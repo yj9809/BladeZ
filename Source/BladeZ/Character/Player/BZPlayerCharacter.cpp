@@ -22,7 +22,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	bUseControllerRotationRoll = true;
 
 	// 이동하는 방향에 맞게 회전하도록 설정.
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -50,6 +50,14 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		// Log 형식은 아직 지정하지 않아 임시로 LogTemp에 남김.
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load character mesh."));
+	}
+	
+	static ConstructorHelpers::FClassFinder<UAnimInstance> CharacterAnim(
+		TEXT("/Game/BZ/Character/Player/Animation/ABP_PlayerAnimation.ABP_PlayerAnimation_C")
+	);
+	if (CharacterAnim.Succeeded())
+	{
+		GetMesh()->SetAnimInstanceClass(CharacterAnim.Class);
 	}
 
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextRef(
@@ -157,8 +165,6 @@ void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerLook(const FInputActionValue& Value)
 {
 	FVector2D LookInput = Value.Get<FVector2D>();
-
-	UE_LOG(LogTemp, Log, TEXT("Look Input: X=%f, Y=%f"), LookInput.X, LookInput.Y);
 	
 	AddControllerYawInput(LookInput.X);
 	float newY = LookInput.Y * -1.0f;
