@@ -28,10 +28,10 @@ void UBZPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		Velocity = Movement->Velocity;
 		
-		Speed = Velocity.Size2D();
-		
 		bIsMove = (bool)Owner->GetLastMovementInputVector().Size2D();
-		
+				
+		Speed = Velocity.Size2D();
+				
 		Direction = CalculateDirection(Velocity, Owner->GetActorRotation());
 	}
 }
