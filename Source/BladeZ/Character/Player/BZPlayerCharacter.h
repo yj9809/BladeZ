@@ -32,7 +32,10 @@ private:
 	void PlayerMove(const FInputActionValue& Value);
 	
 	void PlayerLook(const FInputActionValue& Value);
+	
+	void PlayerRunStart(const FInputActionValue& Value);
 
+	void PlayerRunEnd(const FInputActionValue& Value);
 private:
 	// 카메라 세팅.
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -52,4 +55,8 @@ private:
 	// 카메라 회전 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> LookAction;
+	
+	// 달리기 액션.
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> RunAction;
 };

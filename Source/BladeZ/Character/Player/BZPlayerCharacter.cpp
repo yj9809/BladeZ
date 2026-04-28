@@ -28,7 +28,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
 	SpringArm->TargetArmLength = 600.0f;
-	SpringArm->bUsePawnControlRotation = true; 
+	SpringArm->bUsePawnControlRotation = true;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
@@ -51,7 +51,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		// Log 형식은 아직 지정하지 않아 임시로 LogTemp에 남김.
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load character mesh."));
 	}
-	
+
 	static ConstructorHelpers::FClassFinder<UAnimInstance> CharacterAnim(
 		TEXT("/Game/BZ/Character/Player/Animation/ABP_PlayerAnimation.ABP_PlayerAnimation_C")
 	);
@@ -98,6 +98,18 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load Look input action."));
 	}
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> RunActionRef(
+		TEXT("/Game/BZ/Input/IA_PlayerRun.IA_PlayerRun")
+	);
+	if (RunActionRef.Succeeded())
+	{
+		RunAction = RunActionRef.Object;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load Run input action."));
+	}
 }
 
 // Called when the game starts or when spawned
@@ -138,20 +150,36 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			MoveAction,
 			ETriggerEvent::Triggered,
 			this,
-			&ABZPlayerCharacter::PlayerMove);
-		
+			&ABZPlayerCharacter::PlayerMove
+		);
+
 		EnhancedInputComponent->BindAction(
 			LookAction,
 			ETriggerEvent::Triggered,
 			this,
-			&ABZPlayerCharacter::PlayerLook);	
+			&ABZPlayerCharacter::PlayerLook
+		);
+
+		EnhancedInputComponent->BindAction(
+			RunAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerRunStart
+		);
+		
+		EnhancedInputComponent->BindAction(
+			RunAction,
+			ETriggerEvent::Completed,
+			this,
+			&ABZPlayerCharacter::PlayerRunEnd
+		);
 	}
 }
 
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 {
 	FVector2D Movement = Value.Get<FVector2D>();
-	
+
 	FRotator Rotation = GetControlRotation();
 	FRotator YawRotation(0.0f, Rotation.Yaw, 0.0f);
 
@@ -165,8 +193,18 @@ void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerLook(const FInputActionValue& Value)
 {
 	FVector2D LookInput = Value.Get<FVector2D>();
-	
+
 	AddControllerYawInput(LookInput.X);
 	float newY = LookInput.Y * -1.0f;
 	AddControllerPitchInput(newY);
+}
+
+void ABZPlayerCharacter::PlayerRunStart(const FInputActionValue& Value)
+{
+	GetCharacterMovement()->MaxWalkSpeed *= 2.0f;
+}
+
+void ABZPlayerCharacter::PlayerRunEnd(const FInputActionValue& Value)
+{
+	GetCharacterMovement()->MaxWalkSpeed /= 2.0f;
 }
