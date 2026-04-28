@@ -2,3 +2,10 @@
 
 
 #include "TankStateBase.h"
+#include "Character/BossTank/TankCharacter.h"
+
+
+void UTankStateBase::OnEnter(AActor* Owner)
+{
+	TankCharacter = Cast<ATankCharacter>(Owner);
+}

@@ -25,5 +25,5 @@ private:
 	UPROPERTY()
 	class APawn* PlayerPawn;
 
-	float AttackRange = 250.0f;
+	float AttackRange = 500.0f;
 };

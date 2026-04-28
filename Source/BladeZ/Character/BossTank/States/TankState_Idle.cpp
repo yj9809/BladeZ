@@ -16,10 +16,9 @@ void UTankState_Idle::OnUpdate(AActor* Owner, float DeltaTime)
 	Super::OnUpdate(Owner, DeltaTime);
 
 	// 임시로 바로 Chase진행
-	ATankCharacter* Tank = Cast<ATankCharacter>(Owner);
-	if (Tank && Tank->StateMachine && Tank->ChaseStateInstance)
+	if (TankCharacter && TankCharacter->StateMachine && TankCharacter->ChaseStateInstance)
 	{
-		Tank->StateMachine->ChangeState(Tank->ChaseStateInstance);
+		TankCharacter->StateMachine->ChangeState(TankCharacter->ChaseStateInstance);
 	}
 }
 
