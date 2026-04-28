@@ -14,6 +14,7 @@ public class BladeZ : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
+			"NavigationSystem",
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
