@@ -59,6 +59,12 @@ void UBZPlayerCombatComponent::BeginPlay()
 
 void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 {
+	if (!bIsComboWindowOpen)
+	{
+		// 콤보 윈도우가 열려있지 않으면 인풋 처리를 안함.
+		return;
+	}
+	
 	AttackInputs.Add(NewInputType);
 }
 
@@ -96,10 +102,14 @@ void UBZPlayerCombatComponent::CheckCombo()
 			AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
 		}
 		
-		UE_LOG(LogTemp, Log, TEXT("재생할 몽타주 섹션: %s"), *SectionName->ToString());
 		CurrentComboName = *SectionName;
 	}
 	ComboStep++;
+}
+
+void UBZPlayerCombatComponent::SetComboWindowOpen(bool bIsOpen)
+{
+	bIsComboWindowOpen = bIsOpen;
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)

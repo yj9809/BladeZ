@@ -16,6 +16,12 @@ class BLADEZ_API ABZPlayerCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	ABZPlayerCharacter();
+	
+	// 콤보 윈도우 오픈/클로즈 함수.
+	void SetComboWindowOpen(bool bIsOpen);
+	
+	// 콤보 체크 실행 함수.
+	void StartComboCheck();
 
 protected:
 	// Called when the game starts or when spawned

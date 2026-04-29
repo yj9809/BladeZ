@@ -34,6 +34,9 @@ public:
 	// 콤보 확인용 함수.
 	void CheckCombo();
 	
+	// 콤보 윈도우 오픈 함수.
+	void SetComboWindowOpen(bool bIsOpen);
+	
 	// 몽타주 재생 종료 시 초기화 함수.
 	UFUNCTION()
 	void OnAttackEnded(UAnimMontage* Montage, bool bInterrupted);

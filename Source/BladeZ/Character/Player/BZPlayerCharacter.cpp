@@ -7,6 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
+#include "Common/BZLog.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -116,6 +117,16 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	}
 }
 
+void ABZPlayerCharacter::SetComboWindowOpen(bool bIsOpen)
+{
+	CombatComponent->SetComboWindowOpen(bIsOpen);
+}
+
+void ABZPlayerCharacter::StartComboCheck()
+{
+	CombatComponent->CheckCombo();
+}
+
 // Called when the game starts or when spawned
 void ABZPlayerCharacter::BeginPlay()
 {
@@ -197,7 +208,7 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 {
 	FVector2D Movement = Value.Get<FVector2D>();
-
+	
 	FRotator Rotation = GetControlRotation();
 	FRotator YawRotation(0.0f, Rotation.Yaw, 0.0f);
 
