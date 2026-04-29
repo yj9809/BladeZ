@@ -49,7 +49,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> AttackStateClass;
+	
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> RoarStateClass;
 
+	
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
 	UPROPERTY()
@@ -60,6 +64,10 @@ public:
 
 	UPROPERTY()
 	class UBZTankStateBase* AttackStateInstance;
+	
+	UPROPERTY()
+	class UBZTankStateBase* RoarStateInstance;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	AActor* TargetActor;
@@ -67,6 +75,9 @@ public:
 	// 애니메이션 몽타주
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* AttackMontage;
+	
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* RoarMontage;
 
 private:
 	void UpdateTimers(float DeltaTime);

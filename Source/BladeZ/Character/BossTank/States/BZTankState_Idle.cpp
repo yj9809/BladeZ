@@ -9,16 +9,21 @@
 void UBZTankState_Idle::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
+	
+	AActor* PlayerPawn = Owner->GetWorld()->GetFirstPlayerController()->GetPawn();
+	
+	// Todo: 타깃 넣어주기 (임시)
+	TankCharacter->TargetActor = PlayerPawn;
 }
 
 void UBZTankState_Idle::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
-	// 임시로 바로 Chase진행
+	// Roar 진행
 	if (TankCharacter && TankCharacter->StateMachine && TankCharacter->ChaseStateInstance)
 	{
-		TankCharacter->StateMachine->ChangeState(TankCharacter->ChaseStateInstance);
+		TankCharacter->StateMachine->ChangeState(TankCharacter->RoarStateInstance);
 	}
 }
 

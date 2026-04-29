@@ -11,17 +11,12 @@ void UBZTankState_Chase::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
 
-	PlayerPawn = Owner->GetWorld()->GetFirstPlayerController()->GetPawn();
-	
 	if (!TankCharacter) return;
-
-	// Todo: 타깃 넣어주기 (임시)
-	TankCharacter->TargetActor = PlayerPawn;
 
 	if (TankCharacter && TankCharacter->TargetActor)
 	{
 		// 컴포넌트를 찾아 타겟을 꽂아줌
-		if (auto* MoveComp = TankCharacter->FindComponentByClass<UBZCustomMoveTo>())
+		if (UBZCustomMoveTo* MoveComp = TankCharacter->CustomMoveTo)
 		{
 			MoveComp->SetEnabled(true);
 			MoveComp->SetMoveTarget(TankCharacter->TargetActor, NearDistance);
@@ -35,7 +30,7 @@ void UBZTankState_Chase::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
-	if (!Owner || !PlayerPawn) return;
+	if (!Owner || !TankCharacter->TargetActor) return;
 	
 	if (TankCharacter->DistanceToTarget <= TankCharacter->AttackRange)
 	{
