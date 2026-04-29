@@ -36,6 +36,10 @@ private:
 	void PlayerRunStart(const FInputActionValue& Value);
 
 	void PlayerRunEnd(const FInputActionValue& Value);
+	
+	void PlayerLeftAttack(const FInputActionValue& Value);
+	
+	void PlayerRightAttack(const FInputActionValue& Value);
 private:
 	// 카메라 세팅.
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -43,6 +47,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	TObjectPtr<class UCameraComponent> Camera;
+	
+	// 플레이어 공격 컴포넌트 세팅.
+	UPROPERTY(VisibleAnywhere, Category=Combat)
+	TObjectPtr<class UBZPlayerCombatComponent> CombatComponent;
 
 	// 플레이어 입력 매핑.
 	UPROPERTY(EditAnywhere, Category = Input)
@@ -59,4 +67,11 @@ private:
 	// 달리기 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> RunAction;
+	
+	// 공격(마우스 좌/우 클릭) 액션.
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> LeftAttackAction;
+	
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> RightAttackAction;
 };

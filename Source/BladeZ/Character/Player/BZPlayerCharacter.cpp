@@ -3,6 +3,7 @@
 
 #include "BZPlayerCharacter.h"
 
+#include "BZPlayerCombatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
@@ -32,6 +33,8 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
+	
+	CombatComponent = CreateDefaultSubobject<UBZPlayerCombatComponent>(TEXT("CombatComponent"));
 
 	// 메시의 위치와 회전을 조정하여 캐릭터가 올바르게 보이도록 설정.
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
@@ -46,12 +49,8 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		// 성공하면 메시 컴포넌트에 스켈레탈 메시 설정.
 		GetMesh()->SetSkeletalMesh(CharacterMesh.Object);
 	}
-	else
-	{
-		// Log 형식은 아직 지정하지 않아 임시로 LogTemp에 남김.
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load character mesh."));
-	}
 
+	// 플레이어 캐릭터 AnimInstance 가져오기.
 	static ConstructorHelpers::FClassFinder<UAnimInstance> CharacterAnim(
 		TEXT("/Game/BZ/Character/Player/Animation/ABP_PlayerAnimation.ABP_PlayerAnimation_C")
 	);
@@ -60,6 +59,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		GetMesh()->SetAnimInstanceClass(CharacterAnim.Class);
 	}
 
+	// 맵핑 컨텍스트 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextRef(
 		TEXT("/Game/BZ/Input/IMC_PlayerKeyMap.IMC_PlayerKeyMap")
 	);
@@ -68,11 +68,8 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		InputMappingContext = InputMappingContextRef.Object;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load input mapping context."));
-	}
 
+	// 이동 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> MoveActionRef(
 		TEXT("/Game/BZ/Input/IA_PlayerMove.IA_PlayerMove")
 	);
@@ -81,11 +78,8 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		MoveAction = MoveActionRef.Object;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load move input action."));
-	}
 
+	// 카메라 회전 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> LookActionRef(
 		TEXT("/Game/BZ/Input/IA_PlayerLook.IA_PlayerLook")
 	);
@@ -94,11 +88,8 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		LookAction = LookActionRef.Object;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load Look input action."));
-	}
 
+	// 달리기 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> RunActionRef(
 		TEXT("/Game/BZ/Input/IA_PlayerRun.IA_PlayerRun")
 	);
@@ -106,9 +97,22 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		RunAction = RunActionRef.Object;
 	}
-	else
+	
+	// 공격 (마우스 좌/우 클릭) 액션 가져오기.
+	static ConstructorHelpers::FObjectFinder<UInputAction> LeftAttackActionRef(
+		TEXT("/Game/BZ/Input/IA_LeftAttack.IA_LeftAttack")
+	);
+	if (LeftAttackActionRef.Succeeded())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load Run input action."));
+		LeftAttackAction = LeftAttackActionRef.Object;
+	}
+	
+	static ConstructorHelpers::FObjectFinder<UInputAction> RightAttackActionRef(
+		TEXT("/Game/BZ/Input/IA_RightAttack.IA_RightAttack")
+	);
+	if (RightAttackActionRef.Succeeded())
+	{
+		RightAttackAction = RightAttackActionRef.Object;
 	}
 }
 
@@ -173,6 +177,20 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerRunEnd
 		);
+		
+		EnhancedInputComponent->BindAction(
+			LeftAttackAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerLeftAttack
+		);
+		
+		EnhancedInputComponent->BindAction(
+			RightAttackAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerRightAttack
+		);
 	}
 }
 
@@ -207,4 +225,21 @@ void ABZPlayerCharacter::PlayerRunStart(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerRunEnd(const FInputActionValue& Value)
 {
 	GetCharacterMovement()->MaxWalkSpeed /= 2.0f;
+}
+
+void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
+{
+	if (!CombatComponent->GetIsAttacking())
+	{
+		CombatComponent->StartComboAttack();
+		
+		return;
+	}
+	
+	CombatComponent->SetAttackInput(EBZAttackInputType::Left);
+}
+
+void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
+{
+	CombatComponent->SetAttackInput(EBZAttackInputType::Right);
 }

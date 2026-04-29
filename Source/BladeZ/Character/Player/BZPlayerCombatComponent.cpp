@@ -3,6 +3,8 @@
 
 #include "Character/Player/BZPlayerCombatComponent.h"
 
+#include "GameFramework/Character.h"
+
 // Sets default values for this component's properties
 UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 {
@@ -22,7 +24,7 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	// 공격 애니메이션 몽타주 등록.
 	// Todo: 플레이어 공격 애니메이션 몽타주 만들고 등록하기.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackMontageRef(
-		TEXT("")
+		TEXT("/Game/BZ/Character/Player/Animation/AM_Attack.AM_Attack")
 	);
 	if (AttackMontageRef.Succeeded())
 	{
@@ -34,16 +36,44 @@ void UBZPlayerCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	Owner = Cast<ACharacter>(GetOwner());
+	
+	if (Owner)
+	{
+		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
+		if (AnimInstance && AttackMontage)
+		{
+			AnimInstance->OnMontageEnded.AddDynamic(
+				this,
+				&UBZPlayerCombatComponent::OnAttackEnded
+			);
+		}
+	}
+	
 	for (const FBZAttackData& Data : AttackData->GetAttackDataArray())
 	{
-		FName key = *FString::Printf(TEXT("%d_%d"), (int32)Data.AttackInputType, Data.Step);
-		AttackSectionMap.Add(key, Data.SectionName);
+		FName key = *FString::Printf(TEXT("%s_%d"), *Data.CurrentSectionName.ToString(), (int32)Data.AttackInputType);
+		AttackSectionMap.Add(key, Data.NextSectionName);
 	}
 }
 
 void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 {
 	AttackInputs.Add(NewInputType);
+}
+
+void UBZPlayerCombatComponent::StartComboAttack()
+{
+	// 공격 상태 확인 플래그 변경.
+	bIsAttacking = true;
+	
+	if (AttackMontage)
+	{
+		Owner->PlayAnimMontage(AttackMontage);
+		
+		// 첫 번째 섹션 이름으로 변경.
+		CurrentComboName = AttackMontage->GetSectionName(0);
+	}
 }
 
 void UBZPlayerCombatComponent::CheckCombo()
@@ -55,18 +85,30 @@ void UBZPlayerCombatComponent::CheckCombo()
 	}
 	
 	int32 AttackInput = (int32)AttackInputs[ComboStep];
-	FName key = *FString::Printf(TEXT("%d_%d"), AttackInput, ComboStep);
+	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
 	
 	FName* SectionName = AttackSectionMap.Find(key);
 	if (SectionName)
 	{
+		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
+		if (AnimInstance && AttackMontage)
+		{
+			AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
+		}
+		
 		UE_LOG(LogTemp, Log, TEXT("재생할 몽타주 섹션: %s"), *SectionName->ToString());
+		CurrentComboName = *SectionName;
 	}
 	ComboStep++;
 }
 
-void UBZPlayerCombatComponent::OnAttackEnded()
+void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (Montage != AttackMontage)
+	{
+		return;
+	}
+	
 	// 공격이 끝났을 때 입력값 초기화.
 	AttackInputs.Empty();
 	ComboStep = 0;

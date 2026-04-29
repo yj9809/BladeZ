@@ -12,14 +12,17 @@ struct FBZAttackData
 {
 	GENERATED_BODY()
 	
+	// 현재 재생중인 섹션.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	FName CurrentSectionName;
+	
+	// 입력 값.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
 	EBZAttackInputType AttackInputType;
 	
+	// 다음 재생할 섹션.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
-	int32 Step;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
-	FName SectionName;
+	FName NextSectionName;
 };
 
 /**
