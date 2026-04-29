@@ -42,7 +42,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 
 	// 기본 스켈레탈 메시 가져오기.
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(
-		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")
+		TEXT("/Game/Survival_Character/Meshes/SK_Survival_Character.SK_Survival_Character")
 	);
 
 	if (CharacterMesh.Succeeded())
@@ -50,6 +50,8 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		// 성공하면 메시 컴포넌트에 스켈레탈 메시 설정.
 		GetMesh()->SetSkeletalMesh(CharacterMesh.Object);
 	}
+	
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// 플레이어 캐릭터 AnimInstance 가져오기.
 	static ConstructorHelpers::FClassFinder<UAnimInstance> CharacterAnim(
@@ -115,6 +117,14 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		RightAttackAction = RightAttackActionRef.Object;
 	}
+	
+	static ConstructorHelpers::FClassFinder<AActor> WeaponRef(
+		TEXT("/Game/BZ/Character/Player/BP_Mop.BP_Mop_C")
+	);
+	if (WeaponRef.Succeeded())
+	{
+		WeaponClass = WeaponRef.Class;
+	}
 }
 
 void ABZPlayerCharacter::SetComboWindowOpen(bool bIsOpen)
@@ -131,6 +141,12 @@ void ABZPlayerCharacter::StartComboCheck()
 void ABZPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (WeaponClass)
+	{
+		Weapon = GetWorld()->SpawnActor<AActor>(WeaponClass);
+		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+	}
 }
 
 // Called every frame

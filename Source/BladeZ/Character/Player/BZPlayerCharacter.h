@@ -80,4 +80,11 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> RightAttackAction;
+	
+	// 무기 (대걸레).
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	TSubclassOf<AActor> WeaponClass;
+	
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	TObjectPtr<AActor> Weapon;
 };

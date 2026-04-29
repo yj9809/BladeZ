@@ -3,6 +3,7 @@
 
 #include "Character/Player/BZPlayerCombatComponent.h"
 
+#include "Common/BZLog.h"
 #include "GameFramework/Character.h"
 
 // Sets default values for this component's properties
@@ -59,11 +60,11 @@ void UBZPlayerCombatComponent::BeginPlay()
 
 void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 {
-	if (!bIsComboWindowOpen)
-	{
-		// 콤보 윈도우가 열려있지 않으면 인풋 처리를 안함.
-		return;
-	}
+	// if (!bIsComboWindowOpen)
+	// {
+	// 	// 콤보 윈도우가 열려있지 않으면 인풋 처리를 안함.
+	// 	return;
+	// }
 	
 	AttackInputs.Add(NewInputType);
 }
@@ -75,7 +76,7 @@ void UBZPlayerCombatComponent::StartComboAttack()
 	
 	if (AttackMontage)
 	{
-		Owner->PlayAnimMontage(AttackMontage);
+		Owner->PlayAnimMontage(AttackMontage, 1.5f);
 		
 		// 첫 번째 섹션 이름으로 변경.
 		CurrentComboName = AttackMontage->GetSectionName(0);
@@ -92,7 +93,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 	
 	int32 AttackInput = (int32)AttackInputs[ComboStep];
 	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
-	
+		
 	FName* SectionName = AttackSectionMap.Find(key);
 	if (SectionName)
 	{
