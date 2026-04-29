@@ -37,16 +37,16 @@ void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// 커스텀 MoveTo로직
-	if (!bEnabled || !OwnerPawn || !OwnerAIC || !MovementComp || !Target) return;
+	if (!OwnerPawn || !OwnerAIC || !MovementComp || !Target) return;
 
 	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(GetWorld(),
 		OwnerPawn->GetActorLocation(), Target);
 
 	PathUpdateTimer -= DeltaTime;
-	if (PathUpdateTimer <= 0.f)
+	if (PathUpdateTimer <= 0.0f)
 	{
 		// 여기서만 FindPath 실행 (0.1~0.2초에 한 번)
-		PathUpdateTimer = 0.1f;
+		PathUpdateTimer = 0.2f;
 		NavPath = UNavigationSystemV1::FindPathToActorSynchronously(GetWorld(),
 		                                                            OwnerPawn->GetActorLocation(), Target);
 	}
@@ -57,11 +57,12 @@ void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 		{
 			// 다음 목적지 방향 계산 (PathPoints[0]은 현재 위치이므로 [1]을 참조)
 			FVector NextPoint = NavPath->PathPoints[1];
-			FVector TargetDir = (NextPoint - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
+			TargetDir = (NextPoint - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
 
 			FVector DesiredVelocity = TargetDir * MovementComp->MaxWalkSpeed;
 			// Velocity 직접 주입
-			if (FVector::Dist(OwnerPawn->GetActorLocation(), Target->GetActorLocation()) > NearDistance)
+			if (bIsMovementEnabled && FVector::Dist(OwnerPawn->GetActorLocation(), Target->GetActorLocation()) >
+				NearDistance)
 			{
 				MovementComp->Velocity = FMath::VInterpTo(
 					MovementComp->Velocity,
@@ -70,22 +71,56 @@ void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 					50.0f
 				);
 			}
+			// NearDistance안쪽이면 빈 값 넣어주기
 			else
 			{
 				MovementComp->Velocity = FVector();
 			}
-
-			// 회전 보정
-			if (!TargetDir.IsNearlyZero())
-			{
-				FRotator TargetRot = TargetDir.Rotation();
-				OwnerPawn->SetActorRotation(FMath::RInterpTo(
-					OwnerPawn->GetActorRotation(),
-					TargetRot,
-					DeltaTime,
-					5.0f
-				));
-			}
 		}
+	}
+	// 회전 처리 (SetFixedRotation이 일반 회전보다 우위)
+	if (bIsFixedRotation)
+	{
+		SetFixedTargetRotation(DeltaTime);
+		return;
+	}
+	if (bIsRotationEnabled)
+	{
+		SetRotation(DeltaTime);
+	}
+}
+
+void UBZCustomMoveTo::SetRotation(float DeltaTime)
+{
+	// 회전 보정
+	if (!TargetDir.IsNearlyZero())
+	{
+		FRotator TargetRot = TargetDir.Rotation();
+		OwnerPawn->SetActorRotation(FMath::RInterpTo(
+			OwnerPawn->GetActorRotation(),
+			TargetRot,
+			DeltaTime,
+			2.0f
+		));
+	}
+}
+
+void UBZCustomMoveTo::SetFixedTargetRotation(float DeltaTime)
+{
+	// 네비게이션 경로에 영향을 받지 않고 Target을 직접 향해 회전
+	if (!OwnerPawn || !Target) return;
+
+	// Target 방향을 직접 계산
+	FVector DirectionToTarget = (Target->GetActorLocation() - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
+
+	if (!DirectionToTarget.IsNearlyZero())
+	{
+		FRotator TargetRot = DirectionToTarget.Rotation();
+		OwnerPawn->SetActorRotation(FMath::RInterpTo(
+			OwnerPawn->GetActorRotation(),
+			TargetRot,
+			DeltaTime,
+			2.0f
+		));
 	}
 }

@@ -28,6 +28,11 @@ void ABZTankCharacter::BeginPlay()
 	{
 		IdleStateInstance = NewObject<UBZTankStateBase>(this, IdleStateClass);
 	}
+	
+	if (RoarStateClass)
+	{
+		RoarStateInstance = NewObject<UBZTankStateBase>(this, RoarStateClass);
+	}
 
 	if (ChaseStateClass)
 	{

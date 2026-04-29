@@ -21,9 +21,5 @@ public:
 	virtual void OnExit(AActor* Owner) override;
 
 private:
-	// 추격 중임을 확인하는 변수
-	UPROPERTY()
-	class APawn* PlayerPawn;
-
 	float NearDistance = 300.0f;
 };
