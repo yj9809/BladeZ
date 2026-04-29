@@ -1,19 +1,19 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TankAnimInstance.h"
+#include "BZTankAnimInstance.h"
 
 #include "GameFramework/Character.h"
 
-void UTankAnimInstance::NativeInitializeAnimation()
+void UBZTankAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
 	// 소유주 가져오기
-	Owner = Cast<ATankCharacter>(TryGetPawnOwner());
+	Owner = Cast<ABZTankCharacter>(TryGetPawnOwner());
 }
 
-void UTankAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+void UBZTankAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
@@ -24,5 +24,8 @@ void UTankAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	GroundSpeed = Velocity.Size2D();
 	bIsMoving = GroundSpeed > 3.0f;
 	Direction = CalculateDirection(Velocity, Owner->GetActorRotation());
-	BlendingAmount = Owner->IsBlendingMotion() ? 1.0f : 0.0f;
+	
+	// BlendingAmount에 Lerp 추가
+	float TargetBlendingAmount = Owner->IsBlendingMotion() ? 1.0f : 0.0f;
+	BlendingAmount = FMath::Lerp(BlendingAmount, TargetBlendingAmount, DeltaSeconds * 5.0f);
 }

@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CustomMoveTo.h"
+#include "BZCustomMoveTo.h"
 
 #include "AIController.h"
 #include "NavigationPath.h"
@@ -11,7 +11,7 @@
 
 
 // Sets default values for this component's properties
-UCustomMoveTo::UCustomMoveTo()
+UBZCustomMoveTo::UBZCustomMoveTo()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -22,17 +22,17 @@ UCustomMoveTo::UCustomMoveTo()
 
 
 // Called when the game starts
-void UCustomMoveTo::BeginPlay()
+void UBZCustomMoveTo::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwnerPawn =Cast<APawn>(GetOwner());
+	OwnerPawn = Cast<APawn>(GetOwner());
 	OwnerAIC = Cast<AAIController>(OwnerPawn->GetController());
 	MovementComp = Cast<UCharacterMovementComponent>(OwnerPawn->GetMovementComponent());
 }
 
 // Called every frame
-void UCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -48,25 +48,32 @@ void UCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 		// 여기서만 FindPath 실행 (0.1~0.2초에 한 번)
 		PathUpdateTimer = 0.1f;
 		NavPath = UNavigationSystemV1::FindPathToActorSynchronously(GetWorld(),
-		OwnerPawn->GetActorLocation(), Target);
+		                                                            OwnerPawn->GetActorLocation(), Target);
 	}
-	// 2. 내비게이션으로부터 방향 데이터 추출
+	// 내비게이션으로부터 방향 데이터 추출
 	if (auto* PFollow = OwnerAIC->GetPathFollowingComponent())
 	{
 		if (NavPath && NavPath->IsValid() && NavPath->PathPoints.Num() > 1)
 		{
-			// 2. 다음 목적지 방향 계산 (PathPoints[0]은 현재 위치이므로 [1]을 참조)
+			// 다음 목적지 방향 계산 (PathPoints[0]은 현재 위치이므로 [1]을 참조)
 			FVector NextPoint = NavPath->PathPoints[1];
 			FVector TargetDir = (NextPoint - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
 
 			FVector DesiredVelocity = TargetDir * MovementComp->MaxWalkSpeed;
 			// Velocity 직접 주입
-			MovementComp->Velocity = FMath::VInterpTo(
-				MovementComp->Velocity,
-				DesiredVelocity,
-				DeltaTime,
-				50.0f
-			);
+			if (FVector::Dist(OwnerPawn->GetActorLocation(), Target->GetActorLocation()) > NearDistance)
+			{
+				MovementComp->Velocity = FMath::VInterpTo(
+					MovementComp->Velocity,
+					DesiredVelocity,
+					DeltaTime,
+					50.0f
+				);
+			}
+			else
+			{
+				MovementComp->Velocity = FVector();
+			}
 
 			// 회전 보정
 			if (!TargetDir.IsNearlyZero())

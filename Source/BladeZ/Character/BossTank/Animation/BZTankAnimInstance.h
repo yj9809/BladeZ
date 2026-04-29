@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Character/BossTank/TankCharacter.h"
-#include "TankAnimInstance.generated.h"
+#include "Character/BossTank/BZTankCharacter.h"
+#include "BZTankAnimInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class BLADEZ_API UTankAnimInstance : public UAnimInstance
+class BLADEZ_API UBZTankAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
@@ -35,5 +35,5 @@ public:
 	
 private:
 	UPROPERTY()
-	ATankCharacter* Owner;
+	ABZTankCharacter* Owner;
 };

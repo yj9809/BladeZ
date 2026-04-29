@@ -4,20 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "TankStateBase.h"
-#include "TankStateMachine.generated.h"
+#include "BZTankStateBase.h"
+#include "BZTankStateMachine.generated.h"
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class BLADEZ_API UTankStateMachine : public UActorComponent
+class BLADEZ_API UBZTankStateMachine : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	UTankStateMachine();
+	UBZTankStateMachine();
 	
 	// 상태를 바꾸는 핵심 함수
-	void ChangeState(UTankStateBase* NewState);
+	void ChangeState(UBZTankStateBase* NewState);
 
 	// 틱 흘리기
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -25,5 +25,5 @@ public:
 private:
 	// 블루프린트에서 상태를 할당할 수 있게 노출
 	UPROPERTY(EditAnywhere, Category = "FSM")
-	UTankStateBase* CurrentState;
+	UBZTankStateBase* CurrentState;
 };

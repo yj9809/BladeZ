@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TankStateMachine.h"
-#include "TankStateBase.h"
+#include "BZTankStateMachine.h"
+#include "BZTankStateBase.h"
 
 
 // Sets default values for this component's properties
-UTankStateMachine::UTankStateMachine()
+UBZTankStateMachine::UBZTankStateMachine()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -16,7 +16,7 @@ UTankStateMachine::UTankStateMachine()
 }
 
 
-void UTankStateMachine::ChangeState(UTankStateBase* NewState)
+void UBZTankStateMachine::ChangeState(UBZTankStateBase* NewState)
 {
 	if (!NewState || CurrentState == NewState) return;
 
@@ -25,7 +25,7 @@ void UTankStateMachine::ChangeState(UTankStateBase* NewState)
 	if (CurrentState) CurrentState->OnEnter(GetOwner());
 }
 
-void UTankStateMachine::TickComponent(float DeltaTime, ELevelTick TickType,
+void UBZTankStateMachine::TickComponent(float DeltaTime, ELevelTick TickType,
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

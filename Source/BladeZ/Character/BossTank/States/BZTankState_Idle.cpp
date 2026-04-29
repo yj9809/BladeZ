@@ -1,17 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "TankState_Idle.h"
+#include "BZTankState_Idle.h"
 
-#include "TankStateMachine.h"
-#include "Character/BossTank/TankCharacter.h"
+#include "BZTankStateMachine.h"
+#include "Character/BossTank/BZTankCharacter.h"
 
-void UTankState_Idle::OnEnter(AActor* Owner)
+void UBZTankState_Idle::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
 }
 
-void UTankState_Idle::OnUpdate(AActor* Owner, float DeltaTime)
+void UBZTankState_Idle::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
@@ -22,7 +22,7 @@ void UTankState_Idle::OnUpdate(AActor* Owner, float DeltaTime)
 	}
 }
 
-void UTankState_Idle::OnExit(AActor* Owner)
+void UBZTankState_Idle::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
 }

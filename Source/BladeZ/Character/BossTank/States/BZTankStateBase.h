@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "TankStateBase.generated.h"
+#include "BZTankStateBase.generated.h"
 
-class ATankCharacter;
+class ABZTankCharacter;
 
 /**
  * 
  */
 UCLASS(Abstract, Blueprintable, EditInlineNew)
-class BLADEZ_API UTankStateBase : public UObject
+class BLADEZ_API UBZTankStateBase : public UObject
 {
 	GENERATED_BODY()
 	
@@ -26,5 +26,5 @@ public:
 	
 protected:
 	UPROPERTY()
-	ATankCharacter* TankCharacter;
+	ABZTankCharacter* TankCharacter;
 };
