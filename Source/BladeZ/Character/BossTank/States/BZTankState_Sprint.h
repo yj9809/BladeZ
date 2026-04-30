@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Animation/AnimInstance.h"
 #include "BZTankStateBase.h"
-#include "BZTankState_Attack.generated.h"
+#include "BZTankState_Sprint.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class BLADEZ_API UBZTankState_Attack : public UBZTankStateBase
+class BLADEZ_API UBZTankState_Sprint : public UBZTankStateBase
 {
 	GENERATED_BODY()
 
@@ -20,8 +19,7 @@ public:
 	virtual void OnEnter(AActor* Owner) override;
 	virtual void OnUpdate(AActor* Owner, float DeltaTime) override;
 	virtual void OnExit(AActor* Owner) override;
-	
+
 private:
-	FOnMontageEnded AttackMontageEndDelegate;
-	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	float SprintAttackRange = 1000.0f;
 };

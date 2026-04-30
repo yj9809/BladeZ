@@ -8,6 +8,7 @@
 #include "NavigationSystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "Character/BossTank/BZTankCharacter.h"
 
 
 // Sets default values for this component's properties
@@ -29,6 +30,7 @@ void UBZCustomMoveTo::BeginPlay()
 	OwnerPawn = Cast<APawn>(GetOwner());
 	OwnerAIC = Cast<AAIController>(OwnerPawn->GetController());
 	MovementComp = Cast<UCharacterMovementComponent>(OwnerPawn->GetMovementComponent());
+	TankCharacter = Cast<ABZTankCharacter>(GetOwner());
 }
 
 // Called every frame
@@ -36,8 +38,53 @@ void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// 커스텀 MoveTo로직
-	if (!OwnerPawn || !OwnerAIC || !MovementComp || !Target) return;
+	if (!OwnerPawn || !MovementComp || !TankCharacter) return;
+
+	// 포지션 기반 이동
+	if (bUsePositionTarget)
+	{
+		float DistanceToTarget = FVector::Dist(OwnerPawn->GetActorLocation(), TargetPosition);
+		
+		// 도착했으면 정지
+		if (DistanceToTarget < 50.0f)
+		{
+			ApplyMovementVelocity(FVector::ZeroVector, DeltaTime);
+			return;
+		}
+
+		// 목표 포지션으로의 방향 계산
+		FVector DirectionToTarget = (TargetPosition - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
+		
+		// 속도 계산
+		float CurrentMaxSpeed = bIsSprinting ? (TankCharacter ? TankCharacter->GetSprintSpeed() : 800.0f) : (TankCharacter ? TankCharacter->GetWalkSpeed() : 300.0f);
+		FVector DesiredVelocity = DirectionToTarget * CurrentMaxSpeed;
+
+		// 이동 적용
+		if (bIsMovementEnabled)
+		{
+			ApplyMovementVelocity(DesiredVelocity, DeltaTime);
+		}
+
+		// 회전 처리 (SetFixedRotation이 일반 회전보다 우위)
+		if (bIsFixedRotation)
+		{
+			// Target을 향해 직접 회전
+			SetFixedTargetRotation(DeltaTime);
+		}
+		else if (bIsRotationEnabled)
+		{
+			// 이동 방향으로 회전
+			if (!DirectionToTarget.IsNearlyZero())
+			{
+				FRotator TargetRot = DirectionToTarget.Rotation();
+				OwnerPawn->SetActorRotation(FMath::RInterpTo(OwnerPawn->GetActorRotation(), TargetRot, DeltaTime, RotationLerpWeight));
+			}
+		}
+		return;
+	}
+
+	// 액터 기반 이동
+	if (!OwnerAIC || !Target) return;
 
 	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(GetWorld(),
 		OwnerPawn->GetActorLocation(), Target);
@@ -59,22 +106,19 @@ void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 			FVector NextPoint = NavPath->PathPoints[1];
 			TargetDir = (NextPoint - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
 
-			FVector DesiredVelocity = TargetDir * MovementComp->MaxWalkSpeed;
+			// TankCharacter의 속도 정보를 사용하여 DesiredVelocity 계산
+			float CurrentMaxSpeed = bIsSprinting ? TankCharacter->GetSprintSpeed() : TankCharacter->GetWalkSpeed();
+			FVector DesiredVelocity = TargetDir * CurrentMaxSpeed;
 			// Velocity 직접 주입
 			if (bIsMovementEnabled && FVector::Dist(OwnerPawn->GetActorLocation(), Target->GetActorLocation()) >
 				NearDistance)
 			{
-				MovementComp->Velocity = FMath::VInterpTo(
-					MovementComp->Velocity,
-					DesiredVelocity,
-					DeltaTime,
-					50.0f
-				);
+				ApplyMovementVelocity(DesiredVelocity, DeltaTime);
 			}
 			// NearDistance안쪽이면 빈 값 넣어주기
 			else
 			{
-				MovementComp->Velocity = FVector();
+				ApplyMovementVelocity(FVector::ZeroVector, DeltaTime);
 			}
 		}
 	}
@@ -100,9 +144,18 @@ void UBZCustomMoveTo::SetRotation(float DeltaTime)
 			OwnerPawn->GetActorRotation(),
 			TargetRot,
 			DeltaTime,
-			2.0f
+			RotationLerpWeight
 		));
 	}
+}
+
+void UBZCustomMoveTo::ApplyMovementVelocity(const FVector& DesiredVelocity, float DeltaTime) const
+{
+	if (!MovementComp) return;
+
+	const float ClampedWeight = FMath::Clamp(MovementLerpWeight, 0.0f, 1.0f);
+	const float FrameAdjustedWeight = 1.0f - FMath::Pow(1.0f - ClampedWeight, DeltaTime * 60.0f);
+	MovementComp->Velocity = FMath::Lerp(MovementComp->Velocity, DesiredVelocity, FrameAdjustedWeight);
 }
 
 void UBZCustomMoveTo::SetFixedTargetRotation(float DeltaTime)
@@ -120,7 +173,7 @@ void UBZCustomMoveTo::SetFixedTargetRotation(float DeltaTime)
 			OwnerPawn->GetActorRotation(),
 			TargetRot,
 			DeltaTime,
-			2.0f
+			RotationLerpWeight
 		));
 	}
 }

@@ -21,8 +21,8 @@ void UBZTankState_Chase::OnEnter(AActor* Owner)
 			MoveComp->SetEnabled(true);
 			MoveComp->SetMoveTarget(TankCharacter->TargetActor, NearDistance);
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("추격 상태 진입"));
+		TankCharacter->SetBlendingMotion(false);
+		TankCharacter->CustomMoveTo->SetSprinting(false);
 	}
 }
 
@@ -31,7 +31,7 @@ void UBZTankState_Chase::OnUpdate(AActor* Owner, float DeltaTime)
 	Super::OnUpdate(Owner, DeltaTime);
 
 	if (!Owner || !TankCharacter->TargetActor) return;
-	
+
 	if (TankCharacter->DistanceToTarget <= TankCharacter->AttackRange)
 	{
 		TankCharacter->StateMachine->ChangeState(TankCharacter->AttackStateInstance);
@@ -41,6 +41,4 @@ void UBZTankState_Chase::OnUpdate(AActor* Owner, float DeltaTime)
 void UBZTankState_Chase::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
-
-	UE_LOG(LogTemp, Warning, TEXT("추격 상태 퇴장"));
 }

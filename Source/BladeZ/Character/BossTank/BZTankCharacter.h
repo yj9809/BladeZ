@@ -24,6 +24,11 @@ public:
 	FORCEINLINE void SetBlendingMotion(bool IsBlending) { bIsBlending = IsBlending; }
 	FORCEINLINE bool IsBlendingMotion() const { return bIsBlending; }
 
+	// Speed 관련 Getter 함수
+	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
+	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
+	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -49,11 +54,23 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> AttackStateClass;
-	
+
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> RoarStateClass;
 
-	
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> SprintStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> SprintAttackStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> KeepDistanceStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> SkillSelectionStateClass;
+
+
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
 	UPROPERTY()
@@ -64,10 +81,22 @@ public:
 
 	UPROPERTY()
 	class UBZTankStateBase* AttackStateInstance;
-	
+
 	UPROPERTY()
 	class UBZTankStateBase* RoarStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* SprintStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* SprintAttackStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* KeepDistanceStateInstance;
 	
+	UPROPERTY()
+	class UBZTankStateBase* SkillSelectionStateInstance;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	AActor* TargetActor;
@@ -75,22 +104,29 @@ public:
 	// 애니메이션 몽타주
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* AttackMontage;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* RoarMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* SprintAttackMontage;
+
 private:
 	void UpdateTimers(float DeltaTime);
-	
+
 private:
 	bool bIsPlayingCustomRootMotion;
 	bool bIsBlending;
+	bool bIsSprinting;
+	float CurrentSpeed = 0.0f;
+	float WalkSpeed = 300.0f;
+	float SprintSpeed = 800.0f;
 
 public:
 	// State에서 쓰일 변수들
 	float AttackRange = 500.0f;
 	float DistanceToTarget = 1000.0f;
-	
+
 	// 각종 쿨타임 변수
 	UPROPERTY()
 	FSkillCooldown DefaultAttackCooldown{3.0f};
