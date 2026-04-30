@@ -20,11 +20,8 @@ void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 	
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
-		// 애니메이션 재생
 		TankCharacter->SetBlendingMotion(true);
 		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage);
-		
-		// 몽타주 종료 델리게이트 연결
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
@@ -41,13 +38,12 @@ void UBZTankState_Attack::OnExit(AActor* Owner)
 	TankCharacter->SetBlendingMotion(false);
 }
 
-// 몽타주 종료 델리게이트 연결 함수
 void UBZTankState_Attack::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	// 사정거리 확인
-	if (TankCharacter->AttackRange < FVector::Dist(TankCharacter->GetActorLocation(),
-	                                                TankCharacter->TargetActor->GetActorLocation()))
-	{
-		TankCharacter->StateMachine->ChangeState(TankCharacter->ChaseStateInstance);
-	}
+	// if (TankCharacter->AttackRange >= FVector::Dist(TankCharacter->GetActorLocation(),
+	//                                                 TankCharacter->TargetActor->GetActorLocation()))
+	// {
+		TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
+	// }
 }

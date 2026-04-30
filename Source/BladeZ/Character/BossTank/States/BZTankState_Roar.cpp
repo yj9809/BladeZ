@@ -22,7 +22,7 @@ void UBZTankState_Roar::OnEnter(AActor* Owner)
 			MoveComp->SetMoveTarget(TankCharacter->TargetActor);
 		}
 		// 애니메이션 재생
-		TankCharacter->SetBlendingMotion(true);
+		TankCharacter->SetBlendingMotion(false);
 		TankCharacter->PlayAnimMontage(TankCharacter->RoarMontage);
 	}
 }
@@ -48,5 +48,6 @@ void UBZTankState_Roar::OnExit(AActor* Owner)
 
 void UBZTankState_Roar::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	TankCharacter->StateMachine->ChangeState(TankCharacter->ChaseStateInstance);
+	TankCharacter->StateMachine->ChangeState(TankCharacter->KeepDistanceStateInstance);
 }
+

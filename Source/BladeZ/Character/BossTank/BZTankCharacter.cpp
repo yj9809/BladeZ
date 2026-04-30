@@ -44,6 +44,26 @@ void ABZTankCharacter::BeginPlay()
 		AttackStateInstance = NewObject<UBZTankStateBase>(this, AttackStateClass);
 	}
 
+	if (SprintStateClass)
+	{
+		SprintStateInstance = NewObject<UBZTankStateBase>(this, SprintStateClass);
+	}
+
+	if (SprintAttackStateClass)
+	{
+		SprintAttackStateInstance = NewObject<UBZTankStateBase>(this, SprintAttackStateClass);
+	}
+
+	if (KeepDistanceStateClass)
+	{
+		KeepDistanceStateInstance = NewObject<UBZTankStateBase>(this, KeepDistanceStateClass);
+	}
+
+	if (SkillSelectionStateClass)
+	{
+		SkillSelectionStateInstance = NewObject<UBZTankStateBase>(this, SkillSelectionStateClass);
+	}
+
 	// 초기 상태 설정 (예: Idle로 시작)
 	if (StateMachine && IdleStateInstance)
 	{
@@ -58,8 +78,8 @@ void ABZTankCharacter::Tick(float DeltaTime)
 	if (TargetActor)
 	{
 		DistanceToTarget = FVector::Dist(this->GetActorLocation(), TargetActor->GetActorLocation());
-		UpdateTimers(DeltaTime);
 	}
+	UpdateTimers(DeltaTime);
 }
 
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
