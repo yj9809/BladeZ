@@ -127,11 +127,6 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	}
 }
 
-void ABZPlayerCharacter::SetComboWindowOpen(bool bIsOpen)
-{
-	CombatComponent->SetComboWindowOpen(bIsOpen);
-}
-
 void ABZPlayerCharacter::StartComboCheck()
 {
 	CombatComponent->CheckCombo();
@@ -223,16 +218,19 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 {
-	FVector2D Movement = Value.Get<FVector2D>();
+	FVector2D Movement = Value.Get<FVector2D>().GetSafeNormal();
 	
 	FRotator Rotation = GetControlRotation();
 	FRotator YawRotation(0.0f, Rotation.Yaw, 0.0f);
 
 	FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-	AddMovementInput(ForwardVector, Movement.Y);
-	AddMovementInput(RightVector, Movement.X);
+	
+	float BackwardScale = (Movement.Y < 0.0f) ? 0.5f : 1.0f;
+	FVector2D ScaleMovement = Movement * BackwardScale;
+	
+	AddMovementInput(ForwardVector, ScaleMovement.Y);
+	AddMovementInput(RightVector, ScaleMovement.X);
 }
 
 void ABZPlayerCharacter::PlayerLook(const FInputActionValue& Value)

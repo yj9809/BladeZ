@@ -3,7 +3,6 @@
 
 #include "Character/Player/BZPlayerCombatComponent.h"
 
-#include "Common/BZLog.h"
 #include "GameFramework/Character.h"
 
 // Sets default values for this component's properties
@@ -60,13 +59,13 @@ void UBZPlayerCombatComponent::BeginPlay()
 
 void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 {
-	// if (!bIsComboWindowOpen)
-	// {
-	// 	// 콤보 윈도우가 열려있지 않으면 인풋 처리를 안함.
-	// 	return;
-	// }
+	if (!bIsAttacking)
+	{
+		return;
+	}
 	
-	AttackInputs.Add(NewInputType);
+	NextInputType = NewInputType;
+	bHasNextInput = true;
 }
 
 void UBZPlayerCombatComponent::StartComboAttack()
@@ -76,7 +75,7 @@ void UBZPlayerCombatComponent::StartComboAttack()
 	
 	if (AttackMontage)
 	{
-		Owner->PlayAnimMontage(AttackMontage, 1.5f);
+		Owner->PlayAnimMontage(AttackMontage, 1.f);
 		
 		// 첫 번째 섹션 이름으로 변경.
 		CurrentComboName = AttackMontage->GetSectionName(0);
@@ -85,13 +84,12 @@ void UBZPlayerCombatComponent::StartComboAttack()
 
 void UBZPlayerCombatComponent::CheckCombo()
 {
-	if (ComboStep >= AttackInputs.Num())
+	if (!bHasNextInput)
 	{
-		// 입력이 없거나 Step 값이 전체 입력 크기를 넘어가면 종료.
 		return;
 	}
 	
-	int32 AttackInput = (int32)AttackInputs[ComboStep];
+	int32 AttackInput = (int32)NextInputType;
 	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
 		
 	FName* SectionName = AttackSectionMap.Find(key);
@@ -105,12 +103,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 		
 		CurrentComboName = *SectionName;
 	}
-	ComboStep++;
-}
-
-void UBZPlayerCombatComponent::SetComboWindowOpen(bool bIsOpen)
-{
-	bIsComboWindowOpen = bIsOpen;
+	bHasNextInput = false;
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -121,9 +114,6 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 	}
 	
 	// 공격이 끝났을 때 입력값 초기화.
-	AttackInputs.Empty();
-	ComboStep = 0;
 	bIsAttacking = false;
-	bIsComboWindowOpen = false;
 }
 

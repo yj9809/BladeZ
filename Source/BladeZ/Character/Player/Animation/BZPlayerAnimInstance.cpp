@@ -4,6 +4,7 @@
 #include "Character/Player/Animation/BZPlayerAnimInstance.h"
 
 #include "Character/Player/BZPlayerCharacter.h"
+#include "Common/BZLog.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void UBZPlayerAnimInstance::NativeInitializeAnimation()
@@ -33,5 +34,7 @@ void UBZPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		Speed = Velocity.Size2D();
 				
 		Direction = CalculateDirection(Velocity, Owner->GetActorRotation());
+		
+		PLAYER_LOG(Log, "Speed: %f, Direction: %f", Speed, Direction);
 	}
 }

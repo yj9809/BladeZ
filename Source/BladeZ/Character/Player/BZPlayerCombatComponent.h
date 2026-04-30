@@ -34,9 +34,6 @@ public:
 	// 콤보 확인용 함수.
 	void CheckCombo();
 	
-	// 콤보 윈도우 오픈 함수.
-	void SetComboWindowOpen(bool bIsOpen);
-	
 	// 몽타주 재생 종료 시 초기화 함수.
 	UFUNCTION()
 	void OnAttackEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -51,15 +48,11 @@ private:
 	
 	// 공격 입력값 보관용.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
-	TArray<EBZAttackInputType> AttackInputs;
+	EBZAttackInputType NextInputType;
 	
-	// 최대 입력 갯수.
-	UPROPERTY(EditAnywhere, Category = Combat)
-	int32 MaxInputCount = 5;
-	
-	// 공격 재생용 인덱스.
+	// 공격 입력 확인용 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
-	int32 ComboStep = 0;
+	bool bHasNextInput = false;
 	
 	// 콤보 재생 데이터.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
@@ -76,8 +69,4 @@ private:
 	// 공격 상태 확인 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	bool bIsAttacking = false;
-	
-	// 공격 입력 가능 여부 확인 플래그.
-	UPROPERTY(VisibleAnywhere, Category = Combat)
-	bool bIsComboWindowOpen = false;
 };
