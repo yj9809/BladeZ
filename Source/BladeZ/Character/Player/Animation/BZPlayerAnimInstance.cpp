@@ -28,13 +28,19 @@ void UBZPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	if (Movement)
 	{
 		Velocity = Movement->Velocity;
-		
-		bIsMove = (bool)Owner->GetLastMovementInputVector().Size2D();
-				
 		Speed = Velocity.Size2D();
-				
-		Direction = CalculateDirection(Velocity, Owner->GetActorRotation());
 		
-		PLAYER_LOG(Log, "Speed: %f, Direction: %f", Speed, Direction);
+		FVector InputVector = Owner->GetLastMovementInputVector();
+		bIsMove = (bool)InputVector.Size2D();
+        
+		if (bIsMove)
+		{
+			Speed = Movement->MaxWalkSpeed * InputVector.Size2D();
+    
+			float TargetDirection = CalculateDirection(InputVector, Owner->GetActorRotation());
+			float Delta = FMath::FindDeltaAngleDegrees(Direction, TargetDirection);
+			Direction = FRotator::NormalizeAxis(Direction + FMath::FInterpTo(0.0f, Delta, DeltaSeconds, 10.0f));
+		}
 	}
+	PLAYER_LOG(Log, "Direction: %f", Direction);
 }

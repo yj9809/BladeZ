@@ -75,7 +75,7 @@ void UBZPlayerCombatComponent::StartComboAttack()
 	
 	if (AttackMontage)
 	{
-		Owner->PlayAnimMontage(AttackMontage, 1.f);
+		Owner->PlayAnimMontage(AttackMontage, 1.5f);
 		
 		// 첫 번째 섹션 이름으로 변경.
 		CurrentComboName = AttackMontage->GetSectionName(0);
