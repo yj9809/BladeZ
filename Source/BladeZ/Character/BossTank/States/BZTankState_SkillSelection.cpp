@@ -4,7 +4,9 @@
 #include "BZTankState_SkillSelection.h"
 
 #include "BZTankStateMachine.h"
+#include "BZTankState_JumpTo.h"
 #include "Character/BossTank/BZTankCharacter.h"
+#include "NavigationSystem.h"
 
 void UBZTankState_SkillSelection::OnEnter(AActor* Owner)
 {
@@ -37,6 +39,12 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 {
 	if (!TankCharacter || !TankCharacter->StateMachine) return;
 
+	// 너무 가까우면 공격 후보보다 먼저 거리를 벌립니다.
+	if (TrySelectTooCloseJump())
+	{
+		return;
+	}
+
 	TArray<UBZTankStateBase*> AvailableStates;
 
 	// 타겟과의 거리에 따라 후보 상태를 다르게 구성
@@ -67,6 +75,55 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 
 	// 선택된 상태로 전환
 	TankCharacter->StateMachine->ChangeState(SelectedState);
+}
+
+bool UBZTankState_SkillSelection::TrySelectTooCloseJump()
+{
+	if (!TankCharacter || !TankCharacter->TargetActor || !TankCharacter->JumpToStateInstance)
+	{
+		return false;
+	}
+
+	if (TankCharacter->DistanceToTarget > TooCloseJumpDistance)
+	{
+		return false;
+	}
+
+	const float CurrentTime = TankCharacter->GetWorld() ? TankCharacter->GetWorld()->GetTimeSeconds() : 0.0f;
+	if (CurrentTime - LastTooCloseJumpTime < TooCloseJumpCooldown)
+	{
+		return false;
+	}
+
+	UBZTankState_JumpTo* JumpToState = Cast<UBZTankState_JumpTo>(TankCharacter->JumpToStateInstance);
+	if (!JumpToState)
+	{
+		return false;
+	}
+
+	const FVector CurrentLocation = TankCharacter->GetActorLocation();
+	const FVector TargetLocation = TankCharacter->TargetActor->GetActorLocation();
+	FVector AwayDirection = (CurrentLocation - TargetLocation).GetSafeNormal2D();
+	if (AwayDirection.IsNearlyZero())
+	{
+		AwayDirection = -TankCharacter->GetActorForwardVector().GetSafeNormal2D();
+	}
+
+	FVector LandingLocation = CurrentLocation + AwayDirection * TooCloseJumpBackDistance;
+	if (UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(TankCharacter->GetWorld()))
+	{
+		FNavLocation ProjectedLocation;
+		if (NavSystem->ProjectPointToNavigation(LandingLocation, ProjectedLocation, FVector(500.0f, 500.0f, 1000.0f)))
+		{
+			LandingLocation = ProjectedLocation.Location;
+		}
+	}
+
+	JumpToState->SetJumpDestination(LandingLocation);
+	JumpToState->SetJumpLookMode(EBZTankJumpLookMode::TargetActor);
+	LastTooCloseJumpTime = CurrentTime;
+	TankCharacter->StateMachine->ChangeState(JumpToState);
+	return true;
 }
 
 void UBZTankState_SkillSelection::AddStateIfValid(TArray<UBZTankStateBase*>& States, UBZTankStateBase* State) const

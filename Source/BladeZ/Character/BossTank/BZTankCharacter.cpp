@@ -64,6 +64,11 @@ void ABZTankCharacter::BeginPlay()
 		SkillSelectionStateInstance = NewObject<UBZTankStateBase>(this, SkillSelectionStateClass);
 	}
 
+	if (JumpToStateClass)
+	{
+		JumpToStateInstance = NewObject<UBZTankStateBase>(this, JumpToStateClass);
+	}
+
 	// 초기 상태 설정 (예: Idle로 시작)
 	if (StateMachine && IdleStateInstance)
 	{

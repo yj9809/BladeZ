@@ -70,6 +70,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> SkillSelectionStateClass;
 
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> JumpToStateClass;
+
 
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
@@ -96,6 +99,9 @@ public:
 	
 	UPROPERTY()
 	class UBZTankStateBase* SkillSelectionStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* JumpToStateInstance;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
