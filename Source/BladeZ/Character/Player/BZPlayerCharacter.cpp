@@ -3,7 +3,7 @@
 
 #include "BZPlayerCharacter.h"
 
-#include "BZPlayerCombatComponent.h"
+#include "Component/BZPlayerCombatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"

@@ -42,5 +42,4 @@ void UBZPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			Direction = FRotator::NormalizeAxis(Direction + FMath::FInterpTo(0.0f, Delta, DeltaSeconds, 10.0f));
 		}
 	}
-	PLAYER_LOG(Log, "Direction: %f", Direction);
 }

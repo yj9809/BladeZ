@@ -18,11 +18,15 @@ struct FBZAttackData
 	
 	// 입력 값.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
-	EBZAttackInputType AttackInputType;
+	EBZAttackInputType AttackInputType = EBZAttackInputType::Left;
 	
 	// 다음 재생할 섹션.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
 	FName NextSectionName;
+	
+	// 각 콤보 별 데미지.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	float Damage;
 };
 
 /**
