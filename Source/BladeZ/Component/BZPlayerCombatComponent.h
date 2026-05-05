@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BZPlayerAttackData.h"
+#include "Character/Player/BZPlayerAttackData.h"
 #include "Components/ActorComponent.h"
-#include "EBZAttackInput.h"
+#include "Character/Player/EBZAttackInput.h"
 #include "BZPlayerCombatComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
