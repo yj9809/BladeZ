@@ -27,6 +27,10 @@ struct FBZAttackData
 	// 각 콤보 별 데미지.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
 	float Damage;
+	
+	// 깊이를 알기 위한 값.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	int32 depth;
 };
 
 /**

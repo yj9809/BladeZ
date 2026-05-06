@@ -119,7 +119,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	}
 	
 	static ConstructorHelpers::FClassFinder<AActor> WeaponRef(
-		TEXT("/Game/BZ/Character/Player/BP_Mop.BP_Mop_C")
+		TEXT("/Game/BZ/Character/Player/BP_Weapon.BP_Weapon_C")
 	);
 	if (WeaponRef.Succeeded())
 	{
