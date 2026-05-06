@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "BZMainMenuPlayerController.generated.h"
+#include "BZTitlePlayerController.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class BLADEZ_API ABZMainMenuPlayerController : public APlayerController
+class BLADEZ_API ABZTitlePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
 public:
-	ABZMainMenuPlayerController();
+	ABZTitlePlayerController();
 
 protected:
 	virtual void BeginPlay() override;

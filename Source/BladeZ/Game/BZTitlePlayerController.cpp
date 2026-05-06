@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Game/BZMainMenuPlayerController.h"
+#include "BZTitlePlayerController.h"
 #include "Blueprint/UserWidget.h"
 
-ABZMainMenuPlayerController::ABZMainMenuPlayerController()
+ABZTitlePlayerController::ABZTitlePlayerController()
 {
 	// Project에서 Class 정보 가져오기.
 	static ConstructorHelpers::FClassFinder<UUserWidget> MainUIClassRef(
@@ -17,7 +17,7 @@ ABZMainMenuPlayerController::ABZMainMenuPlayerController()
 	}
 }
 
-void ABZMainMenuPlayerController::BeginPlay()
+void ABZTitlePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 

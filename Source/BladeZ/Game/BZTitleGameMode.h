@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "BZMainMenuGameMode.generated.h"
+#include "BZTitleGameMode.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class BLADEZ_API ABZMainMenuGameMode : public AGameModeBase
+class BLADEZ_API ABZTitleMenuGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	ABZMainMenuGameMode();
+	ABZTitleMenuGameMode();
 	
 };
