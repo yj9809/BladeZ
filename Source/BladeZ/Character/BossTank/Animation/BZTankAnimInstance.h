@@ -33,6 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
 	float BlendingAmount;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	bool bIsGrounded;
+	
 private:
 	UPROPERTY()
 	ABZTankCharacter* Owner;

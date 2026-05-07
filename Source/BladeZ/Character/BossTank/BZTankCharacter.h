@@ -116,6 +116,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* SprintAttackMontage;
+	
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* JumpMontage;
 
 private:
 	void UpdateTimers(float DeltaTime);
@@ -136,4 +139,7 @@ public:
 	// 각종 쿨타임 변수
 	UPROPERTY()
 	FSkillCooldown DefaultAttackCooldown{3.0f};
+	
+	UPROPERTY()
+	FSkillCooldown JumpToCooldown{3.0f};
 };

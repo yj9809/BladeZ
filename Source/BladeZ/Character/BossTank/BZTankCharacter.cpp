@@ -90,4 +90,5 @@ void ABZTankCharacter::Tick(float DeltaTime)
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
 {
 	DefaultAttackCooldown.CurrentTime += DeltaTime;
+	JumpToCooldown.CurrentTime += DeltaTime;
 }

@@ -50,6 +50,12 @@ public:
 		bUsePositionTarget = true;
 	}
 
+	// 루트 모션 활성화 상태를 변경하는 함수
+	void SetRootMotionOverride(bool bNewOverrideState);
+
+	// 루트 모션이 켜져있는지 확인하는 변수
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomMoveTo|RootMotion")
+	uint8 bIsRootMotionActive : 1;
 
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,

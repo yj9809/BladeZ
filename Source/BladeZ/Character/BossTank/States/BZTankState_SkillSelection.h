@@ -22,7 +22,6 @@ public:
 
 private:
 	void SelectRandomSkill();
-	bool TrySelectTooCloseJump();
 	void AddStateIfValid(TArray<UBZTankStateBase*>& States, UBZTankStateBase* State) const;
 	void BuildCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const;
 	void BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const;
@@ -31,10 +30,7 @@ private:
 	float SelectionDuration = 0.5f; // n초 후 선택
 
 	UPROPERTY(EditAnywhere, Category = "Skill Selection|Jump", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
-	float TooCloseJumpDistance = 600.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Skill Selection|Jump", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
-	float TooCloseJumpBackDistance = 1400.0f;
+	float JumpToDistance = 2000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Skill Selection|Jump", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float TooCloseJumpCooldown = 2.0f;

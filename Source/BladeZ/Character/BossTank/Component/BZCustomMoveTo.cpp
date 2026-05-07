@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "Character/BossTank/BZTankCharacter.h"
+#include "Common/BZLog.h"
 
 
 // Sets default values for this component's properties
@@ -33,13 +34,37 @@ void UBZCustomMoveTo::BeginPlay()
 	TankCharacter = Cast<ABZTankCharacter>(GetOwner());
 }
 
+void UBZCustomMoveTo::SetRootMotionOverride(bool bNewOverrideState)
+{
+	bIsRootMotionActive = bNewOverrideState;
+
+	if (bIsRootMotionActive)
+	{
+		// 루트 모션이 활성화되면 커스텀 속도 연산을 0으로 초기화
+		ApplyMovementVelocity(FVector::ZeroVector, 0.0f);
+		if (MovementComp)
+		{
+			MovementComp->Velocity = FVector::ZeroVector;
+		}
+	}
+}
+
 // Called every frame
 void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// 루트 모션이 활성화되어 있으면 이동 연산 스킵
+	if (bIsRootMotionActive)
+	{
+		return;
+	}
+	
 	if (!OwnerPawn || !MovementComp || !TankCharacter) return;
 
+	// CharacterMovementComponent가 공중 상태인지 확인
+	// bool bIsFalling = MovementComp->IsFalling();
+	
 	// 포지션 기반 이동
 	if (bUsePositionTarget)
 	{
@@ -97,31 +122,33 @@ void UBZCustomMoveTo::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 		NavPath = UNavigationSystemV1::FindPathToActorSynchronously(GetWorld(),
 		                                                            OwnerPawn->GetActorLocation(), Target);
 	}
+
 	// 내비게이션으로부터 방향 데이터 추출
 	if (auto* PFollow = OwnerAIC->GetPathFollowingComponent())
 	{
 		if (NavPath && NavPath->IsValid() && NavPath->PathPoints.Num() > 1)
 		{
-			// 다음 목적지 방향 계산 (PathPoints[0]은 현재 위치이므로 [1]을 참조)
 			FVector NextPoint = NavPath->PathPoints[1];
 			TargetDir = (NextPoint - OwnerPawn->GetActorLocation()).GetSafeNormal2D();
 
-			// TankCharacter의 속도 정보를 사용하여 DesiredVelocity 계산
 			float CurrentMaxSpeed = bIsSprinting ? TankCharacter->GetSprintSpeed() : TankCharacter->GetWalkSpeed();
 			FVector DesiredVelocity = TargetDir * CurrentMaxSpeed;
-			// Velocity 직접 주입
-			if (bIsMovementEnabled && FVector::Dist(OwnerPawn->GetActorLocation(), Target->GetActorLocation()) >
-				NearDistance)
-			{
-				ApplyMovementVelocity(DesiredVelocity, DeltaTime);
-			}
-			// NearDistance안쪽이면 빈 값 넣어주기
-			else
-			{
-				ApplyMovementVelocity(FVector::ZeroVector, DeltaTime);
-			}
+
+			// 공중이 아닐 때만 Velocity 직접 주입
+			// if (!bIsFalling) 
+			// {
+				if (bIsMovementEnabled && FVector::Dist(OwnerPawn->GetActorLocation(), Target->GetActorLocation()) > NearDistance)
+				{
+					ApplyMovementVelocity(DesiredVelocity, DeltaTime);
+				}
+				else
+				{
+					ApplyMovementVelocity(FVector::ZeroVector, DeltaTime);
+				}
+			// }
 		}
 	}
+	
 	// 회전 처리 (SetFixedRotation이 일반 회전보다 우위)
 	if (bIsFixedRotation)
 	{
@@ -155,7 +182,16 @@ void UBZCustomMoveTo::ApplyMovementVelocity(const FVector& DesiredVelocity, floa
 
 	const float ClampedWeight = FMath::Clamp(MovementLerpWeight, 0.0f, 1.0f);
 	const float FrameAdjustedWeight = 1.0f - FMath::Pow(1.0f - ClampedWeight, DeltaTime * 60.0f);
-	MovementComp->Velocity = FMath::Lerp(MovementComp->Velocity, DesiredVelocity, FrameAdjustedWeight);
+
+	// 1. 현재 속도 저장
+	FVector CurrentVelocity = MovementComp->Velocity;
+    
+	// 2. 목표 속도의 Z값을 현재 물리 Z값(중력/점프)으로 동기화
+	FVector TargetVelocity = DesiredVelocity;
+	TargetVelocity.Z = CurrentVelocity.Z;
+
+	// 3. 보간 후 적용
+	MovementComp->Velocity = FMath::Lerp(CurrentVelocity, TargetVelocity, FrameAdjustedWeight);
 }
 
 void UBZCustomMoveTo::SetFixedTargetRotation(float DeltaTime)

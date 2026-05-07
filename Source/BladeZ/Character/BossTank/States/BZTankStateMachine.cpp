@@ -3,6 +3,7 @@
 
 #include "BZTankStateMachine.h"
 #include "BZTankStateBase.h"
+#include "Common/BZLog.h"
 
 
 // Sets default values for this component's properties
@@ -22,6 +23,7 @@ void UBZTankStateMachine::ChangeState(UBZTankStateBase* NewState)
 
 	if (CurrentState) CurrentState->OnExit(GetOwner());
 	CurrentState = NewState;
+	BOSS_LOG(Log, "New State: %s", *CurrentState->GetName());
 	if (CurrentState) CurrentState->OnEnter(GetOwner());
 }
 

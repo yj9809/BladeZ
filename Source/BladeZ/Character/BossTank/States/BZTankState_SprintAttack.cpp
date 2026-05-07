@@ -20,27 +20,28 @@ void UBZTankState_SprintAttack::OnEnter(AActor* Owner)
 		MoveComp->SetMoveTarget(TankCharacter->TargetActor);
 		// 달리기
 		TankCharacter->CustomMoveTo->SetSprinting(true);
+		
+		if (TankCharacter && TankCharacter->SprintAttackMontage)
+		{
+			// 애니메이션 재생
+			TankCharacter->SetBlendingMotion(false);
+			TankCharacter->PlayAnimMontage(TankCharacter->SprintAttackMontage);
+
+			// 몽타주 종료 델리게이트 연결
+			UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_SetEndDelegate(SprintAttackMontageEndDelegate, TankCharacter->SprintAttackMontage);
+			}
+			TankCharacter->DefaultAttackCooldown.Reset();
+		}
 	}
 }
 
 void UBZTankState_SprintAttack::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
-
-	if (TankCharacter && TankCharacter->SprintAttackMontage)
-	{
-		// 애니메이션 재생
-		TankCharacter->SetBlendingMotion(false);
-		TankCharacter->PlayAnimMontage(TankCharacter->SprintAttackMontage);
-
-		// 몽타주 종료 델리게이트 연결
-		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_SetEndDelegate(SprintAttackMontageEndDelegate, TankCharacter->SprintAttackMontage);
-		}
-		TankCharacter->DefaultAttackCooldown.Reset();
-	}
+	
 }
 
 void UBZTankState_SprintAttack::OnExit(AActor* Owner)

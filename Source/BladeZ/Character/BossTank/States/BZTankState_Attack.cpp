@@ -5,11 +5,17 @@
 
 #include "BZTankStateMachine.h"
 #include "Character/BossTank/BZTankCharacter.h"
+#include "Character/BossTank/Component/BZCustomMoveTo.h"
 
 void UBZTankState_Attack::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
 	AttackMontageEndDelegate.BindUObject(this, &UBZTankState_Attack::OnAttackMontageEnded);
+	
+	if (UBZCustomMoveTo* MoveComp = TankCharacter->CustomMoveTo)
+	{
+		MoveComp->SetEnabled(true);
+	}
 }
 
 void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
@@ -45,5 +51,6 @@ void UBZTankState_Attack::OnAttackMontageEnded(UAnimMontage* Montage, bool bInte
 	//                                                 TankCharacter->TargetActor->GetActorLocation()))
 	// {
 		TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
+		TankCharacter->CustomMoveTo->SetEnabled(true);
 	// }
 }
