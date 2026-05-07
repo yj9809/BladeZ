@@ -22,11 +22,11 @@ protected:
 
 	// HUD.
 protected:
-	// Class 沥焊 => 角力 HUD 按眉 积己: 捞 版快 MainMenu.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MainUI)
-	TSubclassOf<class UUserWidget> MainUIClass;
+	// Class 沥焊 => 角力 HUD 按眉 积己: 捞 版快 TitleUI.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TitleUI)
+	TSubclassOf<class UUserWidget> TitleWidgetClass;
 
 	// 角力 积己等 UI 按眉.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MainUI)
-	TObjectPtr<class UUserWidget> MainUIWidget;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TitleUI)
+	TObjectPtr<class UUserWidget> TitleWidget;
 };
