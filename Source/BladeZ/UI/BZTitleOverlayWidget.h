@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,14 +15,14 @@ class BLADEZ_API UBZTitleOverlayWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	// UserWidgetÀÇ »ı¼ºÀÚ¸¦ Override.
+	// UserWidgetì˜ ìƒì„±ìë¥¼ Override.
 	UBZTitleOverlayWidget(const FObjectInitializer& ObjectInitializer);
 
 protected:
-	// UMG°¡ ÃÊ±âÈ­µÉ ¶§ È£ÃâµÇ´Â ÇÔ¼ö.
+	// UMGê°€ ì´ˆê¸°í™”ë  ë•Œ í˜¸ì¶œë˜ëŠ” í•¨ìˆ˜.
 	virtual void NativeConstruct() override;
 
-	// ¹öÆ° Å¬¸¯ ½Ã È£ÃâÇÒ ÇÔ¼ö.
+	// ë²„íŠ¼ í´ë¦­ ì‹œ í˜¸ì¶œí•  í•¨ìˆ˜.
 public:
 	UFUNCTION()
 	void OpenIngame();
@@ -38,5 +38,6 @@ protected:
 	TObjectPtr<class UButton> QuitButton;
 
 private:
-	FName IngameLevelName = FName(TEXT("BossTestLevel"));
+	// Startì—ì„œ ë„˜ì–´ê°ˆ Levelì˜ ì´ë¦„ì„ ë¯¸ë¦¬ ì§€ì •
+	const FName IngameLevelName = FName(TEXT("BossTestLevel"));
 };

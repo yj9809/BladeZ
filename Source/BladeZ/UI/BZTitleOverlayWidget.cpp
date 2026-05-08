@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZTitleOverlayWidget.h"
@@ -14,14 +14,8 @@ void UBZTitleOverlayWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// UI Object¿¡ ¹èÄ¡µÈ UI WidgetµéÀ» ÀÌ¸§À¸·Î °Ë»öÇØ¼­ Set.
-	StartButton = Cast<UButton>(GetWidgetFromName(TEXT("StartButton")));
-
-	// Á¦´ë·Î ¼³Á¤µÆ´ÂÁö È®ÀÎ.
+	// ì œëŒ€ë¡œ ì„¤ì •ëëŠ”ì§€ í™•ì¸.
 	ensureAlways(StartButton);
-
-	QuitButton = Cast<UButton>(GetWidgetFromName(TEXT("QuitButton")));
-
 	ensureAlways(QuitButton);
 	
 	// Event Binding

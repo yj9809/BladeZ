@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -15,7 +15,7 @@ class BLADEZ_API ABZPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
-	// Project¿¡¼­ HUD Class Á¤º¸¸¦ °¡Á®¿À±â À§ÇØ »ı¼ºÀÚ Ãß°¡.
+	// Projectì—ì„œ HUD Class ì •ë³´ë¥¼ ê°€ì ¸ì˜¤ê¸° ìœ„í•´ ìƒì„±ì ì¶”ê°€.
 	ABZPlayerController();
 
 private:
@@ -23,11 +23,11 @@ private:
 
 	// HUD.
 protected:
-	// Class Á¤º¸ => ½ÇÁ¦ HUD °´Ã¼ »ı¼º
+	// Class ì •ë³´ => ì‹¤ì œ HUD ê°ì²´ ìƒì„±
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
 	TSubclassOf<class UUserWidget> HUDWidgetClass;
 
-	// ½ÇÁ¦ »ı¼ºµÈ UI °´Ã¼.
+	// ì‹¤ì œ ìƒì„±ëœ UI ê°ì²´.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
 	TObjectPtr<class UUserWidget> HUDWidget;
 };

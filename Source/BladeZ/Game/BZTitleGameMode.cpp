@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZTitleGameMode.h"
@@ -6,10 +6,10 @@
 
 ABZTitleMenuGameMode::ABZTitleMenuGameMode()
 {
-	// TitleMenuÀÇ °æ¿ì PawnÀÌ »ı¼ºµÇ¸é ¾ÈµÊ
+	// TitleMenuì˜ ê²½ìš° Pawnì´ ìƒì„±ë˜ë©´ ì•ˆë¨
 	DefaultPawnClass = nullptr;
 	HUDClass = nullptr;
 
-	// Menu¸¸ ¸¸µé¾îÁÖ±â À§ÇØ PlayerController Ãß°¡
+	// Menuë§Œ ë§Œë“¤ì–´ì£¼ê¸° ìœ„í•´ PlayerController ì¶”ê°€
 	PlayerControllerClass = ABZTitlePlayerController::StaticClass();
 }

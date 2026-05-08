@@ -1,11 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+Ôªø// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BZTitlePlayerController.h"
 #include "Blueprint/UserWidget.h"
 
 ABZTitlePlayerController::ABZTitlePlayerController()
 {
-	// Projectø°º≠ Class ¡§∫∏ ∞°¡Æø¿±‚.
+	// ProjectÏóêÏÑú Class Ï†ïÎ≥¥ Í∞ÄÏ†∏Ïò§Í∏∞.
 	static ConstructorHelpers::FClassFinder<UUserWidget> TitleWidgetClassRef(
 		TEXT("/Game/BZ/UI/WBP_Title.WBP_Title_C")
 	);
@@ -20,17 +20,17 @@ void ABZTitlePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 		
-	// Widget ª˝º∫.
+	// Widget ÏÉùÏÑ±.
 	TitleWidget = CreateWidget<UUserWidget>(this, TitleWidgetClass);
 
 	if (TitleWidget)
 	{
-		// »≠∏Èø° √ﬂ∞°«ÿ UI∞° ∫∏¿œ ºˆ ¿÷µµ∑œ º≥¡§.
+		// ÌôîÎ©¥Ïóê Ï∂îÍ∞ÄÌï¥ UIÍ∞Ä Î≥¥Ïùº Ïàò ÏûàÎèÑÎ°ù ÏÑ§Ï†ï.
 		TitleWidget->AddToViewport();
 
-		// Input Mode º≥¡§.
-		// º≥¡§«œ¡ˆ æ ¿∏∏È, UI∞° æ∆¥— ∫Œ∫–¿ª Click«ﬂ¿ª ∂ß ¿‘∑¬¿Ã ViewPort∑Œ »Ìºˆµ 
-		// => ∏∂øÏΩ∫∞° ªÁ∂Û¡¯ ∞Õ√≥∑≥ ∫∏¿Œ¥Ÿ.
+		// Input Mode ÏÑ§Ï†ï.
+		// ÏÑ§Ï†ïÌïòÏßÄ ÏïäÏúºÎ©¥, UIÍ∞Ä ÏïÑÎãå Î∂ÄÎ∂ÑÏùÑ ClickÌñàÏùÑ Îïå ÏûÖÎ†•Ïù¥ ViewPortÎ°ú Ìù°ÏàòÎê®
+		// => ÎßàÏö∞Ïä§Í∞Ä ÏÇ¨ÎùºÏßÑ Í≤ÉÏ≤òÎüº Î≥¥Ïù∏Îã§.
 		FInputModeUIOnly UIOnlyInputMode;
 		UIOnlyInputMode.SetWidgetToFocus(TitleWidget->TakeWidget());
 		UIOnlyInputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);

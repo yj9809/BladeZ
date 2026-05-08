@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZPlayerController.h"
@@ -6,7 +6,7 @@
 
 ABZPlayerController::ABZPlayerController()
 {
-	// Project¿¡¼­ Class Á¤º¸ °¡Á®¿À±â.
+	// Projectì—ì„œ Class ì •ë³´ ê°€ì ¸ì˜¤ê¸°.
 	static ConstructorHelpers::FClassFinder<UUserWidget> HUDWidgetClassRef(
 		TEXT("/Game/BZ/UI/WBP_Ingame.WBP_Ingame_C")
 	);
@@ -21,12 +21,12 @@ void ABZPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// HUD Widget »ı¼º.
+	// HUD Widget ìƒì„±.
 	HUDWidget = CreateWidget<UUserWidget>(this, HUDWidgetClass);
 
 	if (HUDWidget)
 	{
-		// È­¸é¿¡ Ãß°¡ÇØ UI°¡ º¸ÀÏ ¼ö ÀÖµµ·Ï ¼³Á¤.
+		// í™”ë©´ì— ì¶”ê°€í•´ UIê°€ ë³´ì¼ ìˆ˜ ìˆë„ë¡ ì„¤ì •.
 		HUDWidget->AddToViewport();
 	}
 

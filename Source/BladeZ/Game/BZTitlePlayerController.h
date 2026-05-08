@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -22,11 +22,11 @@ protected:
 
 	// HUD.
 protected:
-	// Class Á¤º¸ => ½ÇÁ¦ HUD °´Ã¼ »ı¼º: ÀÌ °æ¿ì TitleUI.
+	// Class ì •ë³´ => ì‹¤ì œ HUD ê°ì²´ ìƒì„±: ì´ ê²½ìš° TitleUI.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TitleUI)
 	TSubclassOf<class UUserWidget> TitleWidgetClass;
 
-	// ½ÇÁ¦ »ı¼ºµÈ UI °´Ã¼.
+	// ì‹¤ì œ ìƒì„±ëœ UI ê°ì²´.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TitleUI)
 	TObjectPtr<class UUserWidget> TitleWidget;
 };
