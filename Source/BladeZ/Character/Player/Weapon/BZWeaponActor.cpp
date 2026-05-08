@@ -3,6 +3,7 @@
 
 #include "Character/Player/Weapon/BZWeaponActor.h"
 #include "DrawDebugHelpers.h"
+#include "Common/BZLog.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
@@ -40,13 +41,28 @@ void ABZWeaponActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	for (USceneComponent* Comp : TInlineComponentArray<USceneComponent*>(this))                                                                                                       
+	{                                                                                                                                                                                   
+		if (Comp->GetFName() == TEXT("Start"))
+		{
+			TraceStart = Comp;
+		}
+		else if (Comp->GetFName() == TEXT("End"))
+		{
+			TraceEnd = Comp;
+		}
+	}
 }
 
 // Called every frame
 void ABZWeaponActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
+	if (bIsTracing)
+	{
+		PerformTrace();
+	}
 }
 
 void ABZWeaponActor::PerformTrace()
@@ -58,15 +74,6 @@ void ABZWeaponActor::PerformTrace()
 	
 	TArray<FHitResult> HitResults;
 	TArray<AActor*> ActorsToIgnore;
-	
-	// GetWorld()->SweepMultiByChannel(
-	// 	HitResults,
-	// 	StartLocation,
-	// 	EndLocation,
-	// 	FQuat::Identity,
-	// 	ECC_GameTraceChannel2,
-	// 	CollisionShape		
-	// );
 	
 	UKismetSystemLibrary::SphereTraceMulti(
 		this,
@@ -92,6 +99,4 @@ void ABZWeaponActor::PerformTrace()
 			HitActors.Add(HitActor);
 		}
 	}
-	
 }
-

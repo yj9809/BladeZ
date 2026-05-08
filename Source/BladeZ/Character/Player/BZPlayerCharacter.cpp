@@ -10,6 +10,7 @@
 #include "Common/BZLog.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Weapon/BZWeaponActor.h"
 
 
 // Sets default values
@@ -34,7 +35,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
-	
+
 	CombatComponent = CreateDefaultSubobject<UBZPlayerCombatComponent>(TEXT("CombatComponent"));
 
 	// 메시의 위치와 회전을 조정하여 캐릭터가 올바르게 보이도록 설정.
@@ -50,7 +51,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		// 성공하면 메시 컴포넌트에 스켈레탈 메시 설정.
 		GetMesh()->SetSkeletalMesh(CharacterMesh.Object);
 	}
-	
+
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// 플레이어 캐릭터 AnimInstance 가져오기.
@@ -100,7 +101,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		RunAction = RunActionRef.Object;
 	}
-	
+
 	// 공격 (마우스 좌/우 클릭) 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> LeftAttackActionRef(
 		TEXT("/Game/BZ/Input/IA_LeftAttack.IA_LeftAttack")
@@ -109,7 +110,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		LeftAttackAction = LeftAttackActionRef.Object;
 	}
-	
+
 	static ConstructorHelpers::FObjectFinder<UInputAction> RightAttackActionRef(
 		TEXT("/Game/BZ/Input/IA_RightAttack.IA_RightAttack")
 	);
@@ -118,12 +119,12 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		RightAttackAction = RightAttackActionRef.Object;
 	}
 	
-	static ConstructorHelpers::FClassFinder<AActor> WeaponRef(
+	static ConstructorHelpers::FClassFinder<ABZWeaponActor> WeaponClassRef(
 		TEXT("/Game/BZ/Character/Player/BP_Weapon.BP_Weapon_C")
 	);
-	if (WeaponRef.Succeeded())
+	if (WeaponClassRef.Succeeded())
 	{
-		WeaponClass = WeaponRef.Class;
+		WeaponClass = WeaponClassRef.Class;
 	}
 }
 
@@ -139,9 +140,10 @@ void ABZPlayerCharacter::BeginPlay()
 	
 	if (WeaponClass)
 	{
-		Weapon = GetWorld()->SpawnActor<AActor>(WeaponClass);
-		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-	}
+		Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(WeaponClass);
+		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+								  TEXT("WeaponSocket"));
+	}	
 }
 
 // Called every frame
@@ -192,21 +194,21 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerRunStart
 		);
-		
+
 		EnhancedInputComponent->BindAction(
 			RunAction,
 			ETriggerEvent::Completed,
 			this,
 			&ABZPlayerCharacter::PlayerRunEnd
 		);
-		
+
 		EnhancedInputComponent->BindAction(
 			LeftAttackAction,
 			ETriggerEvent::Started,
 			this,
 			&ABZPlayerCharacter::PlayerLeftAttack
 		);
-		
+
 		EnhancedInputComponent->BindAction(
 			RightAttackAction,
 			ETriggerEvent::Started,
@@ -219,16 +221,16 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 {
 	FVector2D Movement = Value.Get<FVector2D>().GetSafeNormal();
-	
+
 	FRotator Rotation = GetControlRotation();
 	FRotator YawRotation(0.0f, Rotation.Yaw, 0.0f);
 
 	FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	FVector RightVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-	
+
 	float BackwardScale = (Movement.Y < 0.0f) ? 0.5f : 1.0f;
 	FVector2D ScaleMovement = Movement * BackwardScale;
-	
+
 	AddMovementInput(ForwardVector, ScaleMovement.Y);
 	AddMovementInput(RightVector, ScaleMovement.X);
 }
@@ -257,10 +259,10 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 	if (!CombatComponent->GetIsAttacking())
 	{
 		CombatComponent->StartComboAttack();
-		
+
 		return;
 	}
-	
+
 	CombatComponent->SetAttackInput(EBZAttackInputType::Left);
 }
 

@@ -8,6 +8,8 @@
 #include "InputMappingContext.h"
 #include "BZPlayerCharacter.generated.h"
 
+class ABZWeaponActor;
+
 UCLASS()
 class BLADEZ_API ABZPlayerCharacter : public ACharacter
 {
@@ -19,6 +21,8 @@ public:
 	
 	// 콤보 체크 실행 함수.
 	void StartComboCheck();
+	
+	FORCEINLINE ABZWeaponActor* GetWeapon() const { return Weapon; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -30,7 +34,6 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 private:
 	void PlayerMove(const FInputActionValue& Value);
 	
@@ -78,10 +81,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> RightAttackAction;
 	
-	// 무기 (대걸레).
-	UPROPERTY(EditAnywhere, Category = Weapon)
-	TSubclassOf<AActor> WeaponClass;
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	TSubclassOf<ABZWeaponActor> WeaponClass;
 	
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TObjectPtr<AActor> Weapon;
+	TObjectPtr<ABZWeaponActor> Weapon;
 };
