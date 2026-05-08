@@ -21,6 +21,7 @@ ABZWeaponActor::ABZWeaponActor()
 		RootComponent = WeaponMesh;
 	}
 	
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABZWeaponActor::StartTrace()
