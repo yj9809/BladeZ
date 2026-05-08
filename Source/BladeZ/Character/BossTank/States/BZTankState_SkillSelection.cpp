@@ -43,9 +43,9 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 	TArray<UBZTankStateBase*> AvailableStates;
 
 	// 타겟과의 거리에 따라 후보 상태를 다르게 구성
-	const bool bIsCloseToTarget = TankCharacter->DistanceToTarget <= 800.0f;
+	const bool bIsCloseToTarget = TankCharacter->DistanceToTarget <= 700.0f;
 
-	if (bIsCloseToTarget)
+	if (TankCharacter->DistanceToTarget < TankCharacter->AttackRange)
 	{
 		BuildCloseSkillCandidates(AvailableStates);
 	}
@@ -90,7 +90,6 @@ void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateB
 	{
 		AddStateIfValid(States, TankCharacter->AttackStateInstance);
 	}
-
 }
 
 void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const
