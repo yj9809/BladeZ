@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZPlayerCharacter.h"
@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Weapon/BZWeaponActor.h"
+#include "Component/BZCharacterStatComponent.h"
 
 
 // Sets default values
@@ -131,6 +132,11 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		WeaponClass = WeaponClassRef.Class;
 	}
+
+	// 빈 Stat 만들기
+	// Stat이 붙는 과정에서 이 Actor의 GetStatRowName을 호출해 스스로 Init하므로,
+	// 초기화는 더 안해줘도 됨
+	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
 void ABZPlayerCharacter::StartComboCheck()
@@ -244,6 +250,14 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
+void ABZPlayerCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// 만약 죽음 처리 함수를 만든다면 아래와 같이 추가하세요.
+	//Stat->OnHpZero.AddUObject(this, &ABZPlayerCharacter::SetDead);
+}
+
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 {
 	FVector2D Movement = Value.Get<FVector2D>().GetSafeNormal();
@@ -295,4 +309,9 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 {
 	CombatComponent->SetAttackInput(EBZAttackInputType::Right);
+}
+
+FName ABZPlayerCharacter::GetStatRowName() const
+{
+	return StatRowName;
 }
