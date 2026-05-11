@@ -4,7 +4,7 @@
 #include "BZCharacterStatComponent.h"
 
 #include "GameData/StatDataTableManager.h"
-#include "Character/Player/BZPlayerCharacter.h"
+#include "Interface/BZCharacterStatProvider.h"
 
 // Sets default values for this component's properties
 UBZCharacterStatComponent::UBZCharacterStatComponent()
