@@ -20,10 +20,11 @@ public class BladeZ : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"Niagara"
+			"Niagara",
+			"GameplayCameras",
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { "EngineCameras" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"BladeZ",

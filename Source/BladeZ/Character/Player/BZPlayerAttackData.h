@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BZCameraShakeData.h"
 #include "EBZAttackInput.h"
 #include "Engine/DataAsset.h"
 #include "BZPlayerAttackData.generated.h"
@@ -34,8 +33,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
 	int32 depth = 0;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
-	FBZCameraShakeData CameraShakeData;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CameraShake)
+	float Amplitude;
 };
 
 /**

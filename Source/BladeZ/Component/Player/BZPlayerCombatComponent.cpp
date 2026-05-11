@@ -122,9 +122,10 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
 	
 	if (CurrentData)
 	{
-		OnCameraShake.ExecuteIfBound(CurrentData->CameraShakeData);
-		PLAYER_LOG(Log, "Enemy Hit");
+		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
 	}
+	
+	
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)

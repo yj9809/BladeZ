@@ -8,7 +8,7 @@
 #include "Character/Player/EBZAttackInput.h"
 #include "BZPlayerCombatComponent.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnCameraShake, const FBZCameraShakeData& /* Camera Shake Data */)
+DECLARE_DELEGATE_OneParam(FOnCameraShake, float /* Camera Shake Amplitude */)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLADEZ_API UBZPlayerCombatComponent : public UActorComponent

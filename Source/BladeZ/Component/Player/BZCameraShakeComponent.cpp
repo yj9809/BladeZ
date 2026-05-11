@@ -3,6 +3,9 @@
 
 #include "Component/Player//BZCameraShakeComponent.h"
 
+#include "Common/BZLog.h"
+#include "GameFramework/Character.h"
+
 // Sets default values for this component's properties
 UBZCameraShakeComponent::UBZCameraShakeComponent()
 {
@@ -11,6 +14,13 @@ UBZCameraShakeComponent::UBZCameraShakeComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+	static ConstructorHelpers::FClassFinder<UCameraShakeBase> CameraShakeClassRef(
+		TEXT("/Game/BZ/Character/Player/BP_CameraShake.BP_CameraShake_C")
+	);
+	if (CameraShakeClassRef.Succeeded())
+	{
+		CameraShakeClass = CameraShakeClassRef.Class;
+	}
 }
 
 
@@ -32,12 +42,18 @@ void UBZCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	// ...
 }
 
-void UBZCameraShakeComponent::OnCameraShake(const FBZCameraShakeData& CameraShakeData)
+void UBZCameraShakeComponent::OnCameraShake(float Amplitude)
 {
-	
-}
+	if (!CameraShakeClass)
+	{
+		return;
+	}
 
-void UBZCameraShakeComponent::OnCameraShake(float Amplitude, float Frequency, float ShakeTime)
-{
+	PLAYER_LOG(Warning, "Camera Shake Triggered with Amplitude: %f", Amplitude);
+	
+	APlayerController* PlayerController =
+		Cast<APlayerController>(Cast<ACharacter>(GetOwner())->GetController());
+	
+	PlayerController->ClientStartCameraShake(CameraShakeClass, Amplitude);
 }
 
