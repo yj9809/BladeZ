@@ -29,7 +29,7 @@ public:
 
 	// 보스가 집을 때 호출
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
-	void Grab(USceneComponent* ParentComponent, FName SocketName);
+	void Grab(USceneComponent* GrabParentComponent, FName SocketName);
 
 	// 보스가 던질 때 호출
 	UFUNCTION(BlueprintCallable, Category = "Interaction")

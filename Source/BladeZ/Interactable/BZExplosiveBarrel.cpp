@@ -45,9 +45,9 @@ void ABZExplosiveBarrel::ReceiveDamage_Implementation(float DamageAmount, AActor
 	}
 }
 
-void ABZExplosiveBarrel::Grab(USceneComponent* ParentComponent, FName SocketName)
+void ABZExplosiveBarrel::Grab(USceneComponent* GrabParentComponent, FName SocketName)
 {
-	if (bHasExploded || !ParentComponent) return;
+	if (bHasExploded || !GrabParentComponent) return;
 
 	bIsGrabbed = true;
 	bIsThrown = false;
@@ -57,7 +57,7 @@ void ABZExplosiveBarrel::Grab(USceneComponent* ParentComponent, FName SocketName
 	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// 컴포넌트에 부착
-	AttachToComponent(ParentComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
+	AttachToComponent(GrabParentComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
 }
 
 void ABZExplosiveBarrel::Throw(const FVector& ThrowVelocity)
