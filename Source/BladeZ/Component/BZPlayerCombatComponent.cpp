@@ -22,7 +22,6 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	}
 	
 	// 공격 애니메이션 몽타주 등록.
-	// Todo: 플레이어 공격 애니메이션 몽타주 만들고 등록하기.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackMontageRef(
 		TEXT("/Game/BZ/Character/Player/Animation/AM_Attack.AM_Attack")
 	);

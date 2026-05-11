@@ -97,7 +97,6 @@ void ABZWeaponActor::PerformTrace()
 		if (HitActor && !HitActors.Contains(HitActor))
 		{
 			HitActors.Add(HitActor);
-			PLAYER_LOG(Warning, "Hit Actor: %s", *HitActor->GetName());
 		}
 	}
 }
