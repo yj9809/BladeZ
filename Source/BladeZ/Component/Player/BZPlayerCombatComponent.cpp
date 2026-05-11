@@ -3,6 +3,7 @@
 
 #include "BZPlayerCombatComponent.h"
 
+#include "Common/BZLog.h"
 #include "GameFramework/Character.h"
 
 // Sets default values for this component's properties
@@ -104,6 +105,26 @@ void UBZPlayerCombatComponent::CheckCombo()
 		CurrentComboName = *SectionName;
 	}
 	bHasNextInput = false;
+}
+
+// Todo: 데미지 처리를 위해 AActor로 받아서 Component로 처리할지 Component로 받을지 고민해봐야함.
+// 일단 AActor로 처리.
+void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
+{
+	// 현재 진행중인 콤보의 데이터를 바로 얻기 위해 FindByPredicate를 사용하여,
+	// 람다로 현재 진행중인 콤보 이름과 동일한 데이터를 찾아서 가져오도록 구현.
+	const FBZAttackData* CurrentData = AttackData->GetAttackDataArray().FindByPredicate(
+		[this](const FBZAttackData& Data)
+		{
+			return Data.CurrentSectionName == CurrentComboName;
+		}
+	);
+	
+	if (CurrentData)
+	{
+		OnCameraShake.ExecuteIfBound(CurrentData->CameraShakeData);
+		PLAYER_LOG(Log, "Enemy Hit");
+	}
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)

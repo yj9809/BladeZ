@@ -8,6 +8,8 @@
 #include "Character/Player/EBZAttackInput.h"
 #include "BZPlayerCombatComponent.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnCameraShake, const FBZCameraShakeData& /* Camera Shake Data */)
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLADEZ_API UBZPlayerCombatComponent : public UActorComponent
 {
@@ -34,9 +36,17 @@ public:
 	// 콤보 확인용 함수.
 	void CheckCombo();
 	
+	// 실제 데미지 처리용 함수.
+	void OnAttackHit(const AActor* Enemy);
+	
 	// 몽타주 재생 종료 시 초기화 함수.
 	UFUNCTION()
 	void OnAttackEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+public:
+	// 카메라 셰이크 알림을 위한 델리게이트.
+	FOnCameraShake OnCameraShake;
+	
 private:
 	// 컴포넌트를 가지고 있는 캐릭터.
 	UPROPERTY(VisibleAnywhere, Category = Combat)

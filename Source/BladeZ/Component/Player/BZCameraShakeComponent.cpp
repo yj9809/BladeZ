@@ -32,3 +32,12 @@ void UBZCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	// ...
 }
 
+void UBZCameraShakeComponent::OnCameraShake(const FBZCameraShakeData& CameraShakeData)
+{
+	
+}
+
+void UBZCameraShakeComponent::OnCameraShake(float Amplitude, float Frequency, float ShakeTime)
+{
+}
+

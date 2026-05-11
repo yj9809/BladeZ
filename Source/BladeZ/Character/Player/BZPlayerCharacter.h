@@ -8,6 +8,8 @@
 #include "InputMappingContext.h"
 #include "BZPlayerCharacter.generated.h"
 
+DECLARE_DELEGATE_ThreeParams(FOnBossAttack, float, float, float)
+
 class ABZWeaponActor;
 
 UCLASS()
@@ -46,6 +48,11 @@ private:
 	void PlayerLeftAttack(const FInputActionValue& Value);
 	
 	void PlayerRightAttack(const FInputActionValue& Value);
+	
+public:
+	// 보스가 사용할 카메라 쉐이크 델리게이트.
+	FOnBossAttack OnBossAttack;
+	
 private:
 	// 카메라 세팅.
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -58,6 +65,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category=Combat)
 	TObjectPtr<class UBZPlayerCombatComponent> CombatComponent;
 
+	// 카메라 쉐이크 컴포넌트 세팅.
+	UPROPERTY(VisibleAnywhere, Category = CameraShake)
+	TObjectPtr<class UBZCameraShakeComponent> CameraShakeComponent;
+	
 	// 플레이어 입력 매핑.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -81,9 +92,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> RightAttackAction;
 	
+	// 웨폰 세팅.
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TSubclassOf<ABZWeaponActor> WeaponClass;
 	
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TObjectPtr<ABZWeaponActor> Weapon;
+	TObjectPtr<ABZWeaponActor> Weapon;	
 };

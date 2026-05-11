@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "BZWeaponActor.generated.h"
 
+DECLARE_DELEGATE_OneParam(FOnAttackHit, const AActor* Enemy)
+
 UCLASS()
 class BLADEZ_API ABZWeaponActor : public AActor
 {
@@ -29,6 +31,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+public:
+	// Trace 감지 시 공격 데미지 처리를 할 델리게이트.
+	FOnAttackHit OnAttackHit;
+	
 private:
 	void PerformTrace();
 	

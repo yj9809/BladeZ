@@ -8,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Common/BZLog.h"
+#include "Component/Player/BZCameraShakeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Weapon/BZWeaponActor.h"
@@ -36,7 +37,11 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
+	// Combat Component 생성.
 	CombatComponent = CreateDefaultSubobject<UBZPlayerCombatComponent>(TEXT("CombatComponent"));
+	
+	// Camera Shake Component 생성.
+	CameraShakeComponent = CreateDefaultSubobject<UBZCameraShakeComponent>(TEXT("CameraShakeComponent"));
 
 	// 메시의 위치와 회전을 조정하여 캐릭터가 올바르게 보이도록 설정.
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
@@ -144,6 +149,27 @@ void ABZPlayerCharacter::BeginPlay()
 		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 								  TEXT("WeaponSocket"));
 	}	
+	
+	if (CombatComponent && CameraShakeComponent)
+	{
+		CombatComponent->OnCameraShake.BindUObject(
+			CameraShakeComponent,
+			&UBZCameraShakeComponent::OnCameraShake
+		);
+		
+		OnBossAttack.BindUObject(
+			CameraShakeComponent,
+			&UBZCameraShakeComponent::OnCameraShake
+		);
+	}
+	
+	if (Weapon)
+	{
+		Weapon->OnAttackHit.BindUObject(
+			CombatComponent,
+			&UBZPlayerCombatComponent::OnAttackHit
+		);
+	}
 }
 
 // Called every frame

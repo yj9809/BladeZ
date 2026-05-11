@@ -97,6 +97,7 @@ void ABZWeaponActor::PerformTrace()
 		if (HitActor && !HitActors.Contains(HitActor))
 		{
 			HitActors.Add(HitActor);
+			OnAttackHit.ExecuteIfBound(HitActor);
 		}
 	}
 }

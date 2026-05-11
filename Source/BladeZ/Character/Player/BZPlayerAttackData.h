@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BZCameraShakeData.h"
 #include "EBZAttackInput.h"
 #include "Engine/DataAsset.h"
 #include "BZPlayerAttackData.generated.h"
@@ -12,6 +13,7 @@ struct FBZAttackData
 {
 	GENERATED_BODY()
 	
+public:
 	// 현재 재생중인 섹션.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
 	FName CurrentSectionName;
@@ -31,6 +33,9 @@ struct FBZAttackData
 	// 깊이를 알기 위한 값.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
 	int32 depth = 0;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack)
+	FBZCameraShakeData CameraShakeData;
 };
 
 /**
