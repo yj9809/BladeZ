@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Character/BossTank/BZTankCharacter.h"
+#include "Character/Enemy/BossTank/BZTankCharacter.h" // Corrected include path
 #include "BZTankAnimInstance.generated.h"
 
 /**
@@ -15,6 +15,7 @@ class BLADEZ_API UBZTankAnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	
+public:
 	// 초기화 완료 시 실행되는 함수.
 	virtual void NativeInitializeAnimation() override;
 	// 애니메이션 실행 시 매 프레임마다 실행되는 함수.

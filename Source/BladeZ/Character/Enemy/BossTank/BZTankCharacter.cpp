@@ -3,9 +3,9 @@
 
 #include "BZTankCharacter.h"
 
-#include "BladeZ/Character/BossTank/States/BZTankStateMachine.h"
-#include "BladeZ/Character/BossTank/States/BZTankStateBase.h"
-#include "Component/BZCustomMoveTo.h"
+#include "BladeZ/Character/Enemy/BossTank/States/BZTankStateMachine.h"
+#include "BladeZ/Character/Enemy/BossTank/States/BZTankStateBase.h"
+#include "Component/Boss/BZCustomMoveTo.h"
 
 
 // Sets default values

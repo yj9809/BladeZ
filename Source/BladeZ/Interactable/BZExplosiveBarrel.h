@@ -10,7 +10,7 @@
 /**
  * 평소에 맵에 배치되어 있다가 보스가 집어서 던질 수 있는 폭발용 드럼통
  */
-UCLASS()
+UCLASS(meta=(BossPickable))
 class BLADEZ_API ABZExplosiveBarrel : public AActor, public IBZDamageable
 {
 	GENERATED_BODY()

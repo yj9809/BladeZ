@@ -4,8 +4,8 @@
 #include "BZTankState_Roar.h"
 
 #include "BZTankStateMachine.h"
-#include "Character/BossTank/BZTankCharacter.h"
-#include "Character/BossTank/Component/BZCustomMoveTo.h"
+#include "Character/Enemy/BossTank/BZTankCharacter.h"
+#include "Component/Boss/BZCustomMoveTo.h"
 
 void UBZTankState_Roar::OnEnter(AActor* Owner)
 {

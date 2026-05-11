@@ -36,7 +36,7 @@ public:
 	}
 
 	// 타겟을 설정하는 함수
-	FORCEINLINE void SetMoveTarget(AActor* InTarget, float InNearDistance = 0.0f)
+	FORCEINLINE void SetMoveTarget(AActor* InTarget, float InNearDistance = 100.0f)
 	{
 		Target = InTarget;
 		NearDistance = InNearDistance;

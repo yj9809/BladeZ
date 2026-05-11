@@ -4,7 +4,7 @@
 #include "BZTankState_Idle.h"
 
 #include "BZTankStateMachine.h"
-#include "Character/BossTank/BZTankCharacter.h"
+#include "Character/Enemy/BossTank/BZTankCharacter.h"
 
 void UBZTankState_Idle::OnEnter(AActor* Owner)
 {

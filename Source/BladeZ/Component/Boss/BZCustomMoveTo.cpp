@@ -8,8 +8,7 @@
 #include "NavigationSystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Navigation/PathFollowingComponent.h"
-#include "Character/BossTank/BZTankCharacter.h"
-#include "Common/BZLog.h"
+#include "Character/Enemy/BossTank/BZTankCharacter.h"
 
 
 // Sets default values for this component's properties

@@ -4,10 +4,8 @@
 #include "BZTankState_SkillSelection.h"
 
 #include "BZTankStateMachine.h"
-#include "BZTankState_JumpTo.h"
-#include "Character/BossTank/BZTankCharacter.h"
-#include "NavigationSystem.h"
-#include "Character/BossTank/Component/BZCustomMoveTo.h"
+#include "Character/Enemy/BossTank/BZTankCharacter.h"
+#include "Component/Boss/BZCustomMoveTo.h"
 
 void UBZTankState_SkillSelection::OnEnter(AActor* Owner)
 {

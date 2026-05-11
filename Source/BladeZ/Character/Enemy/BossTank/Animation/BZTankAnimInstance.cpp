@@ -3,7 +3,7 @@
 
 #include "BZTankAnimInstance.h"
 
-#include "GameFramework/Character.h"
+#include "Character/Enemy/BossTank/BZTankCharacter.h"
 
 void UBZTankAnimInstance::NativeInitializeAnimation()
 {

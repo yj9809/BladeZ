@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Character/BossTank/States/BZTankStateBase.h"
+#include "BZTankStateBase.h"
 #include "BZTankState_Roar.generated.h"
 
 /**
