@@ -21,6 +21,9 @@ ABZExplosiveBarrel::ABZExplosiveBarrel()
 	Mesh->OnComponentHit.AddDynamic(this, &ABZExplosiveBarrel::OnHit);
 
 	CurrentHealth = MaxHealth;
+
+	// Add the "BossPickable" tag to this actor
+	Tags.Add(FName("BossPickable"));
 }
 
 void ABZExplosiveBarrel::BeginPlay()

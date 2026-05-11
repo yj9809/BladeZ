@@ -73,6 +73,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> JumpToStateClass;
 
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> ThrowObjectStateClass;
+
 
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
@@ -103,6 +106,8 @@ public:
 	UPROPERTY()
 	class UBZTankStateBase* JumpToStateInstance;
 
+	UPROPERTY()
+	class UBZTankStateBase* ThrowObjectStateInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	AActor* TargetActor;
@@ -120,6 +125,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* JumpMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* ThrowObjectMontage;
+
 private:
 	void UpdateTimers(float DeltaTime);
 
@@ -133,7 +141,7 @@ private:
 
 public:
 	// State에서 쓰일 변수들
-	float AttackRange = 500.0f;
+	float AttackRange = 300.0f;
 	float DistanceToTarget = 1000.0f;
 
 	// 각종 쿨타임 변수
@@ -142,4 +150,7 @@ public:
 	
 	UPROPERTY()
 	FSkillCooldown JumpToCooldown{3.0f};
+	
+	UPROPERTY(VisibleAnywhere)
+	FName BossName = TEXT("BossTank");
 };

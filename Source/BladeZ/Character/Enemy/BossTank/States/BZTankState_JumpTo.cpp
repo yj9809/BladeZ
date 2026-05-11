@@ -31,6 +31,10 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		return;
 	}
 
+	// 최소한의 착지 판정 (시간 경과 또는 바닥에 닿음)
+	const UCharacterMovementComponent* MovementComp = TankCharacter->GetCharacterMovement();
+	bool bIsGrounded = MovementComp && MovementComp->IsMovingOnGround();
+
 	if (TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage) ==
 		"Floating")
 	{
@@ -43,21 +47,17 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 	ElapsedTime += DeltaTime;
 
 	// 임시 내려짹기 타이밍
-	if (ElapsedTime > 1.0f)
+	if (ElapsedTime > 1.5f)
 	{
 		TankCharacter->GetCharacterMovement()->GravityScale = 5.0f;
+		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
 	}
-
-	// 최소한의 착지 판정 (시간 경과 또는 바닥에 닿음)
-	const UCharacterMovementComponent* MovementComp = TankCharacter->GetCharacterMovement();
-	bool bIsGrounded = MovementComp && MovementComp->IsMovingOnGround();
 
 	if (bIsGrounded &&
 		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage)
 		== "Loop")
 	{
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
-		
 	}
 
 	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
@@ -82,6 +82,5 @@ void UBZTankState_JumpTo::FinishJump()
 
 void UBZTankState_JumpTo::OnJumpMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	BOSS_LOG(Log, "JumpEnded");
 	FinishJump();
 }

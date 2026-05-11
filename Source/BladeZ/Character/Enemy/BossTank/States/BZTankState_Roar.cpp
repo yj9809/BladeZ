@@ -48,5 +48,5 @@ void UBZTankState_Roar::OnExit(AActor* Owner)
 
 void UBZTankState_Roar::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
+	TankCharacter->StateMachine->ChangeState(TankCharacter->ThrowObjectStateInstance);
 }

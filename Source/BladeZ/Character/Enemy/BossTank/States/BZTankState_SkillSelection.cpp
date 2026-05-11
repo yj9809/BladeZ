@@ -96,9 +96,9 @@ void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBas
 
 	// 멀 때
 	AddStateIfValid(States, TankCharacter->SprintStateInstance);
+	AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
 	if (TankCharacter->JumpToCooldown.IsTimeout())
 	{
 		AddStateIfValid(States, TankCharacter->JumpToStateInstance);
 	}
-	// AddStateIfValid(States, TankCharacter->RoarStateInstance);
 }

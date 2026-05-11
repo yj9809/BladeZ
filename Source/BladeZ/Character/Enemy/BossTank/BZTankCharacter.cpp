@@ -68,6 +68,11 @@ void ABZTankCharacter::BeginPlay()
 	{
 		JumpToStateInstance = NewObject<UBZTankStateBase>(this, JumpToStateClass);
 	}
+	
+	if (ThrowObjectStateClass)
+	{
+		ThrowObjectStateInstance = NewObject<UBZTankStateBase>(this, ThrowObjectStateClass);
+	}
 
 	// 초기 상태 설정 (예: Idle로 시작)
 	if (StateMachine && IdleStateInstance)
