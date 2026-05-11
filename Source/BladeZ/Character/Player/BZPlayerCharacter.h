@@ -9,7 +9,7 @@
 #include "Interface/BZCharacterStatProvider.h"
 #include "BZPlayerCharacter.generated.h"
 
-DECLARE_DELEGATE_ThreeParams(FOnBossAttack, float, float, float)
+DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 
 class ABZWeaponActor;
 
