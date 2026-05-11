@@ -14,14 +14,15 @@ struct FBZCharacterStat : public FTableRowBase
 public:
 	FBZCharacterStat()
 		: MaxHp(0.0f),
-		AttackDamage(0.0f)
+		BaseAttackPower(0.0f)
 	{
 	}
-
+	
+	// 자동으로 생성되는 RowName에 Character의 이름을 넣는다.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stat)
 	float MaxHp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Stat)
-	float AttackDamage;
+	float BaseAttackPower;
 };
