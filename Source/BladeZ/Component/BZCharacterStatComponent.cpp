@@ -40,9 +40,10 @@ void UBZCharacterStatComponent::BeginPlay()
 
 void UBZCharacterStatComponent::InitializeStat()
 {
-	const ABZPlayerCharacter* OwnerCharacter = Cast<ABZPlayerCharacter>(GetOwner());
+	const IBZCharacterStatProvider* RowNameProvider 
+		= Cast<IBZCharacterStatProvider>(GetOwner());
 	const UStatDataTableManager* StatManager = UStatDataTableManager::Get(this);
-	const FBZCharacterStat* Stat = StatManager->GetRow(OwnerCharacter->GetPlayerName());
+	const FBZCharacterStat* Stat = StatManager->GetRow(RowNameProvider->GetStatRowName());
 	
 	ensureAlways(Stat);
 
