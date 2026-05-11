@@ -3,6 +3,9 @@
 
 #include "BZCharacterStatComponent.h"
 
+#include "GameData/StatDataTableManager.h"
+#include "Interface/BZCharacterStatProvider.h"
+
 // Sets default values for this component's properties
 UBZCharacterStatComponent::UBZCharacterStatComponent()
 {
@@ -10,37 +13,64 @@ UBZCharacterStatComponent::UBZCharacterStatComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
+	// InitializeComponent 함수 호출을 위해 true로 설정.
+	bWantsInitializeComponent = true;
+
+	// Stat이 비어있을 경우를 대비해 기본값 설정.
 	MaxHp = 200.0f;
 	CurrentHp = MaxHp;
+	BaseAttackPower = 0.0f;
 }
 
-
-// Called when the game starts
-void UBZCharacterStatComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// 게임이 시작되면 최대 체력에서 시작하도록 설정.
-	SetHp(MaxHp);
-}
-
-void UBZCharacterStatComponent::SetHp(float NewHp)
+void UBZCharacterStatComponent::SetHp(float InNewHp)
 {
 	// 현재 체력 값 갱신.
-	CurrentHp = FMath::Clamp<float>(NewHp, 0.0f, MaxHp);
+	CurrentHp = FMath::Clamp<float>(InNewHp, 0.0f, MaxHp);
 
 	// 체력 변경 이벤트 발행.
 	OnHpChanged.Broadcast(CurrentHp);
 }
 
-float UBZCharacterStatComponent::ApplyDamage(float InDamage)
+void UBZCharacterStatComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitializeStat();
+}
+
+void UBZCharacterStatComponent::InitializeStat()
+{
+	const IBZCharacterStatProvider* RowNameProvider 
+		= Cast<IBZCharacterStatProvider>(GetOwner());
+	const UStatDataTableManager* StatManager = UStatDataTableManager::Get(this);
+	const FBZCharacterStat* Stat = StatManager->GetRow(RowNameProvider->GetStatRowName());
+	
+	ensureAlways(Stat);
+
+	SetStat(*Stat);
+}
+
+void UBZCharacterStatComponent::SetStat(const FBZCharacterStat& InStat)
+{
+	MaxHp = InStat.MaxHp;
+	BaseAttackPower = InStat.BaseAttackPower;
+
+	// 이후 Stat 항목이 추가되면 여기에 추가.
+}
+
+
+float UBZCharacterStatComponent::ApplyDamage(float InAdditiveDamage)
 {
 	// 변경 여부를 확인하기 위해 대미지 처리 전 값 저장.
 	const float PrevHp = CurrentHp;
 
 	// 대미지 값 가져오기.
 	const float ActualDamage
-		= FMath::Clamp<float>(InDamage, 0.0f, MaxHp);
+		= FMath::Clamp<float>(
+			BaseAttackPower + InAdditiveDamage,
+			0.0f,
+			MaxHp
+		);
 
 	// 대미지 처리.
 	SetHp(PrevHp - ActualDamage);
