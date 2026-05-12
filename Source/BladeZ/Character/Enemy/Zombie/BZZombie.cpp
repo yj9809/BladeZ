@@ -17,6 +17,8 @@ ABZZombie::ABZZombie()
 	CurrentState = EZombieState::Idle;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AAIController::StaticClass();
+	
+	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
 void ABZZombie::BeginPlay()
@@ -36,13 +38,25 @@ void ABZZombie::BeginPlay()
 	SetZombieState(IsValid(TargetActor) ? EZombieState::Idle : EZombieState::Inactive);
 }
 
-float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+void ABZZombie::PostInitializeComponents()
 {
-	UE_LOG(LogTemp, Log, TEXT("TestTakeDamage"));
-	SetZombieState(EZombieState::Dead);
+	Super::PostInitializeComponents();
 	
-	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	Stat->OnHpZero.AddUObject(this, &ABZZombie::OnHpZero);
+}
+
+void ABZZombie::OnHpZero()
+{
+	SetZombieState(EZombieState::Dead);
+}
+
+float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+                            class AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	Stat->ApplyDamage();
+
+	return DamageAmount;
 }
 
 void ABZZombie::Tick(float DeltaTime)
@@ -367,10 +381,15 @@ void ABZZombie::PerformAttackTrace()
 
 		UGameplayStatics::ApplyDamage(
 			HitActor,
-			AttackDamage,
+			 Stat->GetBaseAttackPower(),
 			nullptr,
 			this,
 			nullptr
 		);
 	}
+}
+
+FName ABZZombie::GetStatRowName() const
+{
+	return StatRowName;
 }

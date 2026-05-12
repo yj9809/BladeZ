@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interface/BZStatRowNameProvider.h"
+#include "Component/BZCharacterStatComponent.h"
 #include "BZZombie.generated.h"
 
 UENUM(BlueprintType)
@@ -15,7 +17,7 @@ enum class EZombieState : uint8
 };
 
 UCLASS()
-class BLADEZ_API ABZZombie : public ACharacter
+class BLADEZ_API ABZZombie : public ACharacter, public IBZStatRowNameProvider
 {
 	GENERATED_BODY()
 
@@ -26,6 +28,11 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	
+	virtual void PostInitializeComponents() override;
+	
+	void OnHpZero();
+	
 	virtual float TakeDamage(float DamageAmount,
 		struct FDamageEvent const& DamageEvent,
 		class AController* EventInstigator,
@@ -41,7 +48,7 @@ public:
 
 	//Setter
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
-	void SetZombieState(EZombieState NewState);
+	void SetZombieState(EZombieState NewState = EZombieState::Dead);
 
 	//Getter
 	UFUNCTION(BlueprintPure, Category = "Zombie|FSM")
@@ -62,6 +69,8 @@ private:
 	//거리 구하는 함수
 	float GetDistanceToTarget2D() const;
 	void PerformAttackTrace();
+	
+	FName GetStatRowName() const override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zombie|FSM")
@@ -130,6 +139,13 @@ protected:
 	FColor AttackTraceBlockedColor = FColor::Blue;
 
 private:
+	//스탯 컴포넌트
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+	TObjectPtr<class UBZCharacterStatComponent> Stat;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Zombie|Data")
+	FName StatRowName = TEXT("Zombie");
+	
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<AActor>> AttackHitActors;
 };
