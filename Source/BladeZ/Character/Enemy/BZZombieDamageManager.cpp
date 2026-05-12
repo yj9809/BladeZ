@@ -6,8 +6,6 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogZombieCrowdAttack, Log, All);
-
 ABZZombieDamageManager::ABZZombieDamageManager()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -35,7 +33,6 @@ void ABZZombieDamageManager::BeginPlay()
         NiagaraComp->SetVariableObject(CallbackUserParameterName, this);
     }
 
-    UE_LOG(LogZombieCrowdAttack, Log, TEXT("ZombieCrowdAttackManager BeginPlay"));
 }
 
 void ABZZombieDamageManager::ReceiveParticleData_Implementation(
@@ -111,15 +108,6 @@ void ABZZombieDamageManager::ReceiveParticleData_Implementation(
             FacingDirection
         );
 
-        UE_LOG(
-            LogZombieCrowdAttack,
-            Log,
-            TEXT("[Attack Request] ZombieID=%d Location=%s Distance=%.1f"),
-            ZombieID,
-            *ZombieLocation.ToString(),
-            FMath::Sqrt(DistanceToPlayerSq)
-        );
-
         AttackRequestCount++;
 
         if (AttackRequestCount >= MaxAttackRequestsPerTick)
@@ -133,7 +121,6 @@ bool ABZZombieDamageManager::PerformAttackSphereTrace(int32 ZombieID)
 {
     if (!TargetCharacter || !GetWorld())
     {
-        UE_LOG(LogZombieCrowdAttack, Warning, TEXT("[SphereTrace] Failed: TargetCharacter or World is null"));
         return false;
     }
 
@@ -141,7 +128,6 @@ bool ABZZombieDamageManager::PerformAttackSphereTrace(int32 ZombieID)
 
     if (!Candidate)
     {
-        UE_LOG(LogZombieCrowdAttack, Warning, TEXT("[SphereTrace] Failed: No candidate. ZombieID=%d"), ZombieID);
         return false;
     }
 
@@ -200,16 +186,6 @@ bool ABZZombieDamageManager::PerformAttackSphereTrace(int32 ZombieID)
 
     if (!bAnyHit)
     {
-        UE_LOG(
-            LogZombieCrowdAttack,
-            Log,
-            TEXT("[SphereTrace] ZombieID=%d No Hit. Start=%s End=%s Radius=%.1f"),
-            ZombieID,
-            *TraceStart.ToString(),
-            *TraceEnd.ToString(),
-            TraceRadius
-        );
-
         DrawAttackDebug(TraceStart, TraceEnd, false, nullptr);
         return false;
     }
@@ -220,16 +196,6 @@ bool ABZZombieDamageManager::PerformAttackSphereTrace(int32 ZombieID)
 
         const bool bIsPlayer =
             HitActor == TargetCharacter;
-
-        UE_LOG(
-            LogZombieCrowdAttack,
-            Warning,
-            TEXT("[SphereTrace Hit] ZombieID=%d HitActor=%s IsPlayer=%s HitLocation=%s"),
-            ZombieID,
-            *GetNameSafe(HitActor),
-            bIsPlayer ? TEXT("TRUE") : TEXT("FALSE"),
-            *Hit.ImpactPoint.ToString()
-        );
 
         if (bIsPlayer)
         {
@@ -254,15 +220,6 @@ bool ABZZombieDamageManager::PerformAttackSphereTrace(int32 ZombieID)
             nullptr,
             this,
             nullptr
-        );
-
-        UE_LOG(
-            LogZombieCrowdAttack,
-            Error,
-            TEXT("[Player Damaged] ZombieID=%d Damage=%.1f Player=%s"),
-            ZombieID,
-            DamageAmount,
-            *GetNameSafe(TargetCharacter)
         );
 
         return true;
