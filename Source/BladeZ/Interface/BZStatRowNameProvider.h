@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "BZCharacterStatProvider.generated.h"
+#include "BZStatRowNameProvider.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UBZCharacterStatProvider : public UInterface
+class UBZStatRowNameProvider : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +16,7 @@ class UBZCharacterStatProvider : public UInterface
 /**
  * 
  */
-class BLADEZ_API IBZCharacterStatProvider
+class BLADEZ_API IBZStatRowNameProvider
 {
 	GENERATED_BODY()
 

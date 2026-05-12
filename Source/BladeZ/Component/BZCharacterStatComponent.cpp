@@ -4,7 +4,7 @@
 #include "BZCharacterStatComponent.h"
 
 #include "GameData/StatDataTableManager.h"
-#include "Interface/BZCharacterStatProvider.h"
+#include "Interface/BZStatRowNameProvider.h"
 
 // Sets default values for this component's properties
 UBZCharacterStatComponent::UBZCharacterStatComponent()
@@ -38,8 +38,8 @@ void UBZCharacterStatComponent::BeginPlay()
 
 void UBZCharacterStatComponent::InitializeStat()
 {
-	const IBZCharacterStatProvider* RowNameProvider 
-		= Cast<IBZCharacterStatProvider>(GetOwner());
+	const IBZStatRowNameProvider* RowNameProvider 
+		= Cast<IBZStatRowNameProvider>(GetOwner());
 	const UStatDataTableManager* StatManager = UStatDataTableManager::Get(this);
 	const FBZCharacterStat* Stat = StatManager->GetRow(RowNameProvider->GetStatRowName());
 	

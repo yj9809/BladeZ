@@ -6,7 +6,8 @@
 #include "GameFramework/Character.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
-#include "Interface/BZCharacterStatProvider.h"
+#include "Interface/BZStatRowNameProvider.h"
+#include "Interface/BZCharacterWidgetInterface.h"
 #include "BZPlayerCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
@@ -16,7 +17,8 @@ class ABZWeaponActor;
 UCLASS()
 class BLADEZ_API ABZPlayerCharacter 
 	: public ACharacter
-	, public IBZCharacterStatProvider
+	, public IBZStatRowNameProvider
+	, public IBZCharacterWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -117,8 +119,8 @@ private:
 	* 작성자: 강수연
 	* 작성일: 26.05.11
 	* 작성 사유: Stat Component 처리를 위해 추가.
+	* 스탯 컴포넌트.
 	*/
-	// 스탯 컴포넌트.
 	UPROPERTY(VisibleAnywhere, Category = Stat)
 	TObjectPtr<class UBZCharacterStatComponent> Stat;
 
@@ -130,4 +132,9 @@ private:
 	// IBZCharacterStatProvider을(를) 통해 상속됨
 	// StatComponent에 StatRowName을 넘겨, 스스로 초기화할 수 있도록 함.
 	FName GetStatRowName() const override;
+
+	// IBZCharacterWidgetInterface을(를) 통해 상속됨
+	// Widget이 캐릭터 Interface에 접근해,
+	// 캐릭터가 Delegate을 등록할 수 있도록 자신의 정보를 전달
+	void SetupCharacterWidget(UBZUserWidget* InUserWidget) override;
 };

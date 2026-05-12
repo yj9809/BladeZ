@@ -3,6 +3,7 @@
 
 #include "BZHpBarWidget.h"
 #include "Components/ProgressBar.h"
+#include "Interface/BZCharacterWidgetInterface.h"
 
 
 UBZHpBarWidget::UBZHpBarWidget(const FObjectInitializer& ObjectInitializer)
@@ -24,15 +25,14 @@ void UBZHpBarWidget::NativeConstruct()
 	// 값이 제대로 설정됐는지 확인.
 	ensureAlways(HpProgressBar);
 
-	// TODO: Interface 만들기
 	// 캐릭터(인터페이스)에 접근해서 델리게이트 등록이 가능하도록 
 	// 정보 전달.
-	//IABCharacterWidgetInterface* CharacterWidget
-	//	= Cast<IABCharacterWidgetInterface>(OwningActor);
-	//if (CharacterWidget)
-	//{
-	//	CharacterWidget->SetupCharacterWidget(this);
-	//}
+	IBZCharacterWidgetInterface* CharacterWidget
+		= Cast<IBZCharacterWidgetInterface>(OwningActor);
+	if (CharacterWidget)
+	{
+		CharacterWidget->SetupCharacterWidget(this);
+	}
 }
 
 
