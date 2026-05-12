@@ -8,7 +8,10 @@
 #include "Component/Boss/BZCustomMoveTo.h"
 
 #include "Component/BZCharacterStatComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/BZHpBarWidget.h"
+#include "GameFramework/DamageType.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -29,6 +32,61 @@ ABZTankCharacter::ABZTankCharacter()
 	* 초기화는 더 안해줘도 됨
 	*/
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
+}
+
+// EnableAttack function implementation (moved from header)
+void ABZTankCharacter::EnableAttack(bool bEnable, float AttackDamage)
+{
+	bIsAttackCollisionEnabled = bEnable;
+	AttackDamageValue = AttackDamage;
+
+	if (bEnable && GetMesh())
+	{
+		FVector StartLocation = GetMesh()->GetSocketLocation(FName("RHandAttackSocket"));
+		FVector EndLocation = StartLocation + GetActorForwardVector() * 100.0f; // Trace forward 100 units
+		float SphereRadius = 50.0f;
+
+		TArray<FHitResult> HitResults;
+		FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
+		TraceParams.bReturnPhysicalMaterial = false;
+		TraceParams.bTraceComplex = true;
+
+		bool bHit = GetWorld()->SweepMultiByChannel(
+			HitResults,
+			StartLocation,
+			EndLocation,
+			FQuat::Identity,
+			ECollisionChannel::ECC_Pawn,
+			FCollisionShape::MakeSphere(SphereRadius),
+			TraceParams
+		);
+
+		DrawDebugSphere(GetWorld(), StartLocation, SphereRadius, 12, FColor::Red, false, 0.5f);
+
+		if (bHit)
+		{
+			for (const FHitResult& HitResult : HitResults)
+			{
+				AActor* HitActor = HitResult.GetActor();
+				if (HitActor && HitActor != this)
+				{
+					UGameplayStatics::ApplyDamage(HitActor, AttackDamageValue, GetController(), this, UDamageType::StaticClass());
+				}
+			}
+		}
+	}
+}
+
+float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+                                   class AController* EventInstigator, AActor* DamageCauser)
+{
+	const float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if (Stat)
+	{
+		Stat->ApplyDamage(Damage);
+	}
+		
+	return Damage;
 }
 
 void ABZTankCharacter::PostInitializeComponents()
@@ -111,30 +169,6 @@ void ABZTankCharacter::Tick(float DeltaTime)
 		DistanceToTarget = FVector::Dist(this->GetActorLocation(), TargetActor->GetActorLocation());
 	}
 	UpdateTimers(DeltaTime);
-
-	if (bIsAttackCollisionEnabled)
-	{
-		
-		FVector StartLocation = GetMesh()->GetSocketLocation("RHandAttackSocket");
-
-		auto PerformSingleHandTrace = [&](const FVector& HandLocation)
-		{
-			FHitResult HitResult;
-			FCollisionQueryParams TraceParams;
-			TraceParams.AddIgnoredActor(this);
-
-			bool bHit = GetWorld()->SweepSingleByChannel(
-				HitResult,
-				StartLocation,
-				HandLocation,
-				FQuat::Identity,
-				ECollisionChannel::ECC_Visibility,
-				FCollisionShape::MakeSphere(20.0f),
-				TraceParams
-			);
-		};
-		DrawDebugSphere(GetWorld(), StartLocation, 50.0f, 10, FColor::Red, false, 0.5f);
-	}
 }
 
 void ABZTankCharacter::UpdateTimers(float DeltaTime)

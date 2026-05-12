@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/BZStatRowNameProvider.h"
 #include "Interface/BZCharacterWidgetInterface.h"
+
 #include "BZTankCharacter.generated.h"
 
 UCLASS()
@@ -35,8 +36,11 @@ public:
 	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
 	
 	// State에서 공격 콜리전 및 대미지 설정하는 함수
-	FORCEINLINE void EnableAttack(bool bEnable, float AttackDamage = 0.0f) {bIsAttackCollisionEnabled = bEnable; AttackDamageValue = AttackDamage;}
+	void EnableAttack(bool bEnable, float AttackDamage = 0.0f); // Declaration only
 
+	// 데미지 받는 함수
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	
 public:
 	/*
 	* 작성자: 강수연
