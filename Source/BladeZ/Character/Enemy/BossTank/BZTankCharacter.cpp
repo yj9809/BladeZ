@@ -25,6 +25,14 @@ ABZTankCharacter::ABZTankCharacter()
 	/*
 	* 작성자: 강수연
 	* 작성일: 26.05.12
+	* 작성 사유: BossHUDWidgetBind 처리를 위해 추가.
+	* PlayerPawn이 아니기 때문에, Tag를 통해 찾는 처리 필요.
+	*/
+	Tags.AddUnique(TEXT("Boss"));
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.12
 	* 작성 사유: Stat Component 처리를 위해 추가.
 	* 빈 Stat 만들기
 	* Stat이 붙는 과정에서 이 Actor의 GetStatRowName을 호출해 스스로 Init하므로,
