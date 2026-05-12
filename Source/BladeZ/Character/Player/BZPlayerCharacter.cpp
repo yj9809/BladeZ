@@ -324,25 +324,6 @@ FName ABZPlayerCharacter::GetStatRowName() const
 	return StatRowName;
 }
 
-void ABZPlayerCharacter::SetupCharacterWidget(UBZUserWidget* InUserWidget)
-{
-	// 의존성 주입(Dependency Injection).
-	// 캐릭터 입장: 누군가 이 함수를 호출하면서 UABUserWidget 정보를 전달.
-
-	UBZHpBarWidget* HpBarWidget = Cast<UBZHpBarWidget>(InUserWidget);
-	if (HpBarWidget)
-	{
-		// 체력 관련 값 설정.
-		HpBarWidget->SetMaxHp(Stat->GetMaxHp());
-		HpBarWidget->UpdateHpBar(Stat->GetCurrentHp());
-		// 델리게이트 등록.
-		Stat->OnHpChanged.AddUObject(
-			HpBarWidget,
-			&UBZHpBarWidget::UpdateHpBar
-		);
-	}
-}
-
 void ABZPlayerCharacter::SetupHUDWidget(UBZHUDWidget* InHUDWidget)
 {
 	if (InHUDWidget)

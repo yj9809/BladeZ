@@ -7,7 +7,6 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "Interface/BZStatRowNameProvider.h"
-#include "Interface/BZCharacterWidgetInterface.h"
 #include "Interface/BZCharacterHUD.h"
 #include "BZPlayerCharacter.generated.h"
 
@@ -19,7 +18,6 @@ UCLASS()
 class BLADEZ_API ABZPlayerCharacter 
 	: public ACharacter
 	, public IBZStatRowNameProvider
-	, public IBZCharacterWidgetInterface
 	, public IBZCharacterHUD
 {
 	GENERATED_BODY()
@@ -138,13 +136,6 @@ private:
 	* StatComponent에 StatRowName을 넘겨, 스스로 초기화할 수 있도록 함.
 	*/
 	FName GetStatRowName() const override;
-
-	/*
-	* IBZCharacterWidgetInterface을(를) 통해 상속됨
-	* Widget이 캐릭터 Interface에 접근해,
-	* 캐릭터가 Delegate을 등록할 수 있도록 자신의 정보를 전달
-	*/
-	void SetupCharacterWidget(UBZUserWidget* InUserWidget) override;
 
 	/*
 	* IBZCharacterHUD을(를) 통해 상속됨
