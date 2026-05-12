@@ -3,6 +3,7 @@
 #include "BZHUDWidget.h"
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHpBarWidget.h"
+#include "BZBossHUDWidget.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)

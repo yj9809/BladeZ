@@ -26,5 +26,5 @@ public:
 	* 캐릭터에서 HUD 위젯을 설정할 때 사용할 함수.
 	* UI 측에서 캐릭터에 자신의 정보(HUD 정보)를 전달.
 	*/
-	virtual void SetupHUDWidget(class UBZHUDWidget* InHUDWidget) = 0;
+	virtual void SetupHUDWidget(class UBZUserWidget* InWidget) = 0;
 };

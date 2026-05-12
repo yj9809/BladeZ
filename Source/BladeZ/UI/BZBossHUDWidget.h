@@ -4,23 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "BZUserWidget.h"
-#include "BZHUDWidget.generated.h"
+#include "BZBossHUDWidget.generated.h"
 
 /**
- * 
+ * 그냥 BZHUDWidget과 기능이 비슷하지만,
+ * BossHUD 특수 기능이 추가될 여지가 있어 새로운 class로 분리
  */
 UCLASS()
-class BLADEZ_API UBZHUDWidget : public UBZUserWidget
+class BLADEZ_API UBZBossHUDWidget : public UBZUserWidget
 {
 	GENERATED_BODY()
-
+	
 public:
 	// UserWidget의 생성자를 Override.
-	UBZHUDWidget(const FObjectInitializer& ObjectInitializer);
+	UBZBossHUDWidget(const FObjectInitializer& ObjectInitializer);
+
 
 protected:
 	// UMG가 초기화될 때 호출되는 함수.
 	virtual void NativeConstruct() override;
+
 
 	/*
 	* 캐릭터에서 호출할 함수.
@@ -43,16 +46,7 @@ public:
 	// NativeConstruct에서 따로 FName을 통해 GetWidgetFromName으로 찾아서 Bind 해야 함.
 protected:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UBZHpBarWidget> HpBarWidget;
+	TObjectPtr<class UBZHpBarWidget> BossHpBarWidget;
 
-	// TODO: 아래 Widget들은 Widget Class 따로 만들 때마다 Bind되는 Class를 바꿔야 함!
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUserWidget> QuestInfoWidget;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUserWidget> KillCountWidget;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUserWidget> MinimapWidget;
 };
- 
+

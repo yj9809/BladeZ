@@ -13,7 +13,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Weapon/BZWeaponActor.h"
 #include "Component/BZCharacterStatComponent.h"
-#include "UI/BZHpBarWidget.h"
 #include "UI/BZHUDWidget.h"
 
 
@@ -335,8 +334,11 @@ FName ABZPlayerCharacter::GetStatRowName() const
 	return StatRowName;
 }
 
-void ABZPlayerCharacter::SetupHUDWidget(UBZHUDWidget* InHUDWidget)
+void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 {
+	if (!InWidget) return;
+
+	UBZHUDWidget* InHUDWidget = Cast<UBZHUDWidget>(InWidget);
 	if (InHUDWidget)
 	{
 		// Stat 정보를 HUD에 전달.

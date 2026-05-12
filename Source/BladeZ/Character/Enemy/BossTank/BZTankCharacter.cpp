@@ -9,7 +9,7 @@
 
 #include "Component/BZCharacterStatComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "UI/BZHpBarWidget.h"
+#include "UI/BZBossHUDWidget.h"
 #include "GameFramework/DamageType.h"
 #include "DrawDebugHelpers.h"
 
@@ -182,21 +182,23 @@ FName ABZTankCharacter::GetStatRowName() const
 	return BossName;
 }
 
-void ABZTankCharacter::SetupCharacterWidget(UBZUserWidget* InUserWidget)
+void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 {
-	// 의존성 주입(Dependency Injection).
-	// 캐릭터 입장: 누군가 이 함수를 호출하면서 UABUserWidget 정보를 전달.
+	if (!InWidget) return;
 
-	UBZHpBarWidget* HpBarWidget = Cast<UBZHpBarWidget>(InUserWidget);
-	if (HpBarWidget)
+	UBZBossHUDWidget* InHUDWidget = Cast<UBZBossHUDWidget>(InWidget);
+	if (InHUDWidget)
 	{
-		// 체력 관련 값 설정.
-		HpBarWidget->SetMaxHp(Stat->GetMaxHp());
-		HpBarWidget->UpdateHpBar(Stat->GetCurrentHp());
-		// 델리게이트 등록.
-		Stat->OnHpChanged.AddUObject(
-			HpBarWidget,
-			&UBZHpBarWidget::UpdateHpBar
-		);
+		// Stat 정보를 HUD에 전달.
+		// 아직 Stat의 MaxHP만 활용하고 있음. (26.05.12)
+		InHUDWidget->UpdateStat(Stat->GetMaxHp());
+
+		// currentHP 정보도 HUD에 전달.
+		InHUDWidget->UpdateHpBar(Stat->GetCurrentHp());
+
+		// 전달받은 위젯의 함수를 스탯 컴포넌트가 발생하는 
+		// 델리게이트에 연결(바인딩).
+		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateHpBar);
 	}
 }
+

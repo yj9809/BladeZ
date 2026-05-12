@@ -8,7 +8,7 @@ ABZPlayerController::ABZPlayerController()
 {
 	// Project에서 Class 정보 가져오기.
 	static ConstructorHelpers::FClassFinder<UUserWidget> HUDWidgetClassRef(
-		TEXT("/Game/BZ/UI/WBP_Ingame.WBP_Ingame_C")
+		TEXT("/Game/BZ/UI/WBP_HUD.WBP_HUD_C")
 	);
 
 	if (HUDWidgetClassRef.Succeeded())

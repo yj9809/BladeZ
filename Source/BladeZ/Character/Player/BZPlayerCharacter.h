@@ -144,6 +144,6 @@ private:
 	* HUD가 이 캐릭터 Interface에 접근해,
 	* 캐릭터가 Delegate을 등록할 수 있도록 자신의 정보를 전달.
 	*/
-	void SetupHUDWidget(UBZHUDWidget* InHUDWidget) override;
+	void SetupHUDWidget(UBZUserWidget* InWidget) override;
 
 };
