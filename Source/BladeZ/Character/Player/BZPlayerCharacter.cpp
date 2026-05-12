@@ -258,6 +258,17 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	}
 }
 
+float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (Stat)
+	{
+		Stat->ApplyDamage(DamageAmount);
+	}
+	
+	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+}
+
 void ABZPlayerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();

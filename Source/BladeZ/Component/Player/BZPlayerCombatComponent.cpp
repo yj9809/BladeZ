@@ -5,6 +5,7 @@
 
 #include "Common/BZLog.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UBZPlayerCombatComponent::UBZPlayerCombatComponent()
@@ -125,7 +126,13 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
 		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
 	}
 	
-	
+	UGameplayStatics::ApplyDamage(
+		const_cast<AActor*>(Enemy),
+		CurrentData ? CurrentData->Damage : 10.0f, // 데이터가 없을 경우 기본 데미지 10.
+		Owner->GetController(),
+		Owner,
+		UDamageType::StaticClass()
+	);
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)
