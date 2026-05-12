@@ -17,14 +17,6 @@ void UBZBossHUDWidget::NativeConstruct()
 
 	// 제대로 Bind 됐는지 확인.
 	ensureAlways(BossHpBarWidget);
-
-	// Event Binding.
-	IBZCharacterHUD* HUDPawn
-		= Cast<IBZCharacterHUD>(GetOwningPlayerPawn());
-	if (HUDPawn)
-	{
-		HUDPawn->SetupHUDWidget(this);
-	}
 }
 
 void UBZBossHUDWidget::UpdateStat(

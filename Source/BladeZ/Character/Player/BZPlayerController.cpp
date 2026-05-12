@@ -2,12 +2,16 @@
 
 
 #include "BZPlayerController.h"
-#include "Blueprint/UserWidget.h"
+#include "UI/BZUserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Interface/BZCharacterHUD.h"
+
+
 
 ABZPlayerController::ABZPlayerController()
 {
 	// Project에서 Class 정보 가져오기.
-	static ConstructorHelpers::FClassFinder<UUserWidget> HUDWidgetClassRef(
+	static ConstructorHelpers::FClassFinder<UBZUserWidget> HUDWidgetClassRef(
 		TEXT("/Game/BZ/UI/WBP_HUD.WBP_HUD_C")
 	);
 
@@ -15,21 +19,67 @@ ABZPlayerController::ABZPlayerController()
 	{
 		HUDWidgetClass = HUDWidgetClassRef.Class;
 	}
+
+	// Project에서 Class 정보 가져오기.
+	static ConstructorHelpers::FClassFinder<UBZUserWidget> BossHUDWidgetClassRef(
+		TEXT("/Game/BZ/UI/WBP_BossHUD.WBP_BossHUD_C")
+	);
+
+	if (BossHUDWidgetClassRef.Succeeded())
+	{
+		BossHUDWidgetClass = BossHUDWidgetClassRef.Class;
+	}
 }
 
 void ABZPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// HUD Widget 생성.
-	HUDWidget = CreateWidget<UUserWidget>(this, HUDWidgetClass);
+	HUDWidget = CreateWidget<UBZUserWidget>(this, HUDWidgetClass);
 
 	if (HUDWidget)
 	{
 		// 화면에 추가해 UI가 보일 수 있도록 설정.
-		HUDWidget->AddToViewport();
+		// Parameter: ZOrder. 높을 수록 위에 보인다.
+		HUDWidget->AddToViewport(0);
+	}
+
+	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this);
+	if (CurrentLevelName == BossLevelName)
+	{
+		AddBossHUD();
 	}
 
 	FInputModeGameOnly GameOnlyInputMode;
 	SetInputMode(GameOnlyInputMode);
+}
+
+void ABZPlayerController::AddBossHUD()
+{
+	BossHUDWidget = CreateWidget<UBZUserWidget>(this, BossHUDWidgetClass);
+	if (!BossHUDWidget) return;
+
+	BossHUDWidget->AddToViewport(10);
+
+	// Boss를 찾아서 HUD Bind해줘야 함
+	// PlayerPawn이 아니기 때문.
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsWithInterface(
+		this,
+		UBZCharacterHUD::StaticClass(),
+		FoundActors
+	);
+
+	for (AActor* Actor : FoundActors)
+	{
+		if (Actor->ActorHasTag(BossActorTag))
+		{
+			if (IBZCharacterHUD* HUDTarget = Cast<IBZCharacterHUD>(Actor))
+			{
+				HUDTarget->SetupHUDWidget(BossHUDWidget);
+			}
+			break;
+		}
+	}
 }

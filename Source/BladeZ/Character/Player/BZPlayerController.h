@@ -21,13 +21,26 @@ public:
 private:
 	virtual void BeginPlay() override;
 
+	void AddBossHUD();
+
 	// HUD.
 protected:
 	// Class 정보 => 실제 HUD 객체 생성
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
-	TSubclassOf<class UUserWidget> HUDWidgetClass;
+	TSubclassOf<class UBZUserWidget> HUDWidgetClass;
 
 	// 실제 생성된 UI 객체.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
-	TObjectPtr<class UUserWidget> HUDWidget;
+	TObjectPtr<class UBZUserWidget> HUDWidget;
+
+	// Class 정보 => 실제 HUD 객체 생성
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	TSubclassOf<class UBZUserWidget> BossHUDWidgetClass;
+
+	// 실제 생성된 UI 객체.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	TObjectPtr<class UBZUserWidget> BossHUDWidget;
+
+	const FName BossLevelName = TEXT("BossTestLevel");
+	const FName BossActorTag = TEXT("Boss");
 };
