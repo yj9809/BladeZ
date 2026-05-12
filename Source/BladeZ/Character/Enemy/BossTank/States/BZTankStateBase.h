@@ -27,4 +27,7 @@ public:
 protected:
 	UPROPERTY()
 	ABZTankCharacter* TankCharacter;
+
+	// 몽타주 섹션에 따라 공격 활성화/비활성화 체크하는 공통 함수
+	void CheckAttackMontageSection(UAnimMontage* AttackMontage, float AttackDamage);
 };

@@ -10,24 +10,38 @@
 void UBZTankState_Attack::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
+
+	// 쿨타임 안돌았으면 리턴
+	if (!TankCharacter->DefaultAttackCooldown.IsTimeout()) return;
+
 	AttackMontageEndDelegate.BindUObject(this, &UBZTankState_Attack::OnAttackMontageEnded);
-	
+
 	if (UBZCustomMoveTo* MoveComp = TankCharacter->CustomMoveTo)
 	{
 		MoveComp->SetEnabled(true);
+	}
+	TankCharacter->SetBlendingMotion(true);
+
+	// 2종류의 Attack 중 랜덤으로 고르기
+	if (FMath::RandBool())
+	{
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "Default");
+	}
+	else
+	{
+		TankCharacter->SetBlendingMotion(false);
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "2ndAttack");
 	}
 }
 
 void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
-	// 쿨타임 안돌았으면 리턴
-	if (!TankCharacter->DefaultAttackCooldown.IsTimeout()) return;
-	
+
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
-		TankCharacter->SetBlendingMotion(true);
-		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage);
+		CheckAttackMontageSection(TankCharacter->AttackMontage, 20.0f);
+
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
@@ -50,7 +64,7 @@ void UBZTankState_Attack::OnAttackMontageEnded(UAnimMontage* Montage, bool bInte
 	// if (TankCharacter->AttackRange >= FVector::Dist(TankCharacter->GetActorLocation(),
 	//                                                 TankCharacter->TargetActor->GetActorLocation()))
 	// {
-		TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
-		TankCharacter->CustomMoveTo->SetEnabled(true);
+	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
+	TankCharacter->CustomMoveTo->SetEnabled(true);
 	// }
 }

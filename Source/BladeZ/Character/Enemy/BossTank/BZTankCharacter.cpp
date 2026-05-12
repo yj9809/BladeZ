@@ -49,7 +49,7 @@ void ABZTankCharacter::BeginPlay()
 	{
 		IdleStateInstance = NewObject<UBZTankStateBase>(this, IdleStateClass);
 	}
-	
+
 	if (RoarStateClass)
 	{
 		RoarStateInstance = NewObject<UBZTankStateBase>(this, RoarStateClass);
@@ -89,7 +89,7 @@ void ABZTankCharacter::BeginPlay()
 	{
 		JumpToStateInstance = NewObject<UBZTankStateBase>(this, JumpToStateClass);
 	}
-	
+
 	if (ThrowObjectStateClass)
 	{
 		ThrowObjectStateInstance = NewObject<UBZTankStateBase>(this, ThrowObjectStateClass);
@@ -111,6 +111,30 @@ void ABZTankCharacter::Tick(float DeltaTime)
 		DistanceToTarget = FVector::Dist(this->GetActorLocation(), TargetActor->GetActorLocation());
 	}
 	UpdateTimers(DeltaTime);
+
+	if (bIsAttackCollisionEnabled)
+	{
+		
+		FVector StartLocation = GetMesh()->GetSocketLocation("RHandAttackSocket");
+
+		auto PerformSingleHandTrace = [&](const FVector& HandLocation)
+		{
+			FHitResult HitResult;
+			FCollisionQueryParams TraceParams;
+			TraceParams.AddIgnoredActor(this);
+
+			bool bHit = GetWorld()->SweepSingleByChannel(
+				HitResult,
+				StartLocation,
+				HandLocation,
+				FQuat::Identity,
+				ECollisionChannel::ECC_Visibility,
+				FCollisionShape::MakeSphere(20.0f),
+				TraceParams
+			);
+		};
+		DrawDebugSphere(GetWorld(), StartLocation, 50.0f, 10, FColor::Red, false, 0.5f);
+	}
 }
 
 void ABZTankCharacter::UpdateTimers(float DeltaTime)

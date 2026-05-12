@@ -78,7 +78,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Custom Move To",
 		meta=(AllowPrivateAccess="true", ClampMin="0.0", ClampMax="1.0"))
 	float MovementLerpWeight = 0.5f;
-	float RotationLerpWeight = 2.0f;
+	float RotationLerpWeight = 3.0f;
 	bool bIsMovementEnabled = false;
 	bool bIsRotationEnabled = false;
 	bool bIsFixedRotation = false;

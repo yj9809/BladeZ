@@ -10,10 +10,10 @@
 #include "BZTankCharacter.generated.h"
 
 UCLASS()
-class BLADEZ_API ABZTankCharacter 
+class BLADEZ_API ABZTankCharacter
 	: public ACharacter
-	, public IBZStatRowNameProvider
-	, public IBZCharacterWidgetInterface
+	  , public IBZStatRowNameProvider
+	  , public IBZCharacterWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -33,6 +33,9 @@ public:
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
 	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
+	
+	// State에서 공격 콜리전 및 대미지 설정하는 함수
+	FORCEINLINE void EnableAttack(bool bEnable, float AttackDamage = 0.0f) {bIsAttackCollisionEnabled = bEnable; AttackDamageValue = AttackDamage;}
 
 public:
 	/*
@@ -91,7 +94,6 @@ public:
 	TSubclassOf<class UBZTankStateBase> ThrowObjectStateClass;
 
 
-
 	// 실제 생성된 상태 인스턴스를 보관할 변수
 	UPROPERTY()
 	class UBZTankStateBase* IdleStateInstance;
@@ -113,7 +115,7 @@ public:
 
 	UPROPERTY()
 	class UBZTankStateBase* KeepDistanceStateInstance;
-	
+
 	UPROPERTY()
 	class UBZTankStateBase* SkillSelectionStateInstance;
 
@@ -135,7 +137,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* SprintAttackMontage;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* JumpMontage;
 
@@ -149,6 +151,8 @@ private:
 	bool bIsPlayingCustomRootMotion;
 	bool bIsBlending;
 	bool bIsSprinting;
+	bool bIsAttackCollisionEnabled = false;
+	float AttackDamageValue = 0.0f;
 	float CurrentSpeed = 0.0f;
 	float WalkSpeed = 300.0f;
 	float SprintSpeed = 800.0f;
@@ -156,15 +160,15 @@ private:
 public:
 	// State에서 쓰일 변수들
 	float AttackRange = 300.0f;
+	float FarSkillRange = 1000.0f;
 	float DistanceToTarget = 1000.0f;
 
 	// 각종 쿨타임 변수
 	UPROPERTY()
 	FSkillCooldown DefaultAttackCooldown{3.0f};
-	
+
 	UPROPERTY()
 	FSkillCooldown JumpToCooldown{3.0f};
-
 
 private:
 	/*

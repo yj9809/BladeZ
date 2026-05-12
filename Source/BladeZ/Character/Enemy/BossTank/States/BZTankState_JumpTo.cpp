@@ -46,12 +46,15 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 
 	ElapsedTime += DeltaTime;
 
-	// 임시 내려짹기 타이밍
-	if (ElapsedTime > 1.5f)
+	// 내려짹기 타이밍
+	if (TankCharacter->DistanceToTarget < 500.0f)
 	{
 		TankCharacter->GetCharacterMovement()->GravityScale = 5.0f;
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
 	}
+
+	// 공격 섹션 판정
+	CheckAttackMontageSection(TankCharacter->JumpMontage, 30.0f);
 
 	if (bIsGrounded &&
 		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage)
