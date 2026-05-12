@@ -196,8 +196,11 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 
 	if (CurrentState == EZombieState::Dead)
 	{
+		GetCharacterMovement()->bUseRVOAvoidance = false;
+		GetCharacterMovement()->StopMovementImmediately();
 		GetCharacterMovement()->DisableMovement();
 		SetActorEnableCollision(false);
+		GetCapsuleComponent()->SetCanEverAffectNavigation(false);
 		AttackHitActors.Empty();
 	}
 }

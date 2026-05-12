@@ -77,11 +77,11 @@ protected:
 
 	//플레이어에게 접근하는 최소 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|FSM")
-	float ChaseAcceptanceRadius = 120.0f;
+	float ChaseAcceptanceRadius = 30.0f;
 
 	//좀비가 공격하는 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|FSM")
-	float AttackRange = 150.0f;
+	float AttackRange = 100.0f;
 
 	//좀비 공격이 끝나는 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|FSM")
