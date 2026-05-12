@@ -40,7 +40,7 @@ void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
-		CheckAttackMontageSection(TankCharacter->AttackMontage, 20.0f);
+		CheckAttackMontageSection(TankCharacter->AttackMontage, 5.0f);
 
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)

@@ -47,21 +47,23 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 	ElapsedTime += DeltaTime;
 
 	// 내려짹기 타이밍
-	if (TankCharacter->DistanceToTarget < 500.0f)
+	if (TankCharacter->DistanceToTarget < 800.0f)
 	{
 		TankCharacter->GetCharacterMovement()->GravityScale = 5.0f;
+		// TankCharacter->SetBlendingMotion(false);
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
 	}
 
 	// 공격 섹션 판정
-	CheckAttackMontageSection(TankCharacter->JumpMontage, 30.0f);
-
 	if (bIsGrounded &&
 		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage)
 		== "Loop")
 	{
+		// TankCharacter->SetBlendingMotion(false);
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
 	}
+
+	CheckAttackMontageSection(TankCharacter->JumpMontage, 10.0f);
 
 	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -74,6 +76,7 @@ void UBZTankState_JumpTo::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
 	ElapsedTime = 0.0f;
+	TankCharacter->SetBlendingMotion(true);
 	TankCharacter->CustomMoveTo->SetEnabled(true, true);
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(false);
 }

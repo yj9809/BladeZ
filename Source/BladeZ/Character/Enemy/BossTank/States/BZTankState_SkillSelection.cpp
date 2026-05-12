@@ -41,13 +41,17 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 	TArray<UBZTankStateBase*> AvailableStates;
 
 	// 타겟과의 거리에 따라 후보 상태를 다르게 구성
-	if (TankCharacter->DistanceToTarget < TankCharacter->FarSkillRange)
+	if (TankCharacter->DistanceToTarget < TankCharacter->AttackRange)
 	{
 		BuildCloseSkillCandidates(AvailableStates);
 	}
-	else
+	else if (TankCharacter->DistanceToTarget > TankCharacter->FarSkillRange)
 	{
 		BuildFarSkillCandidates(AvailableStates);
+	}
+	else
+	{
+		BuildMiddleSkillCandidates((AvailableStates));
 	}
 	
 	// 사용 가능한 상태가 없으면 KeepDistance로
@@ -79,8 +83,6 @@ void UBZTankState_SkillSelection::AddStateIfValid(TArray<UBZTankStateBase*>& Sta
 
 void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
-	if (!TankCharacter) return;
-
 	// 가까울 때
 	if (TankCharacter->DefaultAttackCooldown.IsTimeout())
 	{
@@ -88,13 +90,16 @@ void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateB
 	}
 }
 
+void UBZTankState_SkillSelection::BuildMiddleSkillCandidates(TArray<UBZTankStateBase*>& States) const
+{
+	AddStateIfValid(States, TankCharacter->SprintStateInstance);
+}
+
 void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
-	if (!TankCharacter) return;
-
 	// 멀 때
-	AddStateIfValid(States, TankCharacter->SprintStateInstance);
-	AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
+	// AddStateIfValid(States, TankCharacter->SprintStateInstance);
+	// AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
 	if (TankCharacter->JumpToCooldown.IsTimeout())
 	{
 		AddStateIfValid(States, TankCharacter->JumpToStateInstance);

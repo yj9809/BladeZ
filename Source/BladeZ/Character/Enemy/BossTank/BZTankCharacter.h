@@ -160,6 +160,10 @@ private:
 	float WalkSpeed = 300.0f;
 	float SprintSpeed = 800.0f;
 
+	// 공격 시 이미 Hit된 액터를 저장하여 중복 Hit 방지
+	UPROPERTY()
+	TSet<AActor*> HitActors;
+
 public:
 	// State에서 쓰일 변수들
 	float AttackRange = 300.0f;

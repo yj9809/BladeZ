@@ -24,6 +24,7 @@ private:
 	void SelectRandomSkill();
 	void AddStateIfValid(TArray<UBZTankStateBase*>& States, UBZTankStateBase* State) const;
 	void BuildCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const;
+	void BuildMiddleSkillCandidates(TArray<UBZTankStateBase*>& States) const;
 	void BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const;
 
 	float SelectionTimer = 0.0f;

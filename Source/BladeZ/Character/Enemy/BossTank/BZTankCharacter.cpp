@@ -14,7 +14,6 @@
 #include "DrawDebugHelpers.h"
 
 
-// Sets default values
 ABZTankCharacter::ABZTankCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -34,43 +33,51 @@ ABZTankCharacter::ABZTankCharacter()
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
-// EnableAttack function implementation (moved from header)
+// EnableAttack function implementation
 void ABZTankCharacter::EnableAttack(bool bEnable, float AttackDamage)
 {
 	bIsAttackCollisionEnabled = bEnable;
 	AttackDamageValue = AttackDamage;
-
-	if (bEnable && GetMesh())
+	
+	if (!bEnable) HitActors.Empty();
+	
+	if (bEnable)
 	{
-		FVector StartLocation = GetMesh()->GetSocketLocation(FName("RHandAttackSocket"));
-		FVector EndLocation = StartLocation + GetActorForwardVector() * 100.0f; // Trace forward 100 units
-		float SphereRadius = 50.0f;
 
-		TArray<FHitResult> HitResults;
-		FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
-		TraceParams.bReturnPhysicalMaterial = false;
-		TraceParams.bTraceComplex = true;
-
-		bool bHit = GetWorld()->SweepMultiByChannel(
-			HitResults,
-			StartLocation,
-			EndLocation,
-			FQuat::Identity,
-			ECollisionChannel::ECC_Pawn,
-			FCollisionShape::MakeSphere(SphereRadius),
-			TraceParams
-		);
-
-		DrawDebugSphere(GetWorld(), StartLocation, SphereRadius, 12, FColor::Red, false, 0.5f);
-
-		if (bHit)
+		if (GetMesh())
 		{
-			for (const FHitResult& HitResult : HitResults)
+			FVector StartLocation = GetMesh()->GetSocketLocation(FName("RHandAttackSocket"));
+			FVector EndLocation = StartLocation + GetActorForwardVector() * 100.0f; // Trace forward 100 units
+			float SphereRadius = 50.0f;
+
+			TArray<FHitResult> HitResults;
+			FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
+			TraceParams.bReturnPhysicalMaterial = false;
+			TraceParams.bTraceComplex = true;
+
+			bool bHit = GetWorld()->SweepMultiByChannel(
+				HitResults,
+				StartLocation,
+				EndLocation,
+				FQuat::Identity,
+				ECollisionChannel::ECC_Pawn,
+				FCollisionShape::MakeSphere(SphereRadius),
+				TraceParams
+			);
+
+			DrawDebugSphere(GetWorld(), StartLocation, SphereRadius, 12, FColor::Red, false, 0.5f);
+
+			if (bHit)
 			{
-				AActor* HitActor = HitResult.GetActor();
-				if (HitActor && HitActor != this)
+				for (const FHitResult& HitResult : HitResults)
 				{
-					UGameplayStatics::ApplyDamage(HitActor, AttackDamageValue, GetController(), this, UDamageType::StaticClass());
+					AActor* HitActor = HitResult.GetActor();
+					// Check if the actor is valid, not self, and hasn't been hit yet in this attack
+					if (HitActor && HitActor != this && !HitActors.Contains(HitActor))
+					{
+						UGameplayStatics::ApplyDamage(HitActor, AttackDamageValue, GetController(), this, UDamageType::StaticClass());
+						HitActors.Add(HitActor); // Add to set to prevent duplicate hits
+					}
 				}
 			}
 		}
@@ -201,4 +208,3 @@ void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateHpBar);
 	}
 }
-
