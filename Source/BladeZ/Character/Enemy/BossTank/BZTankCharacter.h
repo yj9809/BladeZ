@@ -1,14 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "BZSkillTimer.h"
 #include "GameFramework/Character.h"
+#include "Interface/BZStatRowNameProvider.h"
+#include "Interface/BZCharacterWidgetInterface.h"
 #include "BZTankCharacter.generated.h"
 
 UCLASS()
-class BLADEZ_API ABZTankCharacter : public ACharacter
+class BLADEZ_API ABZTankCharacter 
+	: public ACharacter
+	, public IBZStatRowNameProvider
+	, public IBZCharacterWidgetInterface
 {
 	GENERATED_BODY()
 
@@ -28,6 +33,15 @@ public:
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
 	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
+
+public:
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.12
+	* 작성 사유: Stat Component Event Binding 처리를 위해 추가.
+	* 모든 컴포넌트의 초기화가 끝나면 실행.
+	*/
+	virtual void PostInitializeComponents() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -150,7 +164,32 @@ public:
 	
 	UPROPERTY()
 	FSkillCooldown JumpToCooldown{3.0f};
-	
+
+
+private:
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.12
+	* 작성 사유: Stat Component 처리를 위해 추가.
+	* 스탯 컴포넌트.
+	*/
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+	TObjectPtr<class UBZCharacterStatComponent> Stat;
+
+	/*
+	* 이 항목은 Content/BZ/GameData/DT_CharacterStat의 RowName에서 찾을 수 없을 시,
+	* Engine이 강제 종료되니 유의하여 바꿔주세요.
+	* Category는 마음대로 지정하셔도 됩니다.
+	*/
 	UPROPERTY(VisibleAnywhere)
 	FName BossName = TEXT("BossTank");
+
+	// IBZCharacterStatProvider을(를) 통해 상속됨
+	// StatComponent에 StatRowName을 넘겨, 스스로 초기화할 수 있도록 함.
+	FName GetStatRowName() const override;
+
+	// IBZCharacterWidgetInterface을(를) 통해 상속됨
+	// Widget이 캐릭터 Interface에 접근해,
+	// 캐릭터가 Delegate을 등록할 수 있도록 자신의 정보를 전달
+	void SetupCharacterWidget(UBZUserWidget* InUserWidget) override;
 };

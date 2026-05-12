@@ -14,6 +14,7 @@
 #include "Weapon/BZWeaponActor.h"
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHpBarWidget.h"
+#include "UI/BZHUDWidget.h"
 
 
 // Sets default values
@@ -139,10 +140,10 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	* 작성자: 강수연
 	* 작성일: 26.05.11
 	* 작성 사유: Stat Component 처리를 위해 추가.
+	* 빈 Stat 만들기
+	* Stat이 붙는 과정에서 이 Actor의 GetStatRowName을 호출해 스스로 Init하므로,
+	* 초기화는 더 안해줘도 됨
 	*/
-	// 빈 Stat 만들기
-	// Stat이 붙는 과정에서 이 Actor의 GetStatRowName을 호출해 스스로 Init하므로,
-	// 초기화는 더 안해줘도 됨
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
@@ -341,3 +342,21 @@ void ABZPlayerCharacter::SetupCharacterWidget(UBZUserWidget* InUserWidget)
 		);
 	}
 }
+
+void ABZPlayerCharacter::SetupHUDWidget(UBZHUDWidget* InHUDWidget)
+{
+	if (InHUDWidget)
+	{
+		// Stat 정보를 HUD에 전달.
+		// 아직 Stat의 MaxHP만 활용하고 있음. (26.05.12)
+		InHUDWidget->UpdateStat(Stat->GetMaxHp());
+
+		// currentHP 정보도 HUD에 전달.
+		InHUDWidget->UpdateHpBar(Stat->GetCurrentHp());
+
+		// 전달받은 위젯의 함수를 스탯 컴포넌트가 발생하는 
+		// 델리게이트에 연결(바인딩).
+		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZHUDWidget::UpdateHpBar);
+	}
+}
+
