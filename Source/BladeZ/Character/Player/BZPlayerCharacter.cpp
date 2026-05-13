@@ -6,6 +6,7 @@
 #include "Component/Player//BZPlayerCombatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Animation/BZPlayerAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Common/BZLog.h"
 #include "Component/Player/BZCameraShakeComponent.h"
@@ -126,6 +127,16 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		RightAttackAction = RightAttackActionRef.Object;
 	}
 	
+	// 대쉬 액션 가져오기.
+	static ConstructorHelpers::FObjectFinder<UInputAction> DashActionRef(
+		TEXT("/Game/BZ/Input/IA_Dash.IA_Dash")
+	);
+	if (DashActionRef.Succeeded())
+	{
+		DashAction = DashActionRef.Object;
+	}
+	
+	// 무기 세팅.
 	static ConstructorHelpers::FClassFinder<ABZWeaponActor> WeaponClassRef(
 		TEXT("/Game/BZ/Character/Player/BP_Weapon.BP_Weapon_C")
 	);
@@ -261,6 +272,13 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerRightAttack
 		);
+		
+		EnhancedInputComponent->BindAction(
+			DashAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerDash
+		);
 	}
 }
 
@@ -336,6 +354,15 @@ void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 	CombatComponent->SetAttackInput(EBZAttackInputType::Right);
 }
 
+void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
+{
+	UBZPlayerAnimInstance* AnimInstance = Cast<UBZPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+	if (AnimInstance)
+	{
+		AnimInstance->SetDash(true);
+	}
+}
+
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
@@ -344,8 +371,6 @@ void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, u
 	{
 		PlayAnimMontage(LandMontage);
 	}
-	
-	
 }
 
 void ABZPlayerCharacter::Landed(const FHitResult& Hit)

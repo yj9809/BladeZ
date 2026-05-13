@@ -66,6 +66,8 @@ private:
 	
 	void PlayerRightAttack(const FInputActionValue& Value);
 	
+	void PlayerDash(const FInputActionValue& Value);
+	
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
 	virtual void Landed(const FHitResult& Hit) override;
@@ -112,6 +114,10 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> RightAttackAction;
+	
+	// 대쉬 액션.
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> DashAction;
 	
 	// 웨폰 세팅.
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
