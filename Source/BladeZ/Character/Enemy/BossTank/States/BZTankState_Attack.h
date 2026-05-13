@@ -24,4 +24,5 @@ public:
 private:
 	FOnMontageEnded AttackMontageEndDelegate;
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	bool bIsUsingBothHands = false;
 };

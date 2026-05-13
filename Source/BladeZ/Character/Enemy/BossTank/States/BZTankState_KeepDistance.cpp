@@ -13,7 +13,7 @@ void UBZTankState_KeepDistance::OnEnter(AActor* Owner)
 	Super::OnEnter(Owner);
 
 	// 타이머 초기화
-	DistanceCheckTimer = 0.0f;
+	DistanceCheckTimer = 1.0f;
 	StateDurationTimer = 0.0f; // 3초 실행 타이머
 	bHasBackMoveTarget = false;
 	BackMoveTarget = FVector::ZeroVector;

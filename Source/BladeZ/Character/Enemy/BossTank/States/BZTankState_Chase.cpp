@@ -19,7 +19,7 @@ void UBZTankState_Chase::OnEnter(AActor* Owner)
 		if (UBZCustomMoveTo* MoveComp = TankCharacter->CustomMoveTo)
 		{
 			MoveComp->SetEnabled(true);
-			MoveComp->SetMoveTarget(TankCharacter->TargetActor, NearDistance);
+			MoveComp->SetMoveTarget(TankCharacter->TargetActor);
 		}
 		TankCharacter->SetBlendingMotion(false);
 		TankCharacter->CustomMoveTo->SetSprinting(false);

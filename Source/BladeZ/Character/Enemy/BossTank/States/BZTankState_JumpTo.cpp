@@ -5,8 +5,8 @@
 
 #include "BZTankStateMachine.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
-#include "Component/Boss/BZCustomMoveTo.h"
 #include "Common/BZLog.h"
+#include "Component/Boss/BZCustomMoveTo.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void UBZTankState_JumpTo::OnEnter(AActor* Owner)
@@ -40,17 +40,22 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 	{
 		// 점프
 		FVector direction = TankCharacter->TargetActor->GetActorLocation() - TankCharacter->GetActorLocation();
-		direction.Z += TankCharacter->DistanceToTarget;
+		direction.Z += sqrt(TankCharacter->DistanceToTarget) + 1000;
 		TankCharacter->LaunchCharacter(direction, true, true);
 	}
 
 	ElapsedTime += DeltaTime;
 
+	float Dist2D = FVector2D::Distance(FVector2D(TankCharacter->GetActorLocation()),
+	                                   FVector2D(TankCharacter->TargetActor->GetActorLocation()));
+
 	// 내려짹기 타이밍
-	if (TankCharacter->DistanceToTarget < 800.0f)
+	if (Dist2D < 300.0f &&
+		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage)
+		== "Loop")
 	{
 		TankCharacter->GetCharacterMovement()->GravityScale = 5.0f;
-		// TankCharacter->SetBlendingMotion(false);
+		TankCharacter->LaunchCharacter(FVector(0, 0, -1000), true, true);
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
 	}
 
@@ -63,7 +68,7 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
 	}
 
-	CheckAttackMontageSection(TankCharacter->JumpMontage, 10.0f);
+	CheckAttackMontageSection(TankCharacter->JumpMontage, true, true, 10.0f);
 
 	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -76,6 +81,12 @@ void UBZTankState_JumpTo::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
 	ElapsedTime = 0.0f;
+
+	if (TankCharacter && TankCharacter->GetCharacterMovement())
+	{
+		TankCharacter->GetCharacterMovement()->GravityScale = 2.0f;
+	}
+
 	TankCharacter->SetBlendingMotion(true);
 	TankCharacter->CustomMoveTo->SetEnabled(true, true);
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(false);
@@ -88,5 +99,15 @@ void UBZTankState_JumpTo::FinishJump()
 
 void UBZTankState_JumpTo::OnJumpMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (TankCharacter && TankCharacter->GetMesh())
+	{
+		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			FName CurrentSection = AnimInstance->Montage_GetCurrentSection(Montage);
+			BOSS_LOG(Log, "Jump Montage Ended at Section: %s", *CurrentSection.ToString());
+		}
+	}
+
 	FinishJump();
 }
