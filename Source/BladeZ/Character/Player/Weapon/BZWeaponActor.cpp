@@ -109,6 +109,7 @@ void ABZWeaponActor::PerformTrace()
 	float Radius = (WeaponLength / (NumCount - 1)) * 0.5f;
 	FCollisionShape CollisionShapeChekePoint = FCollisionShape::MakeSphere(Radius);
 
+	// Trace 프레임 사이 보간을 위해 각 포인트 별 Shpere Trace를 추가.
 	for (int i = 0; i < NumCount; i++)
 	{
 		float Alpha = static_cast<float>(i) / (NumCount - 1);

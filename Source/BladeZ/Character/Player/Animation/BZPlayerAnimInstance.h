@@ -44,4 +44,8 @@ private:
 	// 방향 변수.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character, meta=(AllowPrivateAccess = true))
 	float Direction;
+	
+	// 추락 판별 변수.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character, meta=(AllowPrivateAccess = true))
+	bool bIsFalling;
 };

@@ -66,6 +66,10 @@ private:
 	
 	void PlayerRightAttack(const FInputActionValue& Value);
 	
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+	
+	virtual void Landed(const FHitResult& Hit) override;
+	
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
 	FOnBossAttack OnBossAttack;
@@ -115,6 +119,10 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<ABZWeaponActor> Weapon;	
+	
+	// 착지를 위한 몽타주.
+	UPROPERTY(VisibleAnywhere, Category = Animation)
+	TObjectPtr<UAnimMontage> LandMontage;
 
 private:
 	/*

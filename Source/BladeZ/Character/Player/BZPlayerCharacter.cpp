@@ -134,6 +134,13 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		WeaponClass = WeaponClassRef.Class;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> LandMontageRef(
+		TEXT("/Game/BZ/Character/Player/Animation/AM_Land.AM_Land")
+	);
+	if (LandMontageRef.Succeeded())
+	{
+		LandMontage = LandMontageRef.Object;
+	}
 
 	/*
 	* 작성자: 강수연
@@ -327,6 +334,25 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 {
 	CombatComponent->SetAttackInput(EBZAttackInputType::Right);
+}
+
+void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	
+	if (GetCharacterMovement()->IsFalling())
+	{
+		PlayAnimMontage(LandMontage);
+	}
+	
+	
+}
+
+void ABZPlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	
+	GetMesh()->GetAnimInstance()->Montage_JumpToSection("Land", LandMontage); 
 }
 
 FName ABZPlayerCharacter::GetStatRowName() const
