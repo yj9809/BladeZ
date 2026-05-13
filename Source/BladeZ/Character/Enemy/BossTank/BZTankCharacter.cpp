@@ -28,7 +28,7 @@ ABZTankCharacter::ABZTankCharacter()
 	* 작성 사유: BossHUDWidgetBind 처리를 위해 추가.
 	* PlayerPawn이 아니기 때문에, Tag를 통해 찾는 처리 필요.
 	*/
-	Tags.AddUnique(TEXT("Boss"));
+	Tags.AddUnique(BossName);
 
 	/*
 	* 작성자: 강수연

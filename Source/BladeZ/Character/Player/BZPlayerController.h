@@ -42,5 +42,5 @@ protected:
 	TObjectPtr<class UBZUserWidget> BossHUDWidget;
 
 	const FName BossLevelName = TEXT("BossTestLevel");
-	const FName BossActorTag = TEXT("Boss");
+	const FName BossActorTag = TEXT("BossTank");
 };
