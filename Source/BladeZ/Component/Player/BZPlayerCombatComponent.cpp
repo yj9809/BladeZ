@@ -22,7 +22,7 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	{
 		AttackData = AttackDataRef.Object;
 	}
-	
+
 	// 공격 애니메이션 몽타주 등록.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackMontageRef(
 		TEXT("/Game/BZ/Character/Player/Animation/AM_Attack.AM_Attack")
@@ -36,9 +36,9 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 void UBZPlayerCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	Owner = Cast<ACharacter>(GetOwner());
-	
+
 	if (Owner)
 	{
 		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
@@ -50,7 +50,7 @@ void UBZPlayerCombatComponent::BeginPlay()
 			);
 		}
 	}
-	
+
 	for (const FBZAttackData& Data : AttackData->GetAttackDataArray())
 	{
 		FName key = *FString::Printf(TEXT("%s_%d"), *Data.CurrentSectionName.ToString(), (int32)Data.AttackInputType);
@@ -64,7 +64,7 @@ void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 	{
 		return;
 	}
-	
+
 	NextInputType = NewInputType;
 	bHasNextInput = true;
 }
@@ -74,13 +74,27 @@ void UBZPlayerCombatComponent::StartComboAttack()
 	// 공격 상태 확인 플래그 변경.
 	bHasNextInput = false;
 	bIsAttacking = true;
-	
+
 	if (AttackMontage)
 	{
-		Owner->PlayAnimMontage(AttackMontage, 1.5f);
+		int32 StartAttack = FMath::RandRange(0, 1);
+		FName Key;
+		
+		switch (StartAttack)
+		{
+			case 0:
+			Key = TEXT("L_1");
+			break;
+			
+			case 1:
+			Key = TEXT("L_1_1");
+			break;
+		}
+		
+		Owner->PlayAnimMontage(AttackMontage, 2.5f, Key);
 		
 		// 첫 번째 섹션 이름으로 변경.
-		CurrentComboName = AttackMontage->GetSectionName(0);
+		CurrentComboName = Key;
 	}
 }
 
@@ -90,10 +104,10 @@ void UBZPlayerCombatComponent::CheckCombo()
 	{
 		return;
 	}
-	
+
 	int32 AttackInput = (int32)NextInputType;
 	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
-		
+
 	FName* SectionName = AttackSectionMap.Find(key);
 	if (SectionName)
 	{
@@ -102,7 +116,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 		{
 			AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
 		}
-		
+
 		CurrentComboName = *SectionName;
 	}
 	bHasNextInput = false;
@@ -125,10 +139,10 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
 	{
 		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
 	}
-	
+
 	UGameplayStatics::ApplyDamage(
 		const_cast<AActor*>(Enemy),
-		CurrentData ? CurrentData->Damage : 10.0f, // 데이터가 없을 경우 기본 데미지 10.
+		CurrentData ? CurrentData->Damage : 0.0f, // 데이터가 없을 경우 기본 데미지 10.
 		Owner->GetController(),
 		Owner,
 		UDamageType::StaticClass()
@@ -141,8 +155,7 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 	{
 		return;
 	}
-	
+
 	// 공격이 끝났을 때 입력값 초기화.
 	bIsAttacking = false;
 }
-

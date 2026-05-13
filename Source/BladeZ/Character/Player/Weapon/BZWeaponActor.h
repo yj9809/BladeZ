@@ -55,4 +55,11 @@ private:
 	
 	// 중복 체크 용 컨테이너.
 	TArray<TObjectPtr<AActor>> HitActors;
+	
+	// 이전 프레임 Start, End 위치.
+	FVector PrevStart = FVector::ZeroVector;
+	FVector PrevEnd = FVector::ZeroVector;
+	
+	// Trace 시작을 알리기.
+	bool bIsStartedTrace = false;
 };

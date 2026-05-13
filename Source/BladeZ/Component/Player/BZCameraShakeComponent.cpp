@@ -48,8 +48,6 @@ void UBZCameraShakeComponent::OnCameraShake(float Amplitude)
 	{
 		return;
 	}
-
-	PLAYER_LOG(Warning, "Camera Shake Triggered with Amplitude: %f", Amplitude);
 	
 	APlayerController* PlayerController =
 		Cast<APlayerController>(Cast<ACharacter>(GetOwner())->GetController());
