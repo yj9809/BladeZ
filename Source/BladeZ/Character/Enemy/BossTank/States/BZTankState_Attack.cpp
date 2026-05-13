@@ -5,6 +5,7 @@
 
 #include "BZTankStateMachine.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
+#include "Common/BZLog.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 
 void UBZTankState_Attack::OnEnter(AActor* Owner)
@@ -12,7 +13,10 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 	Super::OnEnter(Owner);
 
 	// 쿨타임 안돌았으면 리턴
-	if (!TankCharacter->DefaultAttackCooldown.IsTimeout()) return;
+	if (!TankCharacter->DefaultAttackCooldown.IsTimeout())
+	{
+		TankCharacter->StateMachine->ChangeState(TankCharacter->KeepDistanceStateInstance);
+	}
 
 	AttackMontageEndDelegate.BindUObject(this, &UBZTankState_Attack::OnAttackMontageEnded);
 
@@ -26,11 +30,13 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 	if (FMath::RandBool())
 	{
 		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "Default");
+		bIsUsingBothHands = false;
 	}
 	else
 	{
 		TankCharacter->SetBlendingMotion(false);
 		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "2ndAttack");
+		bIsUsingBothHands = true;
 	}
 }
 
@@ -40,8 +46,8 @@ void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
-		CheckAttackMontageSection(TankCharacter->AttackMontage, 5.0f);
-
+		CheckAttackMontageSection(TankCharacter->AttackMontage, true, bIsUsingBothHands, 5.0f);
+		// BOSS_LOG(Log, "sssssssss")
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{

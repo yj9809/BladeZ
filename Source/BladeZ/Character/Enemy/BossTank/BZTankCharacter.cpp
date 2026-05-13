@@ -41,55 +41,94 @@ ABZTankCharacter::ABZTankCharacter()
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
-// EnableAttack function implementation
-void ABZTankCharacter::EnableAttack(bool bEnable, float AttackDamage)
+void ABZTankCharacter::EnableAttack(bool bEnableRight, bool bEnableLeft, float AttackDamage)
 {
-	bIsAttackCollisionEnabled = bEnable;
-	AttackDamageValue = AttackDamage;
-	
-	if (!bEnable) HitActors.Empty();
-	
-	if (bEnable)
-	{
+    // 1. 공격 비활성화 (Off) 처리: 두 손 모두 false가 들어오면 공격 종료 및 초기화
+    if (!bEnableRight && !bEnableLeft)
+    {
+        HitActors.Empty();
+        bIsFirstAttackFrame = true; // 다음 공격을 위해 플래그 초기화
+        return;
+    }
 
-		if (GetMesh())
-		{
-			FVector StartLocation = GetMesh()->GetSocketLocation(FName("RHandAttackSocket"));
-			FVector EndLocation = StartLocation + GetActorForwardVector() * 100.0f; // Trace forward 100 units
-			float SphereRadius = 50.0f;
+    AttackDamageValue = AttackDamage;
 
-			TArray<FHitResult> HitResults;
-			FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
-			TraceParams.bReturnPhysicalMaterial = false;
-			TraceParams.bTraceComplex = true;
+    USkeletalMeshComponent* MeshComp = GetMesh();
+    if (!MeshComp) return;
 
-			bool bHit = GetWorld()->SweepMultiByChannel(
-				HitResults,
-				StartLocation,
-				EndLocation,
-				FQuat::Identity,
-				ECollisionChannel::ECC_Pawn,
-				FCollisionShape::MakeSphere(SphereRadius),
-				TraceParams
-			);
+    // 현재 프레임의 소켓 위치 가져오기
+    FVector CurrentRHandLocation = MeshComp->GetSocketLocation(FName("RHandAttackSocket"));
+    FVector CurrentLHandLocation = MeshComp->GetSocketLocation(FName("LHandAttackSocket"));
 
-			DrawDebugSphere(GetWorld(), StartLocation, SphereRadius, 12, FColor::Red, false, 0.5f);
+    // 2. 이전 프레임 위치 보정 (EndLocation 문제 해결)
+    // 공격이 막 시작된 첫 프레임에는 이전 위치 데이터가 없으므로 현재 위치로 동기화합니다.
+    if (bIsFirstAttackFrame)
+    {
+        LastRHandLocation = CurrentRHandLocation;
+        LastLHandLocation = CurrentLHandLocation;
+        bIsFirstAttackFrame = false;
+    }
 
-			if (bHit)
-			{
-				for (const FHitResult& HitResult : HitResults)
-				{
-					AActor* HitActor = HitResult.GetActor();
-					// Check if the actor is valid, not self, and hasn't been hit yet in this attack
-					if (HitActor && HitActor != this && !HitActors.Contains(HitActor))
-					{
-						UGameplayStatics::ApplyDamage(HitActor, AttackDamageValue, GetController(), this, UDamageType::StaticClass());
-						HitActors.Add(HitActor); // Add to set to prevent duplicate hits
-					}
-				}
-			}
-		}
-	}
+    float SphereRadius = 55.0f;
+    FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
+    TraceParams.bReturnPhysicalMaterial = false;
+    TraceParams.bTraceComplex = true;
+
+    // 타격된 액터 처리를 위한 헬퍼 함수 (람다)
+    auto ProcessHits = [&](const TArray<FHitResult>& HitResults)
+    {
+        for (const FHitResult& HitResult : HitResults)
+        {
+            AActor* HitActor = HitResult.GetActor();
+            
+            // 4. 중복 적용 방지: 한 손에 맞아서 HitActors에 들어가면 다른 손에 맞아도 무시됨
+            if (HitActor && HitActor != this && !HitActors.Contains(HitActor))
+            {
+                UGameplayStatics::ApplyDamage(HitActor, AttackDamageValue, GetController(), this, UDamageType::StaticClass());
+                HitActors.Add(HitActor); // 통합 Set에 추가
+            }
+        }
+    };
+
+    // 3. 오른손 공격 스윕 및 동시 공격 지원
+    if (bEnableRight)
+    {
+        TArray<FHitResult> HitResults;
+        bool bHit = GetWorld()->SweepMultiByChannel(
+            HitResults,
+            LastRHandLocation,     // Start: 이전 프레임 위치
+            CurrentRHandLocation,  // End: 현재 프레임 위치
+            FQuat::Identity,
+            ECollisionChannel::ECC_Pawn,
+            FCollisionShape::MakeSphere(SphereRadius),
+            TraceParams
+        );
+
+        DrawDebugSphere(GetWorld(), CurrentRHandLocation, SphereRadius, 12, FColor::Red, false, 0.5f);
+        if (bHit) ProcessHits(HitResults);
+    }
+
+    // 3. 왼손 공격 스윕 및 동시 공격 지원
+    if (bEnableLeft)
+    {
+        TArray<FHitResult> HitResults;
+        bool bHit = GetWorld()->SweepMultiByChannel(
+            HitResults,
+            LastLHandLocation,     // Start: 이전 프레임 위치
+            CurrentLHandLocation,  // End: 현재 프레임 위치
+            FQuat::Identity,
+            ECollisionChannel::ECC_Pawn,
+            FCollisionShape::MakeSphere(SphereRadius),
+            TraceParams
+        );
+
+        DrawDebugSphere(GetWorld(), CurrentLHandLocation, SphereRadius, 12, FColor::Blue, false, 0.5f);
+        if (bHit) ProcessHits(HitResults);
+    }
+
+    // 다음 프레임 스윕을 위해 현재 위치를 이전 위치로 갱신 (핵심)
+    LastRHandLocation = CurrentRHandLocation;
+    LastLHandLocation = CurrentLHandLocation;
 }
 
 float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,

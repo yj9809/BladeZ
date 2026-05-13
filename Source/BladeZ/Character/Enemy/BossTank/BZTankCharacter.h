@@ -33,13 +33,15 @@ public:
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
 	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
-	
+
 	// State에서 공격 콜리전 및 대미지 설정하는 함수
-	void EnableAttack(bool bEnable, float AttackDamage = 0.0f); // Declaration only
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void EnableAttack(bool bEnableRight, bool bEnableLeft, float AttackDamage = 0.0f);
 
 	// 데미지 받는 함수
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-	
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	                         class AController* EventInstigator, AActor* DamageCauser) override;
+
 public:
 	/*
 	* 작성자: 강수연
@@ -52,6 +54,16 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// 이전 프레임의 소켓 위치 저장용 변수
+	FVector LastRHandLocation;
+	FVector LastLHandLocation;
+
+	// 공격이 시작된 첫 프레임인지 체크 (순간이동 스윕 방지용)
+	bool bIsFirstAttackFrame = true;
+
+	// 대미지
+	float AttackDamageValue = 0.0f;
 
 public:
 	// Called every frame
@@ -155,7 +167,6 @@ private:
 	bool bIsBlending;
 	bool bIsSprinting;
 	bool bIsAttackCollisionEnabled = false;
-	float AttackDamageValue = 0.0f;
 	float CurrentSpeed = 0.0f;
 	float WalkSpeed = 300.0f;
 	float SprintSpeed = 800.0f;
@@ -167,7 +178,8 @@ private:
 public:
 	// State에서 쓰일 변수들
 	float AttackRange = 300.0f;
-	float FarSkillRange = 1000.0f;
+	float MiddleSkillRange = 800.0f;
+	float FarSkillRange = 1200.0f;
 	float DistanceToTarget = 1000.0f;
 
 	// 각종 쿨타임 변수

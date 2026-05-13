@@ -42,7 +42,7 @@ void UBZTankState_SprintAttack::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 	
-	CheckAttackMontageSection(TankCharacter->SprintAttackMontage, 10.0f);
+	CheckAttackMontageSection(TankCharacter->SprintAttackMontage, true, false, 10.0f);
 }
 
 void UBZTankState_SprintAttack::OnExit(AActor* Owner)
