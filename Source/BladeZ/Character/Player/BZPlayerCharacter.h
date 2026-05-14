@@ -11,6 +11,7 @@
 #include "BZPlayerCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
+DECLARE_DELEGATE(FOnDashStart)
 
 class ABZWeaponActor;
 
@@ -68,6 +69,8 @@ private:
 	
 	void PlayerDash(const FInputActionValue& Value);
 	
+	FName GetDashSectionName(float Direction);
+	
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
 	virtual void Landed(const FHitResult& Hit) override;
@@ -76,6 +79,8 @@ public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
 	FOnBossAttack OnBossAttack;
 	
+	// 대시 시작을 알리는 델리게이트.
+	FOnDashStart OnDashStart;
 private:
 	// 카메라 세팅.
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -129,6 +134,10 @@ private:
 	// 착지를 위한 몽타주.
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> LandMontage;
+	
+	// 대쉬 몽타주
+	UPROPERTY(VisibleAnywhere, Category = Animation)
+	TObjectPtr<UAnimMontage> DashMontage;
 
 private:
 	/*
