@@ -27,12 +27,23 @@ protected:
 	* Wrapper 함수로, 이 Widget이 관리하는 하위 Widget에 Message 전달.
 	*/
 public:
+	// For Hp Bar.
 	// 아직 BaseStat을 통으로 쓰지 않고,
 	// StatComponent 내의 값으로 MaxHp를 관리 중이므로
 	// 해당 값만 전달함.
 	void UpdateStat(
 		const float NewMaxHp
 	);
+
+	// For Minimap.
+
+
+	// For KillCount.
+
+
+	// For QuestInfo.
+
+
 
 	void UpdateHpBar(float NewCurrentHp);
 
@@ -47,12 +58,13 @@ protected:
 
 	// TODO: 아래 Widget들은 Widget Class 따로 만들 때마다 Bind되는 Class를 바꿔야 함!
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUserWidget> QuestInfoWidget;
+	TObjectPtr<class UBZMinimapWidget> MinimapWidget;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UUserWidget> KillCountWidget;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUserWidget> MinimapWidget;
+	TObjectPtr<UUserWidget> QuestInfoWidget;
+
 };
  
