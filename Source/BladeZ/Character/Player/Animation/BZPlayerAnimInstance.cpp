@@ -23,6 +23,12 @@ void UBZPlayerAnimInstance::NativeInitializeAnimation()
 	if (Owner)
 	{
 		Movement = Owner->GetCharacterMovement();
+		Owner->OnDashStart.BindLambda(
+			[this]()
+			{
+				bIsDashing = true;
+			}
+		);
 	}
 }
 

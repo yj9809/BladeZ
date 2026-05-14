@@ -152,6 +152,15 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		LandMontage = LandMontageRef.Object;
 	}
+	
+	// 대쉬 몽타주 등록.
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> DashMontageRef(
+		TEXT("/Game/BZ/Character/Player/Animation/AM_Dash.AM_Dash")
+	);
+	if (DashMontageRef.Succeeded())
+	{
+		DashMontage = DashMontageRef.Object;
+	}
 
 	/*
 	* 작성자: 강수연
@@ -356,11 +365,43 @@ void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 {
-	UBZPlayerAnimInstance* AnimInstance = Cast<UBZPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		AnimInstance->SetDash(true);
+		OnDashStart.Execute();
+		FVector InputVector = GetLastMovementInputVector();
+		float Direction = AnimInstance->CalculateDirection(InputVector, GetActorRotation());
+		
+		FName SectionName = GetDashSectionName(Direction);
+		PlayAnimMontage(DashMontage, 1.18f, SectionName);
 	}
+}
+
+FName ABZPlayerCharacter::GetDashSectionName(float Direction)
+{
+	float NormalizedDirection = Direction;
+	if (NormalizedDirection < 0.0f)
+	{
+		NormalizedDirection += 360.0f;
+	}
+	
+	// 8방향 각도 범위 (45도씩, 22.5도 여유)
+	if (NormalizedDirection < 22.5f || NormalizedDirection >= 337.5f)
+		return TEXT("Forward");
+	if (NormalizedDirection < 67.5f)
+		return TEXT("ForwardRight");
+	if (NormalizedDirection < 112.5f)
+		return TEXT("Right");
+	if (NormalizedDirection < 157.5f)
+		return TEXT("BackRight");
+	if (NormalizedDirection < 202.5f)
+		return TEXT("Back");
+	if (NormalizedDirection < 247.5f)
+		return TEXT("BackLeft");
+	if (NormalizedDirection < 292.5f)
+		return TEXT("Left");
+    
+	return TEXT("ForwardLeft");
 }
 
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
