@@ -12,7 +12,7 @@ ABZZombie::ABZZombie()
 {
 	//Todo : 틱-> false, 열거형 초기화 -> Inactive
 	//틱 흘려받기 현재: true 객체를 관리하는 매니저가 생기면 false 전환. 
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick =true;
 	
 	//현재 상태 초기화 : 매니저 생기면 초기화 Inactive 해야 할듯?  
 	CurrentState = EZombieState::Idle;
@@ -69,8 +69,10 @@ void ABZZombie::Tick(float DeltaTime)
 
 void ABZZombie::InitializeFSM(AActor* InTargetActor)
 {
+	
 	if (CurrentState == EZombieState::Dead)
 	{
+		UE_LOG(LogTemp,Log, TEXT("Enter InitializeFSM"));
 		return;
 	}
 
@@ -94,7 +96,7 @@ void ABZZombie::TickFSM(float DeltaTime)
 		AttackState(DeltaTime);
 		break;
 	case EZombieState::Dead:
-		DeadState(DeltaTime);
+		DeadState();		
 		break;
 	default:
 		break;
@@ -189,11 +191,10 @@ void ABZZombie::AttackState(float DeltaTime)
 	SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
 }
 
-void ABZZombie::DeadState(float DeltaTime)
+void ABZZombie::DeadState()
 {
 	SetZombieState(EZombieState::Inactive);
 	ZombieObjectPool->ReturnZombieToPool(this);
-	
 }
 
 void ABZZombie::InActiveState(float DeltaTime)
@@ -244,10 +245,6 @@ void ABZZombie::StartAttackTrace()
 	//Anim Notify 시작되면 호출됨
 	AttackHitActors.Empty();
 	PerformAttackTrace();
-}
-
-void ABZZombie::EndAttackTrace()
-{
 }
 
 void ABZZombie::PerformAttackTrace()

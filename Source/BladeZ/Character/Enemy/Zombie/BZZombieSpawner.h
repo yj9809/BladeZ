@@ -6,6 +6,7 @@
 #include "BZZombie.h"
 #include "BZZombieObjectPool.h"
 #include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
 #include "BZZombieSpawner.generated.h"
 
 UCLASS()
@@ -27,7 +28,9 @@ public:
 	
 private:
 	//죽은 좀비들을 스폰해줌 
-	void ZombieSpawn();
+	void ZombieSpawn() const;
+	
+	FVector GetSpawnLocation() const;
 	
 
 private:
@@ -39,7 +42,18 @@ private:
 	UPROPERTY(editAnywhere, Category="Zombie Spawn")
 	int32 ZombiePoolSize;	
 	
+	UPROPERTY(EditAnywhere, Category="Zombie Spawn")
+	UBoxComponent* SpawnArea;
+	
 	UPROPERTY()
 	TObjectPtr<UBZZombieObjectPool> ObjectPool;
+	
+	UPROPERTY(EditAnywhere, Category="Zombie Spawn")
+	FVector SpawnLocation;
+	
+	UPROPERTY(EditAnywhere, Category="Zombie Spawn")
+	USceneComponent* SpawnerLocationComponent;
+	
+	
 
 };

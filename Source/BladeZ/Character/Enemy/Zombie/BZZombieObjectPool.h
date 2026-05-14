@@ -8,6 +8,8 @@
 #include "BZZombieObjectPool.generated.h"
 
 class ABZZombie;
+
+
 /**
  * 
  */
@@ -43,5 +45,9 @@ private:
 	//보이지 않는 좀비를 담을 풀
 	UPROPERTY()
 	TArray<ABZZombie*> ZombiePool;
-		
+	
+	UPROPERTY()
+	ABZZombie* WantToDeleteZombie;
+
+	
 };

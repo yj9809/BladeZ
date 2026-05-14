@@ -51,7 +51,7 @@ public:
 	//Setter
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	void SetZombieState(EZombieState NewState = EZombieState::Dead);
-
+	
 	//좀비 풀 Setter
 	void SetZombieObjectPool(UBZZombieObjectPool* InZombieObjectPool)
 	{
@@ -64,18 +64,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Zombie|Attack")
 	void StartAttackTrace();
-
-	UFUNCTION(BlueprintCallable, Category = "Zombie|Attack")
-	void EndAttackTrace();
 	
-	
-
 private:
 
 	void IdleState(float DeltaTime);
 	void ChaseState(float DeltaTime);
 	void AttackState(float DeltaTime);
-	void DeadState(float DeltaTime);
+	void DeadState();
 	void InActiveState(float DeltaTime);
 	//거리 구하는 함수
 	float GetDistanceToTarget2D() const;
@@ -97,7 +92,7 @@ protected:
 
 	//플레이어에게 접근하는 최소 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|FSM")
-	float ChaseAcceptanceRadius = 30.0f;
+	float ChaseAcceptanceRadius = 0.0f;
 
 	//좀비가 공격하는 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|FSM")
@@ -129,9 +124,6 @@ protected:
 	float AttackTraceRadius = 35.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Attack")
-	float AttackDamage = 10.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Attack")
 	TEnumAsByte<ECollisionChannel> AttackTraceChannel = ECC_Pawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Attack")
@@ -148,6 +140,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Attack")
 	FColor AttackTraceBlockedColor = FColor::Blue;
+	
+	UPROPERTY()
+	FTimerHandle DeathReturnTimerHandle;
 
 private:
 	//스탯 컴포넌트

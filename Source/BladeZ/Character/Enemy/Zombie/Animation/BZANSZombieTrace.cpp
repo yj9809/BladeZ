@@ -35,8 +35,8 @@ void UBZANSZombieTrace::NotifyEnd(
 		return;
 	}
 
-	if (ABZZombie* Zombie = Cast<ABZZombie>(MeshComp->GetOwner()))
-	{
-		Zombie->EndAttackTrace();
-	}
+	// if (ABZZombie* Zombie = Cast<ABZZombie>(MeshComp->GetOwner()))
+	// {
+	// 	Zombie->EndAttackTrace();
+	// }
 }

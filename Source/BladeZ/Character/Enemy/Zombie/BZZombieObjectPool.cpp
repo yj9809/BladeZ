@@ -42,13 +42,14 @@ void UBZZombieObjectPool::ReturnZombieToPool(ABZZombie* ReturnZombie)
 	{
 		return;
 	}
+	
+	
 	UE_LOG(LogTemp,Warning, TEXT("%s"), *ReturnZombie->GetName());
 	
-	//비활성화
+	//활성화
 	DeActiveZombies(ReturnZombie);
-	
-	//풀에 넣기
 	ZombiePool.Push(ReturnZombie);
+	
 }
 
 void UBZZombieObjectPool::CreateZombie(TSubclassOf<ABZZombie> InZombieClass, int32 InZombiePoolSize)
@@ -69,13 +70,18 @@ void UBZZombieObjectPool::CreateZombie(TSubclassOf<ABZZombie> InZombieClass, int
 	// 오브젝트 풀 객체 생성.
 	for (int i = 0; i < InZombiePoolSize; i++)
 	{
-		ABZZombie* Zombie = GetWorld()->SpawnActor<ABZZombie>(InZombieClass);
+		ABZZombie* Zombie = GetWorld()->SpawnActor<ABZZombie>(InZombieClass,
+			FVector(0.0f,0.0f,500.0f)* i,
+			FRotator(0.0f,0.0f,0.0f));
+		
 		
 		if (!Zombie)
 		{
 			continue;
 		}
 				
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *Zombie->GetName());
+		
 		Zombie->SetZombieObjectPool(this);
 		ReturnZombieToPool(Zombie);
 	}
@@ -87,7 +93,6 @@ void UBZZombieObjectPool::ActiveZombies(ABZZombie* InZombie)
 	if (InZombie)
 	{
 		InZombie->SetActorHiddenInGame(false);
-		
 		InZombie->SetActorEnableCollision(true);
 		InZombie->SetActorTickEnabled(true);
 		InZombie->GetCharacterMovement()->bUseRVOAvoidance = true;
@@ -98,9 +103,12 @@ void UBZZombieObjectPool::DeActiveZombies(ABZZombie* InZombie)
 {
 	if  (InZombie)
 	{
-		InZombie->SetActorHiddenInGame(true);
 		InZombie->SetActorEnableCollision(false);
+		
+		InZombie->SetActorHiddenInGame(true);
 		InZombie->SetActorTickEnabled(false);
 		InZombie->GetCharacterMovement()->bUseRVOAvoidance = false;
 	}
 }
+
+
