@@ -365,6 +365,12 @@ void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 {
+	// 타이머가 도는 중이면 대쉬 로직 실행하지 않음.
+	if (GetWorldTimerManager().IsTimerActive(DashCoolDownTimerHandle))
+	{
+		return;
+	}
+	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
@@ -375,6 +381,9 @@ void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 		FName SectionName = GetDashSectionName(Direction);
 		PlayAnimMontage(DashMontage, 1.18f, SectionName);
 	}
+	
+	// 타이머 실행.
+	GetWorldTimerManager().SetTimer(DashCoolDownTimerHandle, DashCoolDownTime, false);
 }
 
 FName ABZPlayerCharacter::GetDashSectionName(float Direction)

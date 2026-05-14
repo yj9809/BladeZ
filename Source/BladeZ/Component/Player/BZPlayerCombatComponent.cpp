@@ -3,6 +3,7 @@
 
 #include "BZPlayerCombatComponent.h"
 
+#include "Character/Player/BZPlayerCharacter.h"
 #include "Common/BZLog.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
@@ -58,6 +59,46 @@ void UBZPlayerCombatComponent::BeginPlay()
 	}
 }
 
+void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
+	// 공격 중일 때만 처리
+	if (bIsAttacking && AttackMontage)
+	{
+		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(GetOwner());  // 캐릭터 얻기
+		if (Player)
+		{
+			UAnimInstance* AnimInstance = Player->GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				// 현재 몽타주 재생 위치
+				float CurrentPosition = AnimInstance->Montage_GetPosition(AttackMontage);
+                
+				// "AttackRate" 커브에서 값 가져오기
+				const FRawCurveTracks& CurveTracks = AttackMontage->GetCurveData();
+				float CurveValue = 1.0f;
+
+				// FloatCurves에서 "AttackRate" 찾기
+				for (const FFloatCurve& Curve : CurveTracks.FloatCurves)
+				{
+					if (Curve.GetName() == FName(TEXT("AttackRate")))
+					{
+						CurveValue = Curve.FloatCurve.Eval(CurrentPosition);
+						break;
+					}
+				}
+
+				// 커브 값을 Base에 곱해 PlayRate 조정.
+				CurveValue = BasePlayRate * CurveValue;
+				PLAYER_LOG(Log, "CurveValue: %f", CurveValue);
+				AnimInstance->Montage_SetPlayRate(AttackMontage, CurveValue);
+			}
+		}
+	}
+}
+
 void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 {
 	if (!bIsAttacking)
@@ -91,7 +132,7 @@ void UBZPlayerCombatComponent::StartComboAttack()
 			break;
 		}
 		
-		Owner->PlayAnimMontage(AttackMontage, 2.5f, Key);
+		Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
 		
 		// 첫 번째 섹션 이름으로 변경.
 		CurrentComboName = Key;

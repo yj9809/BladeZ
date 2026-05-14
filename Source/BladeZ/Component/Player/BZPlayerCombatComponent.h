@@ -27,6 +27,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 public:	
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
 	// 공격 입력 값 추가용 함수.
 	void SetAttackInput(EBZAttackInputType NewInputType);
 	
@@ -79,4 +81,8 @@ private:
 	// 공격 상태 확인 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	bool bIsAttacking = false;
+	
+	// 기본 베이스 Play Rate.
+	UPROPERTY(VisibleAnywhere, Category = Combat)
+	float BasePlayRate = 2.5f;
 };

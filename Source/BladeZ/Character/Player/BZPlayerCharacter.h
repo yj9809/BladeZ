@@ -138,6 +138,13 @@ private:
 	// 대쉬 몽타주
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> DashMontage;
+	
+	// 대쉬 쿨다운 타이머 핸들.
+	FTimerHandle DashCoolDownTimerHandle;
+	
+	// 대쉬 타이머 값.
+	UPROPERTY(EditAnywhere, Category = Dash)
+	float DashCoolDownTime = 1.0f;
 
 private:
 	/*
