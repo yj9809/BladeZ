@@ -442,6 +442,8 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 	UBZHUDWidget* InHUDWidget = Cast<UBZHUDWidget>(InWidget);
 	if (InHUDWidget)
 	{
+		// Hp Bar.
+		
 		// Stat 정보를 HUD에 전달.
 		// 아직 Stat의 MaxHP만 활용하고 있음. (26.05.12)
 		InHUDWidget->UpdateStat(Stat->GetMaxHp());
@@ -452,6 +454,9 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		// 전달받은 위젯의 함수를 스탯 컴포넌트가 발생하는 
 		// 델리게이트에 연결(바인딩).
 		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZHUDWidget::UpdateHpBar);
+
+
+
 	}
 }
 

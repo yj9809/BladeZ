@@ -9,7 +9,7 @@
 /**
  * 
  */
-
+class UOverlay;
 class UImage;
 
 UCLASS()
@@ -24,7 +24,7 @@ public:
 	void RegisterTrackedActor(AActor* Actor);
 
 	// 미니맵에 등록된 추적 Actor를 해제.
-	void UnRegisterTrackedActor(AActor* Actor);
+	void UnregisterTrackedActor(AActor* Actor);
 
 protected:
 	// UMG가 초기화될 때 호출되는 함수.
@@ -36,6 +36,10 @@ protected:
 	*/
 	virtual void NativeDestruct() override;
 
+	/*
+	* Player가 더 자주 회전하므로, Tick마다 Yaw를 가져와서
+	* 여기서 PlayerIcon의 Yaw에 반영.
+	*/
 	virtual void NativeTick(
 		const FGeometry& MyGeometry,
 		float InDeltaTime
@@ -46,6 +50,10 @@ private:
 	void UpdateMinimap();
 
 protected:
+	// 전체 Contents를 담은 Panel.
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UOverlay> IconOverlay;
+
 	// Player의 회전을 보여주는 Icon. 언제나 중앙에 위치.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> PlayerIcon;
@@ -56,6 +64,14 @@ protected:
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Minimap")
 	float UpdateInterval = 0.1f;
+
+	// BossIcon의 Widget.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	TSubclassOf<UUserWidget> BossIconWidget;
+
+	// ZombieIcon의 Widget.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	TSubclassOf<UUserWidget> ZombieIconWidget;
 
 private:
 

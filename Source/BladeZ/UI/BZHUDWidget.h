@@ -36,6 +36,9 @@ public:
 	);
 
 	// For Minimap.
+	void RegisterMinimapActor(AActor* Actor);
+
+	void UnregisterMinimapActor(AActor* Actor);
 
 
 	// For KillCount.

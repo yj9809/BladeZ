@@ -4,6 +4,7 @@
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHpBarWidget.h"
 #include "BZBossHUDWidget.h"
+#include "BZMinimapWidget.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -32,6 +33,16 @@ void UBZHUDWidget::NativeConstruct()
 void UBZHUDWidget::UpdateStat(const float NewMaxHp)
 {
 	HpBarWidget->SetMaxHp(NewMaxHp);
+}
+
+void UBZHUDWidget::RegisterMinimapActor(AActor* Actor)
+{
+	MinimapWidget->RegisterTrackedActor(Actor);
+}
+
+void UBZHUDWidget::UnregisterMinimapActor(AActor* Actor)
+{
+	MinimapWidget->UnregisterTrackedActor(Actor);
 }
 
 void UBZHUDWidget::UpdateHpBar(float NewCurrentHp)

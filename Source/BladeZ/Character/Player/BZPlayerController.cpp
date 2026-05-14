@@ -5,7 +5,7 @@
 #include "UI/BZUserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Interface/BZCharacterHUD.h"
-
+#include "UI/BZHUDWidget.h"
 
 
 ABZPlayerController::ABZPlayerController()
@@ -79,6 +79,12 @@ void ABZPlayerController::AddBossHUD()
 			{
 				HUDTarget->SetupHUDWidget(BossHUDWidget);
 			}
+
+			if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+			{
+				MainHUDWidget->RegisterMinimapActor(Actor);
+			}
+
 			break;
 		}
 	}
