@@ -39,8 +39,7 @@ void UBZTankState_ThrowObject::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
-	if (ThrowTarget && FVector::Dist(TankCharacter->GetActorLocation(), ThrowTarget->GetActorLocation()) < TankCharacter
-		->AttackRange
+	if (ThrowTarget && FVector::Dist(TankCharacter->GetActorLocation(), ThrowTarget->GetActorLocation()) < 250.0f
 		&& bIsHoldingObject == false)
 	{
 		ThrowObject();
@@ -49,8 +48,28 @@ void UBZTankState_ThrowObject::OnUpdate(AActor* Owner, float DeltaTime)
 	if (TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->ThrowObjectMontage) ==
 		"Throw")
 	{
-		// 던지는 힘
-		ThrowTarget->Throw(TankCharacter->GetActorForwardVector() * TankCharacter->DistanceToTarget + FVector(0.0f, 0.0f, 50.0f));
+		// 타겟의 속도를 고려한 예측 사격 (Lead Shot)
+		FVector ThrowDirection = TankCharacter->GetActorForwardVector();
+
+		if (TankCharacter->TargetActor)
+		{
+			FVector TargetVelocity = TankCharacter->TargetActor->GetVelocity();
+			float Distance = TankCharacter->DistanceToTarget;
+
+			// 투사체 속도에 따른 도달 시간 계산
+			float ProjectileSpeed = Distance + Distance / 20;
+			float LookAheadTime = Distance / ProjectileSpeed;
+
+			// 예측 위치: 현재 위치 + (속도 * 도달 시간)
+			FVector PredictedLocation = TankCharacter->TargetActor->GetActorLocation() + (TargetVelocity *
+				LookAheadTime);
+
+			// 현재 캐릭터 위치에서 예측 위치로의 방향 계산
+			ThrowDirection = (PredictedLocation - TankCharacter->GetActorLocation()).GetSafeNormal();
+		}
+
+		// 던지는 힘 (예측 방향 * 거리 + 수직 오프셋)
+		ThrowTarget->Throw(ThrowDirection * TankCharacter->DistanceToTarget + FVector(0.0f, 0.0f, 50.0f));
 	}
 }
 
@@ -86,6 +105,7 @@ void UBZTankState_ThrowObject::ThrowObject()
 		TankCharacter->CustomMoveTo->SetRootMotionOverride(false);
 	}
 	TankCharacter->SetBlendingMotion(false);
+	
 	if (TankCharacter->ThrowObjectMontage)
 	{
 		TankCharacter->PlayAnimMontage(TankCharacter->ThrowObjectMontage);

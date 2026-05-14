@@ -46,7 +46,6 @@ void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
-		CheckAttackMontageSection(TankCharacter->AttackMontage, true, bIsUsingBothHands, 5.0f);
 		// BOSS_LOG(Log, "sssssssss")
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)

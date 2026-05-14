@@ -22,4 +22,6 @@ public:
 
 private:
 	float NearDistance = 300.0f;
+	float ElapsedTime = 0.0f;
+	float MaxFollowTime = 3.0f;
 };

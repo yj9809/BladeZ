@@ -31,7 +31,6 @@ public:
 private:
 	void FinishJump();
 	float ElapsedTime;
-
 	
 private:
 	FOnMontageEnded JumpMontageEndDelegate;
