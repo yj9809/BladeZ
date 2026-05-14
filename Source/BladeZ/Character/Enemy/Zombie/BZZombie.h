@@ -6,6 +6,8 @@
 #include "Component/BZCharacterStatComponent.h"
 #include "BZZombie.generated.h"
 
+class UBZZombieObjectPool;
+
 UENUM(BlueprintType)
 enum class EZombieState : uint8
 {
@@ -50,6 +52,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	void SetZombieState(EZombieState NewState = EZombieState::Dead);
 
+	//좀비 풀 Setter
+	void SetZombieObjectPool(UBZZombieObjectPool* InZombieObjectPool)
+	{
+		ZombieObjectPool = InZombieObjectPool;
+	}
+	
 	//Getter
 	UFUNCTION(BlueprintPure, Category = "Zombie|FSM")
 	EZombieState GetZombieState() const { return CurrentState; }
@@ -59,6 +67,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Zombie|Attack")
 	void EndAttackTrace();
+	
+	
 
 private:
 
@@ -66,6 +76,7 @@ private:
 	void ChaseState(float DeltaTime);
 	void AttackState(float DeltaTime);
 	void DeadState(float DeltaTime);
+	void InActiveState(float DeltaTime);
 	//거리 구하는 함수
 	float GetDistanceToTarget2D() const;
 	void PerformAttackTrace();
@@ -148,4 +159,7 @@ private:
 	
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<AActor>> AttackHitActors;
+	
+	UPROPERTY()
+	UBZZombieObjectPool* ZombieObjectPool;
 };

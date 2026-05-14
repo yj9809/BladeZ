@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AIController.h"
+#include "BZZombieObjectPool.h"
 
 ABZZombie::ABZZombie()
 {
@@ -55,6 +56,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	Stat->ApplyDamage();
+
 
 	return DamageAmount;
 }
@@ -189,6 +191,14 @@ void ABZZombie::AttackState(float DeltaTime)
 
 void ABZZombie::DeadState(float DeltaTime)
 {
+	SetZombieState(EZombieState::Inactive);
+	ZombieObjectPool->ReturnZombieToPool(this);
+	
+}
+
+void ABZZombie::InActiveState(float DeltaTime)
+{
+	
 }
 
 void ABZZombie::SetZombieState(EZombieState NewState)
@@ -210,11 +220,6 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 
 	if (CurrentState == EZombieState::Dead)
 	{
-		GetCharacterMovement()->bUseRVOAvoidance = false;
-		GetCharacterMovement()->StopMovementImmediately();
-		GetCharacterMovement()->DisableMovement();
-		SetActorEnableCollision(false);
-		GetCapsuleComponent()->SetCanEverAffectNavigation(false);
 		AttackHitActors.Empty();
 	}
 }
