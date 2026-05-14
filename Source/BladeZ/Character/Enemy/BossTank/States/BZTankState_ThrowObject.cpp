@@ -69,7 +69,7 @@ void UBZTankState_ThrowObject::OnUpdate(AActor* Owner, float DeltaTime)
 		}
 
 		// 던지는 힘 (예측 방향 * 거리 + 수직 오프셋)
-		ThrowTarget->Throw(ThrowDirection * TankCharacter->DistanceToTarget + FVector(0.0f, 0.0f, 50.0f));
+		ThrowTarget->Throw(ThrowDirection * TankCharacter->DistanceToTarget + FVector(0.0f, 0.0f, 200.0f));
 	}
 }
 
@@ -87,11 +87,22 @@ void UBZTankState_ThrowObject::OnExit(AActor* Owner)
 
 AActor* UBZTankState_ThrowObject::GetAvailableObject()
 {
-	if (FoundThrowable.Num() > 0)
+	AActor* ClosestActor = nullptr;
+	float MinDistance = TNumericLimits<float>::Max();
+
+	for (AActor* Actor : FoundThrowable)
 	{
-		return FoundThrowable[0];
+		if (Actor)
+		{
+			float Distance = FVector::Dist(TankCharacter->GetActorLocation(), Actor->GetActorLocation());
+			if (Distance < MinDistance)
+			{
+				MinDistance = Distance;
+				ClosestActor = Actor;
+			}
+		}
 	}
-	return nullptr;
+	return ClosestActor;
 }
 
 void UBZTankState_ThrowObject::ThrowObject()

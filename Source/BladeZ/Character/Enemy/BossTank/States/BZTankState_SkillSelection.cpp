@@ -92,18 +92,16 @@ void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateB
 
 void UBZTankState_SkillSelection::BuildMiddleSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
-	AddStateIfValid(States, TankCharacter->SprintStateInstance);
-		AddStateIfValid(States, TankCharacter->JumpToStateInstance);
-	
+	AddStateIfValid(States, TankCharacter->SprintStateInstance);	
 }
 
 void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
-	// 멀 때
+	// // 멀 때
 	// AddStateIfValid(States, TankCharacter->SprintStateInstance);
 	// AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
-	if (TankCharacter->JumpToCooldown.IsTimeout())
-	{
+	// if (TankCharacter->JumpToCooldown.IsTimeout())
+	// {
 		AddStateIfValid(States, TankCharacter->JumpToStateInstance);
-	}
+	// }
 }

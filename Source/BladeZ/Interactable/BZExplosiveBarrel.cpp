@@ -15,6 +15,7 @@ ABZExplosiveBarrel::ABZExplosiveBarrel()
 	RootComponent = Mesh;
 
 	Mesh->SetSimulatePhysics(true);
+	Mesh->SetNotifyRigidBodyCollision(true); // Ensure Hit events are generated
 	Mesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 	
 	// OnHit 바인딩
@@ -35,6 +36,11 @@ void ABZExplosiveBarrel::BeginPlay()
 void ABZExplosiveBarrel::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (GetActorLocation().Z < -500.0f)
+	{
+		Destroy();
+	}
 }
 
 void ABZExplosiveBarrel::ReceiveDamage_Implementation(float DamageAmount, AActor* DamageCauser)

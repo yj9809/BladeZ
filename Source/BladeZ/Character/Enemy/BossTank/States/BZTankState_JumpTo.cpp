@@ -59,7 +59,7 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		{
 			FHitResult GroundHit;
 			FVector Start = TankCharacter->GetActorLocation();
-			FVector End = Start - FVector(0, 0, 500.0f); // 캐릭터 발밑 검사
+			FVector End = Start - FVector(0, 0, 550.0f); // 캐릭터 발밑 검사
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(TankCharacter);
 

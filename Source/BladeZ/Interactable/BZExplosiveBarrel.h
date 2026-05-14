@@ -61,7 +61,7 @@ protected:
 	float ExplosionDamage = 50.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	float ExplosionRadius = 500.0f;
+	float ExplosionRadius = 300.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TObjectPtr<class UParticleSystem> ExplosionEffect;

@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/BZStatRowNameProvider.h"
 #include "Interface/BZCharacterHUD.h"
+#include "BZBossPhaseData.h"
 #include "BZTankCharacter.generated.h"
 
 UCLASS()
@@ -73,6 +74,14 @@ public:
 	// 상태 머신 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FSM")
 	class UBZTankStateMachine* StateMachine;
+
+	// 페이즈 관리 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	class UBZBossPhaseComponent* PhaseComponent;
+
+	// 페이즈 설정 데이터 에셋
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	class UBZBossPhaseDataAsset* PhaseDataAsset;
 
 	// 이동 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
@@ -162,6 +171,9 @@ public:
 
 private:
 	void UpdateTimers(float DeltaTime);
+
+	UFUNCTION()
+	void OnBossPhaseChanged(EBossPhase NewPhase);
 
 private:
 	bool bIsPlayingCustomRootMotion;

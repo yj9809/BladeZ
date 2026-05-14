@@ -14,6 +14,8 @@
 #include "DrawDebugHelpers.h"
 
 
+#include "BZBossPhaseComponent.h"
+
 ABZTankCharacter::ABZTankCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -21,6 +23,7 @@ ABZTankCharacter::ABZTankCharacter()
 
 	StateMachine = CreateDefaultSubobject<UBZTankStateMachine>(TEXT("TankStateMachine"));
 	CustomMoveTo = CreateDefaultSubobject<UBZCustomMoveTo>(TEXT("CustomMoveTo"));
+	PhaseComponent = CreateDefaultSubobject<UBZBossPhaseComponent>(TEXT("PhaseComponent"));
 
 	/*
 	* 작성자: 강수연
@@ -241,6 +244,30 @@ void ABZTankCharacter::BeginPlay()
 	{
 		StateMachine->ChangeState(IdleStateInstance);
 	}
+
+	// 페이즈 컴포넌트 초기화
+	if (PhaseComponent)
+	{
+		PhaseComponent->Initialize(Stat, PhaseDataAsset);
+		PhaseComponent->OnPhaseChanged.AddUObject(this, &ABZTankCharacter::OnBossPhaseChanged);
+	}
+}
+
+void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
+{
+	// 페이즈 전환 시 공통 처리 (예: 포효 상태로 강제 전환)
+	const FBossPhaseData* PhaseData = PhaseComponent->GetCurrentPhaseData();
+	if (PhaseData && PhaseData->TransitionMontage)
+	{
+		// 포효 상태가 있다면 해당 상태로 전이
+		if (RoarStateInstance)
+		{
+			StateMachine->ChangeState(RoarStateInstance);
+		}
+	}
+
+	// 로그 기록
+	UE_LOG(LogTemp, Warning, TEXT("Boss Phase Changed to: %d"), (uint8)NewPhase);
 }
 
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
