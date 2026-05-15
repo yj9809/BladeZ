@@ -175,7 +175,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 	bHasNextInput = false;
 }
 
-void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Point)
+void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVector Point)
 {
 	// 현재 진행중인 콤보의 데이터를 바로 얻기 위해 FindByPredicate를 사용하여,
 	// 람다로 현재 진행중인 콤보 이름과 동일한 데이터를 찾아서 가져오도록 구현.
@@ -192,7 +192,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Po
 	}
 
 	UGameplayStatics::ApplyDamage(
-		const_cast<AActor*>(Enemy),
+		const_cast<AActor*>(Enemy->GetActor()),
 		CurrentData ? CurrentData->Damage : 0.0f, // 데이터가 없을 경우 기본 데미지 10.
 		Owner->GetController(),
 		Owner,
@@ -202,9 +202,10 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Po
 	PLAYER_LOG(Log, "%s", *CurrentComboName.ToString());
 
 	FBZDamageEvent DamageEvent;
-	DamageEvent.SetKnockback(CurrentData->CurrentSectionName == TEXT("LLLL_4"));
-
-	const_cast<AActor*>(Enemy)->TakeDamage(
+	DamageEvent.HitInfo = *Enemy;
+	
+	
+	const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
 		CurrentData->Damage,
 		DamageEvent,
 		Owner->GetController(),

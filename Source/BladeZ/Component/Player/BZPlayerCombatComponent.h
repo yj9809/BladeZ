@@ -39,7 +39,7 @@ public:
 	void CheckCombo();
 	
 	// 실제 데미지 처리용 함수.
-	void OnAttackHit(const AActor* Enemy, const FVector Point);
+	void OnAttackHit(const FHitResult* Enemy, const FVector Point);
 	
 	// 몽타주 재생 종료 시 초기화 함수.
 	UFUNCTION()
