@@ -326,7 +326,7 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		
 		// Todo: 추후 데미지 분기 처리를 해서 재생 섹션을 다르게 해야함.
 		// Todo: 논의 내용으로 FDamageEvent, UDamageType, DamageAmount 값을 통한 분기 처리 등이 있음.
-		PlayAnimMontage(HitMontage);
+		//PlayAnimMontage(HitMontage);
 	}
 	
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);

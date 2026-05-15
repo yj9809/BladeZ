@@ -39,7 +39,7 @@ public:
 	void CheckCombo();
 	
 	// 실제 데미지 처리용 함수.
-	void OnAttackHit(const AActor* Enemy);
+	void OnAttackHit(const AActor* Enemy, const FVector Point);
 	
 	// 몽타주 재생 종료 시 초기화 함수.
 	UFUNCTION()
@@ -85,4 +85,16 @@ private:
 	// 기본 베이스 Play Rate.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	float BasePlayRate = 2.5f;
+	
+	// HitStop 상태 플래그.
+	UPROPERTY(VisibleAnywhere, Category = HitStop)
+	bool bIsHitStop = false;
+	
+	// HitStop 시작 지점의 실제 시간.
+	UPROPERTY(VisibleAnywhere, Category = HitStop)
+	float HitStopStartRealTime = 0.0f;
+	
+	// HitStop 지속 시간.
+	UPROPERTY(VisibleAnywhere, Category = HitStop)
+	float HitStopEndTime = 0.0f;
 };

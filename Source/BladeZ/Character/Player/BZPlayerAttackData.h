@@ -34,7 +34,16 @@ public:
 	int32 depth = 0;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CameraShake)
-	float Amplitude;
+	float Amplitude = 0.0f;
+	
+	// 히트 스톱 값(초 단위).
+	// index0: 지속 시간, index1: 강도.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = HitStop)
+	TArray<float> HitStopValue;
+	
+	// 이펙트.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effect)
+	TArray<TObjectPtr<class UNiagaraSystem>> HitEffect;
 };
 
 /**

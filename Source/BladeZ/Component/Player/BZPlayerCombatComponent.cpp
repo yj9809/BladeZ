@@ -3,6 +3,7 @@
 
 #include "BZPlayerCombatComponent.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Character/Player/BZPlayerCharacter.h"
 #include "Common/BZLog.h"
 #include "GameFramework/Character.h"
@@ -92,9 +93,19 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 
 				// 커브 값을 Base에 곱해 PlayRate 조정.
 				CurveValue = BasePlayRate * CurveValue;
-				PLAYER_LOG(Log, "CurveValue: %f", CurveValue);
 				AnimInstance->Montage_SetPlayRate(AttackMontage, CurveValue);
 			}
+		}
+	}
+	
+	if (bIsHitStop)
+	{
+		float ElapsedTime = GetWorld()->GetRealTimeSeconds() - HitStopStartRealTime;
+		if (ElapsedTime >= HitStopEndTime)
+		{
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+			bIsHitStop = false;
+			HitStopEndTime = 0.0f;
 		}
 	}
 }
@@ -163,9 +174,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 	bHasNextInput = false;
 }
 
-// Todo: 데미지 처리를 위해 AActor로 받아서 Component로 처리할지 Component로 받을지 고민해봐야함.
-// 일단 AActor로 처리.
-void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
+void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Point)
 {
 	// 현재 진행중인 콤보의 데이터를 바로 얻기 위해 FindByPredicate를 사용하여,
 	// 람다로 현재 진행중인 콤보 이름과 동일한 데이터를 찾아서 가져오도록 구현.
@@ -188,6 +197,32 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
 		Owner,
 		UDamageType::StaticClass()
 	);
+	
+	if (!CurrentData->HitStopValue.IsEmpty() && !bIsHitStop)
+	{
+		PLAYER_LOG(Log, "HitStopValue: %f, %f", CurrentData->HitStopValue[0], CurrentData->HitStopValue[1]);
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), CurrentData->HitStopValue[1]);
+		HitStopEndTime = CurrentData->HitStopValue[0];
+		HitStopStartRealTime = GetWorld()->GetRealTimeSeconds();
+		bIsHitStop = true;
+	}
+	
+	if (!CurrentData->HitEffect.IsEmpty())
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			CurrentData->HitEffect[0],
+			Point,
+			FRotator::ZeroRotator
+		);
+		
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			CurrentData->HitEffect[1],
+			Point,
+			FRotator::ZeroRotator
+		);
+	}
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)

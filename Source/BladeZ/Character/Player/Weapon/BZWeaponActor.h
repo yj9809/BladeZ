@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "BZWeaponActor.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnAttackHit, const AActor* Enemy)
+DECLARE_DELEGATE_TwoParams(FOnAttackHit, const AActor* Enemy, const FVector Point);
 
 UCLASS()
 class BLADEZ_API ABZWeaponActor : public AActor

@@ -157,7 +157,7 @@ private:
 	
 	// 대쉬 타이머 값.
 	UPROPERTY(EditAnywhere, Category = Dash)
-	float DashCoolDownTime = 1.0f;
+	float DashCoolDownTime = 0.5f;
 	
 	// Land value private.
 private:
