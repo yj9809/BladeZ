@@ -27,9 +27,10 @@ public:
 	virtual void OnEnter(AActor* Owner) override;
 	virtual void OnUpdate(AActor* Owner, float DeltaTime) override;
 	virtual void OnExit(AActor* Owner) override;
-
+	
 private:
 	void FinishJump();
+	bool DetectGround(FHitResult& OutHit, float Distance) const;
 	float ElapsedTime;
 	
 private:

@@ -48,7 +48,6 @@ void UBZTankState_SprintAttack::OnExit(AActor* Owner)
 	Super::OnExit(Owner);
 	TankCharacter->SetBlendingMotion(false);
 	TankCharacter->CustomMoveTo->SetFixedRotation(true);
-	
 }
 
 void UBZTankState_SprintAttack::OnSprintAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)

@@ -53,7 +53,7 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 	{
 		BuildFarSkillCandidates(AvailableStates);
 	}
-	
+
 	// 사용 가능한 상태가 없으면 KeepDistance로
 	if (AvailableStates.Num() == 0)
 	{
@@ -84,24 +84,25 @@ void UBZTankState_SkillSelection::AddStateIfValid(TArray<UBZTankStateBase*>& Sta
 void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
 	// 가까울 때
-	// if (TankCharacter->DefaultAttackCooldown.IsTimeout())
-	// {
-		AddStateIfValid(States, TankCharacter->ChaseStateInstance);
-	// }
+	if (TankCharacter->BackUpCooldown.IsTimeout())
+	{
+		AddStateIfValid(States, TankCharacter->BackUpStateInstance);
+	}
+	AddStateIfValid(States, TankCharacter->ChaseStateInstance);
 }
 
 void UBZTankState_SkillSelection::BuildMiddleSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
-	AddStateIfValid(States, TankCharacter->SprintStateInstance);	
+	AddStateIfValid(States, TankCharacter->SprintStateInstance);
 }
 
 void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
-	// // 멀 때
-	// AddStateIfValid(States, TankCharacter->SprintStateInstance);
-	// AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
-	// if (TankCharacter->JumpToCooldown.IsTimeout())
-	// {
+	// 멀 때
+	AddStateIfValid(States, TankCharacter->SprintStateInstance);
+	AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
+	if (TankCharacter->JumpToCooldown.IsTimeout())
+	{
 		AddStateIfValid(States, TankCharacter->JumpToStateInstance);
-	// }
+	}
 }

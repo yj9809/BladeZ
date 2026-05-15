@@ -8,6 +8,7 @@
 #include "Common/BZLog.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 void UBZTankState_JumpTo::OnEnter(AActor* Owner)
 {
@@ -58,17 +59,19 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		if (TankCharacter->GetVelocity().Z < 0)
 		{
 			FHitResult GroundHit;
-			FVector Start = TankCharacter->GetActorLocation();
-			FVector End = Start - FVector(0, 0, 550.0f); // 캐릭터 발밑 검사
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(TankCharacter);
-
 			// 바닥 감지 시 내려찍기 실행
-			if (GetWorld()->LineTraceSingleByChannel(GroundHit, Start, End, ECollisionChannel::ECC_WorldStatic, Params))
+			if (DetectGround(GroundHit, 550.0f))
 			{
 				TankCharacter->GetCharacterMovement()->GravityScale = 5.0f;
 				TankCharacter->LaunchCharacter(FVector(0, 0, -1000), true, true);
 				TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
+				TankCharacter->SetBlendingMotion(true);
+				
+				UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
+				if (AnimInstance)
+				{
+					AnimInstance->Montage_SetEndDelegate(JumpMontageEndDelegate, TankCharacter->JumpMontage);
+				}
 			}
 		}
 	}
@@ -78,14 +81,14 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage)
 		== "Loop")
 	{
-		// TankCharacter->SetBlendingMotion(false);
 		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
-	}
+		TankCharacter->SetBlendingMotion(true);
 
-	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
-	if (AnimInstance)
-	{
-		AnimInstance->Montage_SetEndDelegate(JumpMontageEndDelegate, TankCharacter->JumpMontage);
+		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_SetEndDelegate(JumpMontageEndDelegate, TankCharacter->JumpMontage);
+		}
 	}
 }
 
@@ -104,6 +107,21 @@ void UBZTankState_JumpTo::OnExit(AActor* Owner)
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(false);
 }
 
+bool UBZTankState_JumpTo::DetectGround(FHitResult& OutHit, float Distance) const
+{
+	if (!TankCharacter || !GetWorld())
+	{
+		return false;
+	}
+
+	FVector Start = TankCharacter->GetActorLocation();
+	FVector End = Start - FVector(0, 0, Distance); // 캐릭터 발밑 검사
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(TankCharacter);
+
+	return GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECollisionChannel::ECC_WorldStatic, Params);
+}
+
 void UBZTankState_JumpTo::FinishJump()
 {
 	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
@@ -111,14 +129,5 @@ void UBZTankState_JumpTo::FinishJump()
 
 void UBZTankState_JumpTo::OnJumpMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (TankCharacter && TankCharacter->GetMesh())
-	{
-		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			FName CurrentSection = AnimInstance->Montage_GetCurrentSection(Montage);
-		}
-	}
-
 	FinishJump();
 }

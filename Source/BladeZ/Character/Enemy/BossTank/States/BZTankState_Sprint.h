@@ -22,4 +22,5 @@ public:
 
 private:
 	float SprintAttackRange = 1000.0f;
+	float RangeAdjustment = 200.0f;
 };

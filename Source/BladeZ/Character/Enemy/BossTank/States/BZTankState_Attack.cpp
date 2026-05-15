@@ -22,21 +22,24 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 
 	if (UBZCustomMoveTo* MoveComp = TankCharacter->CustomMoveTo)
 	{
-		MoveComp->SetEnabled(true);
+		MoveComp->SetEnabled(false);
 	}
-	TankCharacter->SetBlendingMotion(true);
+	TankCharacter->SetBlendingMotion(false);
 
-	// 2종류의 Attack 중 랜덤으로 고르기
-	if (FMath::RandBool())
+	// 여러종류의 Attack 중 랜덤으로 고르기
+	uint8 RandIndex = FMath ::RandRange(0, 2);
+	if (RandIndex == 0)
 	{
+		TankCharacter->SetBlendingMotion(true);
 		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "Default");
-		bIsUsingBothHands = false;
+	}
+	else if (RandIndex == 1)
+	{
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "2ndAttack");
 	}
 	else
 	{
-		TankCharacter->SetBlendingMotion(false);
-		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "2ndAttack");
-		bIsUsingBothHands = true;
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "3rdAttack");
 	}
 }
 
@@ -46,7 +49,6 @@ void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
-		// BOSS_LOG(Log, "sssssssss")
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{

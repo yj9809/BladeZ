@@ -39,6 +39,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea = false, float AttackDamage = 0.0f);
 
+	// 이펙트 재생 함수
+	void PlayEffect(); 
+	
 	// 데미지 받는 함수
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
@@ -55,7 +58,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	
 	// 이전 프레임의 소켓 위치 저장용 변수
 	FVector LastRHandLocation;
 	FVector LastLHandLocation;
@@ -66,6 +69,10 @@ protected:
 
 	// 대미지
 	float AttackDamageValue = 0.0f;
+	
+	// 내려찍는 효과
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TObjectPtr<class UParticleSystem> GroundEffect;
 
 public:
 	// Called every frame
@@ -118,6 +125,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> ThrowObjectStateClass;
 
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> BackUpStateClass;
+
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
 	UPROPERTY()
@@ -149,6 +159,9 @@ public:
 
 	UPROPERTY()
 	class UBZTankStateBase* ThrowObjectStateInstance;
+	
+	UPROPERTY()
+	class UBZTankStateBase* BackUpStateInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	AActor* TargetActor;
@@ -168,6 +181,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* ThrowObjectMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* BackUpMontage;
 
 private:
 	void UpdateTimers(float DeltaTime);
@@ -199,13 +215,16 @@ public:
 	float MiddleSkillRange = 900.0f;
 	float FarSkillRange = 1500.0f;
 	float DistanceToTarget = 1000.0f;
-
+	
 	// 각종 쿨타임 변수
 	UPROPERTY()
 	FSkillCooldown DefaultAttackCooldown{3.0f};
 
 	UPROPERTY()
 	FSkillCooldown JumpToCooldown{3.0f};
+	
+	UPROPERTY()
+	FSkillCooldown BackUpCooldown{5.0f};
 
 private:
 	/*

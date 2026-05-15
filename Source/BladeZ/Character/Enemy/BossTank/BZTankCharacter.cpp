@@ -45,7 +45,8 @@ ABZTankCharacter::ABZTankCharacter()
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
-void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea, float AttackDamage)
+void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea,
+                                    float AttackDamage)
 {
 	bIsAttackOn = bIsOn;
 	bCurrentEnableRight = bEnableRight;
@@ -57,6 +58,17 @@ void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableL
 	{
 		HitActors.Empty();
 		bIsFirstAttackFrame = true;
+	}
+}
+
+void ABZTankCharacter::PlayEffect()
+{
+	if (GroundEffect)
+	{
+		FVector Offset = GetActorForwardVector() * 150 + FVector(0, 0, -185);
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(), GroundEffect, GetActorLocation() + Offset,
+			FRotator::ZeroRotator, FVector(0.5f, 0.5f, 0.5f));
 	}
 }
 
@@ -76,7 +88,7 @@ void ABZTankCharacter::Tick(float DeltaTime)
 			// 현재 프레임의 소켓 위치 가져오기
 			FVector CurrentRHandLocation = MeshComp->GetSocketLocation(FName("RHandAttackSocket"));
 			FVector CurrentLHandLocation = MeshComp->GetSocketLocation(FName("LHandAttackSocket"));
-			FVector CurrentAreaLocation = MeshComp->GetSocketLocation(FName("HandSocket"));			
+			FVector CurrentAreaLocation = MeshComp->GetSocketLocation(FName("HandSocket"));
 
 			// 공격이 막 시작된 첫 프레임에는 이전 위치 데이터가 없으므로 현재 위치로 동기화합니다.
 			if (bIsFirstAttackFrame)
@@ -86,7 +98,8 @@ void ABZTankCharacter::Tick(float DeltaTime)
 				LastAreaLocation = CurrentAreaLocation;
 				bIsFirstAttackFrame = false;
 			}
-
+			bool bIsDebugEnabled = false;
+			
 			float HandRadius = 55.0f;
 			float AreaRadius = 100.0f;
 			FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
@@ -101,7 +114,8 @@ void ABZTankCharacter::Tick(float DeltaTime)
 					AActor* HitActor = HitResult.GetActor();
 					if (HitActor && HitActor != this && !HitActors.Contains(HitActor))
 					{
-						UGameplayStatics::ApplyDamage(HitActor, CurrentAttackDamage, GetController(), this, UDamageType::StaticClass());
+						UGameplayStatics::ApplyDamage(HitActor, CurrentAttackDamage, GetController(), this,
+						                              UDamageType::StaticClass());
 						HitActors.Add(HitActor);
 					}
 				}
@@ -119,7 +133,7 @@ void ABZTankCharacter::Tick(float DeltaTime)
 					FCollisionShape::MakeSphere(HandRadius),
 					TraceParams
 				);
-				DrawDebugSphere(GetWorld(), CurrentRHandLocation, HandRadius, 12, FColor::Red, false, 0.5f);
+				if (bIsDebugEnabled) DrawDebugSphere(GetWorld(), CurrentRHandLocation, HandRadius, 12, FColor::Red, false, 0.5f);
 				if (bHit) ProcessHits(HitResults);
 			}
 
@@ -135,10 +149,10 @@ void ABZTankCharacter::Tick(float DeltaTime)
 					FCollisionShape::MakeSphere(HandRadius),
 					TraceParams
 				);
-				DrawDebugSphere(GetWorld(), CurrentLHandLocation, HandRadius, 12, FColor::Blue, false, 0.5f);
+				if (bIsDebugEnabled) DrawDebugSphere(GetWorld(), CurrentLHandLocation, HandRadius, 12, FColor::Blue, false, 0.5f);
 				if (bHit) ProcessHits(HitResults);
 			}
-			
+
 			if (bCurrentEnableArea)
 			{
 				TArray<FHitResult> HitResults;
@@ -151,7 +165,7 @@ void ABZTankCharacter::Tick(float DeltaTime)
 					FCollisionShape::MakeSphere(AreaRadius),
 					TraceParams
 				);
-				DrawDebugSphere(GetWorld(), CurrentLHandLocation, AreaRadius, 16, FColor::Green, false, 0.5f);
+				if (bIsDebugEnabled) DrawDebugSphere(GetWorld(), CurrentLHandLocation, AreaRadius, 16, FColor::Green, false, 0.5f);
 				if (bHit) ProcessHits(HitResults);
 			}
 
@@ -239,6 +253,11 @@ void ABZTankCharacter::BeginPlay()
 	{
 		ThrowObjectStateInstance = NewObject<UBZTankStateBase>(this, ThrowObjectStateClass);
 	}
+	
+	if (BackUpStateClass)
+	{
+		BackUpStateInstance = NewObject<UBZTankStateBase>(this, BackUpStateClass);
+	}
 
 	// 초기 상태 설정 (예: Idle로 시작)
 	if (StateMachine && IdleStateInstance)
@@ -287,6 +306,7 @@ void ABZTankCharacter::UpdateTimers(float DeltaTime)
 {
 	DefaultAttackCooldown.CurrentTime += DeltaTime;
 	JumpToCooldown.CurrentTime += DeltaTime;
+	BackUpCooldown.CurrentTime += DeltaTime;
 }
 
 FName ABZTankCharacter::GetStatRowName() const
