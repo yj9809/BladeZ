@@ -6,6 +6,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Character/Player/BZPlayerCharacter.h"
 #include "Common/BZLog.h"
+#include "Common/FBZDamageEvent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -61,14 +62,14 @@ void UBZPlayerCombatComponent::BeginPlay()
 }
 
 void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+                                             FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
+
 	// 공격 중일 때만 처리
 	if (bIsAttacking && AttackMontage)
 	{
-		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(GetOwner());  // 캐릭터 얻기
+		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(GetOwner()); // 캐릭터 얻기
 		if (Player)
 		{
 			UAnimInstance* AnimInstance = Player->GetMesh()->GetAnimInstance();
@@ -76,7 +77,7 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 			{
 				// 현재 몽타주 재생 위치
 				float CurrentPosition = AnimInstance->Montage_GetPosition(AttackMontage);
-                
+
 				// "AttackRate" 커브에서 값 가져오기
 				const FRawCurveTracks& CurveTracks = AttackMontage->GetCurveData();
 				float CurveValue = 1.0f;
@@ -97,7 +98,7 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 			}
 		}
 	}
-	
+
 	if (bIsHitStop)
 	{
 		float ElapsedTime = GetWorld()->GetRealTimeSeconds() - HitStopStartRealTime;
@@ -131,20 +132,20 @@ void UBZPlayerCombatComponent::StartComboAttack()
 	{
 		int32 StartAttack = FMath::RandRange(0, 1);
 		FName Key;
-		
+
 		switch (StartAttack)
 		{
-			case 0:
+		case 0:
 			Key = TEXT("L_1");
 			break;
-			
-			case 1:
+
+		case 1:
 			Key = TEXT("L_1_1");
 			break;
 		}
-		
+
 		Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
-		
+
 		// 첫 번째 섹션 이름으로 변경.
 		CurrentComboName = Key;
 	}
@@ -184,12 +185,12 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Po
 			return Data.CurrentSectionName == CurrentComboName;
 		}
 	);
-	
+
 	if (CurrentData)
 	{
 		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
 	}
-	
+
 	UGameplayStatics::ApplyDamage(
 		const_cast<AActor*>(Enemy),
 		CurrentData ? CurrentData->Damage : 0.0f, // 데이터가 없을 경우 기본 데미지 10.
@@ -197,16 +198,27 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Po
 		Owner,
 		UDamageType::StaticClass()
 	);
-	
+
+	PLAYER_LOG(Log, "%s", *CurrentComboName.ToString());
+
+	FBZDamageEvent DamageEvent;
+	DamageEvent.SetKnockback(CurrentData->CurrentSectionName == TEXT("LLLL_4"));
+
+	const_cast<AActor*>(Enemy)->TakeDamage(
+		CurrentData->Damage,
+		DamageEvent,
+		Owner->GetController(),
+		Owner
+	);
+
 	if (!CurrentData->HitStopValue.IsEmpty() && !bIsHitStop)
 	{
-		PLAYER_LOG(Log, "HitStopValue: %f, %f", CurrentData->HitStopValue[0], CurrentData->HitStopValue[1]);
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), CurrentData->HitStopValue[1]);
 		HitStopEndTime = CurrentData->HitStopValue[0];
 		HitStopStartRealTime = GetWorld()->GetRealTimeSeconds();
 		bIsHitStop = true;
 	}
-	
+
 	if (!CurrentData->HitEffect.IsEmpty())
 	{
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -215,7 +227,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy, const FVector Po
 			Point,
 			FRotator::ZeroRotator
 		);
-		
+
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
 			CurrentData->HitEffect[1],
