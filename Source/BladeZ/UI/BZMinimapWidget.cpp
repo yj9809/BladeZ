@@ -154,10 +154,12 @@ void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
 
 	TSubclassOf<UUserWidget> IconClass = nullptr;
 
+	// Boss면 BossIcon으로
 	if (Actor->ActorHasTag(TEXT("BossTank")))
 	{
 		IconClass = BossIconWidget;
 	}
+	// 그렇재 않으면 일반 좀비 아이콘으로 (RedDot)
 	else
 	{
 		IconClass = ZombieIconWidget;
@@ -169,6 +171,10 @@ void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
 	{
 		return;
 	}
+
+	// 아래에서 중앙 정렬하기 전에 Hidden하지 않으면,
+	// PlayerIcon을 가림.
+	IconWidget->SetVisibility(ESlateVisibility::Hidden);
 
 	// 만들어진 Icon을 정중앙으로 정렬.
 	// 처음 만들어졌을 때는 왼쪽 위이기 때문에 정렬 작업 따로 해줘야 함.

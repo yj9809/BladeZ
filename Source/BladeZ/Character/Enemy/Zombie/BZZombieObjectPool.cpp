@@ -96,6 +96,8 @@ void UBZZombieObjectPool::ActiveZombies(ABZZombie* InZombie)
 		InZombie->SetActorEnableCollision(true);
 		InZombie->SetActorTickEnabled(true);
 		InZombie->GetCharacterMovement()->bUseRVOAvoidance = true;
+
+		OnZombieActivated.Broadcast(InZombie);
 	}
 }
 
@@ -103,8 +105,9 @@ void UBZZombieObjectPool::DeActiveZombies(ABZZombie* InZombie)
 {
 	if  (InZombie)
 	{
+		OnZombieDeactivated.Broadcast(InZombie);
+
 		InZombie->SetActorEnableCollision(false);
-		
 		InZombie->SetActorHiddenInGame(true);
 		InZombie->SetActorTickEnabled(false);
 		InZombie->GetCharacterMovement()->bUseRVOAvoidance = false;

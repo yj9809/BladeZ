@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHUDWidget.h"
+#include "Character/Enemy/Zombie/BZZombieObjectPool.h"
+#include "Character/Enemy/Zombie/BZZombie.h"
 
 ABZPlayerController::ABZPlayerController()
 {
@@ -35,6 +37,19 @@ void ABZPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	CreatePlayerHUD();
+
+	if (UBZZombieObjectPool* ObjectPool = GetWorld()->GetSubsystem<UBZZombieObjectPool>())
+	{
+		ObjectPool->OnZombieActivated.AddUObject(
+			this,
+			&ABZPlayerController::HandleZombieActivated
+		);
+
+		ObjectPool->OnZombieDeactivated.AddUObject(
+			this,
+			&ABZPlayerController::HandleZombieDeactivated
+		);
+	}
 
 	FInputModeGameOnly GameOnlyInputMode;
 	SetInputMode(GameOnlyInputMode);
@@ -88,3 +103,61 @@ void ABZPlayerController::CreatePlayerHUD()
 		HUDWidget->AddToViewport(0);
 	}
 }
+
+
+void ABZPlayerController::RegisterMinimapActor(AActor* Actor)
+{
+	if (!Actor) return;
+
+	if (!HUDWidget)
+	{
+		CreatePlayerHUD();
+	}
+
+	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	{
+		MainHUDWidget->RegisterMinimapActor(Actor);
+	}
+}
+
+void ABZPlayerController::UnregisterMinimapActor(AActor* Actor)
+{
+	if (!Actor || !HUDWidget) return;
+
+	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	{
+		MainHUDWidget->UnregisterMinimapActor(Actor);
+	}
+}
+
+void ABZPlayerController::HandleZombieActivated(ABZZombie* Zombie)
+{
+	if (!Zombie)
+	{
+		return;
+	}
+
+	if (!HUDWidget)
+	{
+		CreatePlayerHUD();
+	}
+
+	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	{
+		MainHUDWidget->RegisterMinimapActor(Zombie);
+	}
+}
+
+void ABZPlayerController::HandleZombieDeactivated(ABZZombie* Zombie)
+{
+	if (!Zombie || !HUDWidget)
+	{
+		return;
+	}
+
+	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	{
+		MainHUDWidget->UnregisterMinimapActor(Zombie);
+	}
+}
+

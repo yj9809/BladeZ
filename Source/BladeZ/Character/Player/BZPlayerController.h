@@ -10,6 +10,8 @@
  * 
  */
 
+class ABZZombie;
+
 UCLASS()
 class BLADEZ_API ABZPlayerController : public APlayerController
 {
@@ -22,8 +24,23 @@ public:
 public:
 	virtual void BeginPlay() override;
 
-	void RegisterBoss(AActor* BossActor);
+	// Player HUD를 만드는 함수.
 	void CreatePlayerHUD();
+
+	/*
+	* Boss측에서 호출해 BossHUD를 만들면서
+	* 자기 자신에게 만들어진 HUD를 등록.
+	* + Minimap에서 관리되는 Actor에 자신을 추가.
+	*/
+	void RegisterBoss(AActor* BossActor);
+
+	// 좀비 Actor들을 Minimap에서 등록/해제.
+	void RegisterMinimapActor(AActor* Actor);
+	void UnregisterMinimapActor(AActor* Actor);
+
+private:
+	void HandleZombieActivated(ABZZombie* Zombie);
+	void HandleZombieDeactivated(ABZZombie* Zombie);
 
 	// HUD.
 protected:

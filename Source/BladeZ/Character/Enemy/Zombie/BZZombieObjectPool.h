@@ -3,12 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BZZombie.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "BZZombieObjectPool.generated.h"
 
 class ABZZombie;
 
+/*
+* 작성자: 강수연
+* 작성일: 26.05.15
+* 작성 사유: Minimap Tracking을 위해 추가.
+* 좀비의 Activate/Deactivate 상태 변화를 알리는 Event Delegate.
+* 나중에 KillCount, Quest 등 다른 Sytem에서도 사용 가능하므로 
+* MultiCast로 설정.
+*/
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnZombiePoolActorChanged, ABZZombie*);
 
 /**
  * 
@@ -30,6 +38,16 @@ public:
 	//처음 스폰하는 함수
 	void CreateZombie(TSubclassOf<ABZZombie> InZombieClass, int32 InZombiePoolSize);
 	
+public:
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.15
+	* 작성 사유: Minimap Tracking을 위해 추가.
+	* 좀비의 Activate/Deactivate 상태 변화를 알리는 Event Delegate.
+	*/
+	FOnZombiePoolActorChanged OnZombieActivated;
+	FOnZombiePoolActorChanged OnZombieDeactivated;
+
 private:
 	
 	//좀비가 보이게 활성화 하는 함수
