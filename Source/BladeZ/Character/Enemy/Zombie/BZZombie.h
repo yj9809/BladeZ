@@ -157,4 +157,7 @@ private:
 	
 	UPROPERTY()
 	UBZZombieObjectPool* ZombieObjectPool;
+	
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> ZombieDeathAnim ;
 };

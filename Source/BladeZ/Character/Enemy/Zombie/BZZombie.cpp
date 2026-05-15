@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AIController.h"
 #include "BZZombieObjectPool.h"
+#include "Animation/BZZombieDeathNotify.h"
 
 ABZZombie::ABZZombie()
 {
@@ -20,6 +21,15 @@ ABZZombie::ABZZombie()
 	AIControllerClass = AAIController::StaticClass();
 	
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
+	
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> MonTageRef(
+		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_ZombieDeath.AM_ZombieDeath")
+		);
+	if (MonTageRef.Succeeded())
+	{
+		ZombieDeathAnim = MonTageRef.Object;
+	}
+	
 }
 
 void ABZZombie::BeginPlay()
@@ -193,8 +203,36 @@ void ABZZombie::AttackState(float DeltaTime)
 
 void ABZZombie::DeadState()
 {
-	SetZombieState(EZombieState::Inactive);
-	ZombieObjectPool->ReturnZombieToPool(this);
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance || !ZombieDeathAnim)
+	{
+		return;
+	}
+
+	// 이미 죽는 몽타주 재생 중이면 다시 Play 하지 않음
+	if (AnimInstance->Montage_IsPlaying(ZombieDeathAnim))
+	{
+		return;
+	}
+
+	const float PlayResult = AnimInstance->Montage_Play(ZombieDeathAnim);
+	if (PlayResult <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Death montage failed to play"));
+		return;
+	}
+	
+	FOnMontageEnded EndMontage;
+	EndMontage.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
+	{
+		
+		ZombieObjectPool->ReturnZombieToPool(this);
+		SetZombieState(EZombieState::Inactive);
+	
+	});
+	
+	AnimInstance->Montage_SetEndDelegate(EndMontage,ZombieDeathAnim );
+	
 }
 
 void ABZZombie::InActiveState(float DeltaTime)
