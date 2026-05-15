@@ -124,11 +124,16 @@ void UBZMinimapWidget::UpdateMinimap()
 
 		Offset *= WorldToMinimapScale;
 
-		// 미리 설정해둔 반경(Minimap 반경으로 다시 설정하기) 보다 멀면 자르기.
-		if (Offset.Size() > MaxIconDistance)
+		const float DistanceFromCenter = Offset.Size();
+
+		// 미리 설정해둔 반경(Minimap 반경으로 다시 설정하기) 보다 멀면 안보이도록 설정
+		if (DistanceFromCenter > MaxIconDistance)
 		{
-			Offset = Offset.GetSafeNormal() * MaxIconDistance;
+			IconWidget->SetVisibility(ESlateVisibility::Hidden);
+			continue;
 		}
+
+		IconWidget->SetVisibility(ESlateVisibility::Visible);
 
 		// 실제 위치 설정.
 		IconWidget->SetRenderTranslation(Offset);
