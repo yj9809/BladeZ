@@ -55,7 +55,7 @@ private:
 protected:
 	// 전체 Contents를 담은 Panel.
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UOverlay> IconOverlay;
+	TObjectPtr<UOverlay> TrackedIconOverlay;
 
 	// Player의 회전을 보여주는 Icon. 언제나 중앙에 위치.
 	UPROPERTY(meta = (BindWidget))

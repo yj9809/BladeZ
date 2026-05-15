@@ -142,7 +142,7 @@ void UBZMinimapWidget::UpdateMinimap()
 
 void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
 {
-	if (!IsValid(Actor) || !IconOverlay)
+	if (!IsValid(Actor) || !TrackedIconOverlay)
 	{
 		return;
 	}
@@ -178,7 +178,7 @@ void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
 
 	// 만들어진 Icon을 정중앙으로 정렬.
 	// 처음 만들어졌을 때는 왼쪽 위이기 때문에 정렬 작업 따로 해줘야 함.
-	UPanelSlot* PanelSlot = IconOverlay->AddChild(IconWidget);
+	UPanelSlot* PanelSlot = TrackedIconOverlay->AddChild(IconWidget);
 
 	if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(PanelSlot))
 	{
