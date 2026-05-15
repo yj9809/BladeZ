@@ -16,11 +16,14 @@ UBZMinimapWidget::UBZMinimapWidget(const FObjectInitializer& ObjectInitializer)
 {
 }
 
+void UBZMinimapWidget::SetUpPlayer(AActor* InPlayer)
+{
+	CachedPlayerActor = InPlayer;
+}
+
 void UBZMinimapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	CachedPlayerActor = UGameplayStatics::GetPlayerPawn(this, 0);
 
 	if (UWorld* World = GetWorld())
 	{

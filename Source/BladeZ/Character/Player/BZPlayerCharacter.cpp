@@ -456,6 +456,8 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZHUDWidget::UpdateHpBar);
 
 
+		// Minimap.
+		InHUDWidget->SetupPlayer(this);
 
 	}
 }

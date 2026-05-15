@@ -20,6 +20,9 @@ class BLADEZ_API UBZMinimapWidget : public UBZUserWidget
 public:
 	UBZMinimapWidget(const FObjectInitializer& ObjectInitializer);
 
+	// HUD에서 들어온 Input으로 CahcedPlayer를 설정.
+	void SetUpPlayer(AActor* InPlayer);
+
 	// 미니맵에서 추적할 Actor를 등록. => TrackedActors
 	void RegisterTrackedActor(AActor* Actor);
 

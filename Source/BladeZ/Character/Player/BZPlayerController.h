@@ -9,6 +9,7 @@
 /**
  * 
  */
+
 UCLASS()
 class BLADEZ_API ABZPlayerController : public APlayerController
 {
@@ -18,10 +19,11 @@ public:
 	// Project에서 HUD Class 정보를 가져오기 위해 생성자 추가.
 	ABZPlayerController();
 
-private:
+public:
 	virtual void BeginPlay() override;
 
-	void AddBossHUD();
+	void RegisterBoss(AActor* BossActor);
+	void CreatePlayerHUD();
 
 	// HUD.
 protected:
@@ -41,6 +43,4 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
 	TObjectPtr<class UBZUserWidget> BossHUDWidget;
 
-	const FName BossLevelName = TEXT("BossTestLevel");
-	const FName BossActorTag = TEXT("BossTank");
 };

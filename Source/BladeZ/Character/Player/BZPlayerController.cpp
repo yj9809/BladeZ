@@ -7,7 +7,6 @@
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHUDWidget.h"
 
-
 ABZPlayerController::ABZPlayerController()
 {
 	// Project에서 Class 정보 가져오기.
@@ -35,6 +34,50 @@ void ABZPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CreatePlayerHUD();
+
+	FInputModeGameOnly GameOnlyInputMode;
+	SetInputMode(GameOnlyInputMode);
+}
+
+void ABZPlayerController::RegisterBoss(AActor* BossActor)
+{
+	if (!BossActor) return;
+
+	if (!HUDWidget)
+	{
+		CreatePlayerHUD();
+	}
+
+	if (!BossHUDWidget)
+	{
+		BossHUDWidget = CreateWidget<UBZUserWidget>(this, BossHUDWidgetClass);
+
+		if (BossHUDWidget)
+		{
+			BossHUDWidget->AddToViewport(10);
+		}
+	}
+
+	if (!BossHUDWidget) return;
+
+	if (IBZCharacterHUD* HUDTarget = Cast<IBZCharacterHUD>(BossActor))
+	{
+		HUDTarget->SetupHUDWidget(BossHUDWidget);
+	}
+
+	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	{
+		MainHUDWidget->RegisterMinimapActor(BossActor);
+	}
+
+	
+}
+
+void ABZPlayerController::CreatePlayerHUD()
+{
+	if (HUDWidget) return;
+
 	// HUD Widget 생성.
 	HUDWidget = CreateWidget<UBZUserWidget>(this, HUDWidgetClass);
 
@@ -43,49 +86,5 @@ void ABZPlayerController::BeginPlay()
 		// 화면에 추가해 UI가 보일 수 있도록 설정.
 		// Parameter: ZOrder. 높을 수록 위에 보인다.
 		HUDWidget->AddToViewport(0);
-	}
-
-	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(this);
-	if (CurrentLevelName == BossLevelName)
-	{
-		AddBossHUD();
-	}
-
-	FInputModeGameOnly GameOnlyInputMode;
-	SetInputMode(GameOnlyInputMode);
-}
-
-void ABZPlayerController::AddBossHUD()
-{
-	BossHUDWidget = CreateWidget<UBZUserWidget>(this, BossHUDWidgetClass);
-	if (!BossHUDWidget) return;
-
-	BossHUDWidget->AddToViewport(10);
-
-	// Boss를 찾아서 HUD Bind해줘야 함
-	// PlayerPawn이 아니기 때문.
-	TArray<AActor*> FoundActors;
-	UGameplayStatics::GetAllActorsWithInterface(
-		this,
-		UBZCharacterHUD::StaticClass(),
-		FoundActors
-	);
-
-	for (AActor* Actor : FoundActors)
-	{
-		if (Actor->ActorHasTag(BossActorTag))
-		{
-			if (IBZCharacterHUD* HUDTarget = Cast<IBZCharacterHUD>(Actor))
-			{
-				HUDTarget->SetupHUDWidget(BossHUDWidget);
-			}
-
-			if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
-			{
-				MainHUDWidget->RegisterMinimapActor(Actor);
-			}
-
-			break;
-		}
 	}
 }

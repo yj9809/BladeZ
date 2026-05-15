@@ -8,6 +8,7 @@
 #include "Component/Boss/BZCustomMoveTo.h"
 
 #include "Component/BZCharacterStatComponent.h"
+#include "Character/Player/BZPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/BZBossHUDWidget.h"
 #include "GameFramework/DamageType.h"
@@ -250,6 +251,18 @@ void ABZTankCharacter::BeginPlay()
 	{
 		PhaseComponent->Initialize(Stat, PhaseDataAsset);
 		PhaseComponent->OnPhaseChanged.AddUObject(this, &ABZTankCharacter::OnBossPhaseChanged);
+	}
+
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.15
+	* 작성 사유: Boss HUD 처리를 위해 추가.
+	* Player 화면에 추가하기 위해, PlayerController에 자신의 Actor pointer를 전달
+	*/
+	if (ABZPlayerController* PlayerController = Cast<ABZPlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		PlayerController->RegisterBoss(this);
 	}
 }
 

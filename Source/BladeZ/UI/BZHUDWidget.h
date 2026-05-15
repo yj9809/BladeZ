@@ -36,6 +36,8 @@ public:
 	);
 
 	// For Minimap.
+	void SetupPlayer(AActor* Actor);
+
 	void RegisterMinimapActor(AActor* Actor);
 
 	void UnregisterMinimapActor(AActor* Actor);

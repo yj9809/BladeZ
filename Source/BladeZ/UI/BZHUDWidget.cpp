@@ -35,6 +35,11 @@ void UBZHUDWidget::UpdateStat(const float NewMaxHp)
 	HpBarWidget->SetMaxHp(NewMaxHp);
 }
 
+void UBZHUDWidget::SetupPlayer(AActor* Actor)
+{
+	MinimapWidget->SetUpPlayer(Actor);
+}
+
 void UBZHUDWidget::RegisterMinimapActor(AActor* Actor)
 {
 	MinimapWidget->RegisterTrackedActor(Actor);
