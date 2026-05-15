@@ -53,6 +53,7 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category="Zombie Spawn")
 	USceneComponent* SpawnerLocationComponent;
+	 
 	
 	
 

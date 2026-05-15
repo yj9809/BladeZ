@@ -7,34 +7,48 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "AIController.h"
 #include "BZZombieObjectPool.h"
-#include "Animation/BZZombieDeathNotify.h"
+
+#include "State/IdleState.h"
+#include "State/ChaseState.h"
+#include "State/AttackState.h"
+#include "State/DeadState.h"
 
 ABZZombie::ABZZombie()
 {
 	//Todo : 틱-> false, 열거형 초기화 -> Inactive
 	//틱 흘려받기 현재: true 객체를 관리하는 매니저가 생기면 false 전환. 
-	PrimaryActorTick.bCanEverTick =true;
-	
+	PrimaryActorTick.bCanEverTick = true;
+
 	//현재 상태 초기화 : 매니저 생기면 초기화 Inactive 해야 할듯?  
 	CurrentState = EZombieState::Idle;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AAIController::StaticClass();
-	
+
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
-	
+
+	// 시작할 때 움직이지 않도록 무브먼트 컴포넌트 모드 변경.
+	GetCharacterMovement()->SetMovementMode(MOVE_None);
+
+	// 죽음 몽타주 애셋 로드.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> MonTageRef(
 		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_ZombieDeath.AM_ZombieDeath")
-		);
+	);
+	
 	if (MonTageRef.Succeeded())
 	{
 		ZombieDeathAnim = MonTageRef.Object;
 	}
-	
 }
 
 void ABZZombie::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// 상태 머신에 사용할 객체 생성.
+	ZombieStates[static_cast<int>(EZombieState::Idle)] = MakeShared<IdleState>(this);
+	ZombieStates[static_cast<int>(EZombieState::Chase)] = MakeShared<ChaseState>(this);
+	ZombieStates[static_cast<int>(EZombieState::Attack)] = MakeShared<AttackState>(this);
+	ZombieStates[static_cast<int>(EZombieState::Dead)] = MakeShared<DeadState>(this);
 
 	GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
@@ -44,7 +58,7 @@ void ABZZombie::BeginPlay()
 	{
 		TargetActor = UGameplayStatics::GetPlayerPawn(this, 0);
 	}
-	
+
 	//플레이어 없으면 안보이게 설정.
 	SetZombieState(IsValid(TargetActor) ? EZombieState::Idle : EZombieState::Inactive);
 }
@@ -52,7 +66,7 @@ void ABZZombie::BeginPlay()
 void ABZZombie::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	
+
 	Stat->OnHpZero.AddUObject(this, &ABZZombie::OnHpZero);
 }
 
@@ -79,165 +93,29 @@ void ABZZombie::Tick(float DeltaTime)
 
 void ABZZombie::InitializeFSM(AActor* InTargetActor)
 {
-	
 	if (CurrentState == EZombieState::Dead)
 	{
-		UE_LOG(LogTemp,Log, TEXT("Enter InitializeFSM"));
+		UE_LOG(LogTemp, Log, TEXT("Enter InitializeFSM"));
 		return;
 	}
 
 	// 상태머신 초기화.
 	TargetActor = IsValid(InTargetActor) ? InTargetActor : UGameplayStatics::GetPlayerPawn(this, 0);
 	SetZombieState(IsValid(TargetActor) ? EZombieState::Idle : EZombieState::Inactive);
+	
+	// 애니메이션 블루프린트 리셋
+	GetMesh()->InitAnim(true);
 }
 
 void ABZZombie::TickFSM(float DeltaTime)
 {
-	//틱마다 상태에 맞는 행동 실행. 
-	switch (CurrentState)
-	{
-	case EZombieState::Idle:
-		IdleState(DeltaTime);
-		break;
-	case EZombieState::Chase:
-		ChaseState(DeltaTime);
-		break;
-	case EZombieState::Attack:
-		AttackState(DeltaTime);
-		break;
-	case EZombieState::Dead:
-		DeadState();		
-		break;
-	default:
-		break;
-	}
+	// 상태 머신 업데이트.
+	ZombieStates[static_cast<int>(CurrentState)]->OnUpdate(DeltaTime);
 }
 
-void ABZZombie::IdleState(float DeltaTime)
+void ABZZombie::ClearAttackHitActors()
 {
-	//예외 처리.
-	if (!IsValid(TargetActor))
-	{
-		TargetActor = UGameplayStatics::GetPlayerPawn(this, 0);
-	}
-
-	if (!IsValid(TargetActor))
-	{
-		SetZombieState(EZombieState::Inactive);
-		return;
-	}
-	
-	//감지 범위 안으로 들어오면  Idle->Chase 변경.
-	if (GetDistanceToTarget2D() <= DetectRange)
-	{
-		SetZombieState(EZombieState::Chase);
-	}
-}
-
-void ABZZombie::ChaseState(float DeltaTime)
-{
-	//예외처리.
-	if (!IsValid(TargetActor))
-	{
-		SetZombieState(EZombieState::Idle);
-		return;
-	}
-
-	//플레이어 멀어지면 Chase->Idle.
-	const float DistanceToTarget = GetDistanceToTarget2D();
-	if (DistanceToTarget > LoseTargetRange)
-	{
-		SetZombieState(EZombieState::Idle);
-		return;
-	}
-
-	//플레이어 공격 범위 안이면 Chase->Attack.
-	if (DistanceToTarget <= AttackRange)
-	{
-		SetZombieState(EZombieState::Attack);
-		return;
-	}
-
-	AAIController* AIController = Cast<AAIController>(GetController());
-	if (!AIController)
-	{
-		return;
-	}
-
-	GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
-	AIController->MoveToActor(TargetActor, ChaseAcceptanceRadius);
-}
-
-void ABZZombie::AttackState(float DeltaTime)
-{
-	//예외처리
-	if (!IsValid(TargetActor))
-	{
-		SetZombieState(EZombieState::Idle);
-		return;
-	}
-
-	const float DistanceToTarget = GetDistanceToTarget2D();
-	
-	//거리가 멀어지면 Attack->Chase
-	if (DistanceToTarget > AttackExitRange)
-	{
-		SetZombieState(EZombieState::Chase);
-		return;
-	}
-	
-	FVector ToTarget = TargetActor->GetActorLocation() - GetActorLocation();
-	ToTarget.Z = 0.0f;
-
-	//방향이 같으면 return
-	if (ToTarget.IsNearlyZero())
-	{
-		return;
-	}
-
-	//방향 회전 
-	const FRotator TargetRotation = ToTarget.GetSafeNormal().Rotation();
-	const FRotator NewRotation = FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, TurnSpeed);
-	SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
-}
-
-void ABZZombie::DeadState()
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (!AnimInstance || !ZombieDeathAnim)
-	{
-		return;
-	}
-
-	// 이미 죽는 몽타주 재생 중이면 다시 Play 하지 않음
-	if (AnimInstance->Montage_IsPlaying(ZombieDeathAnim))
-	{
-		return;
-	}
-
-	const float PlayResult = AnimInstance->Montage_Play(ZombieDeathAnim);
-	if (PlayResult <= 0.f)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Death montage failed to play"));
-		return;
-	}
-	
-	FOnMontageEnded EndMontage;
-	EndMontage.BindLambda([this](UAnimMontage* Montage, bool bInterrupted)
-	{
-		
-		ZombieObjectPool->ReturnZombieToPool(this);
-		SetZombieState(EZombieState::Inactive);
-	
-	});
-	
-	AnimInstance->Montage_SetEndDelegate(EndMontage,ZombieDeathAnim );
-	
-}
-
-void ABZZombie::InActiveState(float DeltaTime)
-{
-	
+	AttackHitActors.Empty();
 }
 
 void ABZZombie::SetZombieState(EZombieState NewState)
@@ -247,20 +125,34 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 		return;
 	}
 
-	CurrentState = NewState;
-
-	if (CurrentState != EZombieState::Chase)
+	// 현재 상태를 변경하기 전에 현재 상태가 Inactive가 아닌 경우,
+	// 현재 상태의 Exit 호출.
+	if (CurrentState != EZombieState::Inactive)
 	{
-		if (AAIController* AIController = Cast<AAIController>(GetController()))
+		// 예외처리. 스테이트 객체가 Null인지 확인.
+		if (ZombieStates[static_cast<uint8>(CurrentState)])
 		{
-			AIController->StopMovement();
+			ZombieStates[static_cast<uint8>(CurrentState)]->OnExit();
 		}
 	}
 
-	if (CurrentState == EZombieState::Dead)
+	// 현재 상태 값 업데이트.
+	CurrentState = NewState;
+
+	// 변경한 상태 값이 Inactive가 아니면, Enter 호출.
+	if (CurrentState != EZombieState::Inactive)
 	{
-		AttackHitActors.Empty();
+		if (ZombieStates[static_cast<uint8>(CurrentState)])
+		{
+			ZombieStates[static_cast<uint8>(CurrentState)]->OnEnter();
+		}
 	}
+}
+
+void ABZZombie::ReturnZombieToPool()
+{
+	SetZombieState(EZombieState::Inactive);
+	ZombieObjectPool->ReturnZombieToPool(this);
 }
 
 float ABZZombie::GetDistanceToTarget2D() const
@@ -308,7 +200,8 @@ void ABZZombie::PerformAttackTrace()
 	{
 		if (bDrawAttackTraceDebug)
 		{
-			DrawDebugSphere(GetWorld(), MeshComp->GetComponentLocation(), 60.0f, 16, FColor::Orange, false, AttackTraceDebugTime);
+			DrawDebugSphere(GetWorld(), MeshComp->GetComponentLocation(), 60.0f, 16, FColor::Orange, false,
+			                AttackTraceDebugTime);
 		}
 
 		return;
@@ -318,7 +211,7 @@ void ABZZombie::PerformAttackTrace()
 	const FVector TraceStart = MeshComp->GetSocketLocation(AttackTraceSocketName);
 
 	FVector TraceDirection = GetActorForwardVector();
-	
+
 	//플레이어 방향으로 트레이스 방향 설정
 	if (IsValid(TargetActor))
 	{
@@ -389,8 +282,8 @@ void ABZZombie::PerformAttackTrace()
 	if (bDrawAttackTraceDebug)
 	{
 		const FColor DebugColor = bHitTarget
-			? AttackTraceHitColor
-			: (bHitBlockedTarget ? AttackTraceBlockedColor : AttackTraceMissColor);
+			                          ? AttackTraceHitColor
+			                          : (bHitBlockedTarget ? AttackTraceBlockedColor : AttackTraceMissColor);
 
 		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, DebugColor, false, AttackTraceDebugTime, 0, 2.0f);
 		//DrawDebugSphere(GetWorld(), TraceStart, AttackTraceRadius, 16, FColor::Cyan, false, AttackTraceDebugTime);
@@ -398,7 +291,8 @@ void ABZZombie::PerformAttackTrace()
 
 		if (bHitTarget || bHitBlockedTarget)
 		{
-			DrawDebugSphere(GetWorld(), TargetHitPoint, AttackTraceRadius * 0.5f, 12, DebugColor, false, AttackTraceDebugTime);
+			DrawDebugSphere(GetWorld(), TargetHitPoint, AttackTraceRadius * 0.5f, 12, DebugColor, false,
+			                AttackTraceDebugTime);
 			DrawDebugPoint(GetWorld(), TargetHitPoint, 14.0f, DebugColor, false, AttackTraceDebugTime);
 		}
 	}
@@ -421,7 +315,7 @@ void ABZZombie::PerformAttackTrace()
 
 		UGameplayStatics::ApplyDamage(
 			HitActor,
-			 Stat->GetBaseAttackPower(),
+			Stat->GetBaseAttackPower(),
 			nullptr,
 			this,
 			nullptr

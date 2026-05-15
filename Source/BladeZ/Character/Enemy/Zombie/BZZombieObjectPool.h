@@ -61,11 +61,12 @@ private:
 private:
 	
 	//보이지 않는 좀비를 담을 풀
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<ABZZombie*> ZombiePool;
 	
 	UPROPERTY()
 	ABZZombie* WantToDeleteZombie;
-
 	
+	//UPROPERTY()
+	//TObjectPtr<UAnimMontage> ZombieDeathAnim;
 };
