@@ -16,7 +16,6 @@
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
 
-
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
 {
@@ -40,6 +39,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
+	//region Component
 	// Combat Component 생성.
 	CombatComponent = CreateDefaultSubobject<UBZPlayerCombatComponent>(TEXT("CombatComponent"));
 	
@@ -48,7 +48,9 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 
 	// 메시의 위치와 회전을 조정하여 캐릭터가 올바르게 보이도록 설정.
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
-
+	//endregion
+	
+	//region Default Setting
 	// 기본 스켈레탈 메시 가져오기.
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(
 		TEXT("/Game/Survival_Character/Meshes/SK_Survival_Character.SK_Survival_Character")
@@ -70,7 +72,9 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		GetMesh()->SetAnimInstanceClass(CharacterAnim.Class);
 	}
-
+	//endregion
+	
+	//region Input Mapping
 	// 맵핑 컨텍스트 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextRef(
 		TEXT("/Game/BZ/Input/IMC_PlayerKeyMap.IMC_PlayerKeyMap")
@@ -135,7 +139,9 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		DashAction = DashActionRef.Object;
 	}
+	//endregion
 	
+	//region Weapon
 	// 무기 세팅.
 	static ConstructorHelpers::FClassFinder<ABZWeaponActor> WeaponClassRef(
 		TEXT("/Game/BZ/Character/Player/BP_Weapon.BP_Weapon_C")
@@ -144,7 +150,10 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		WeaponClass = WeaponClassRef.Class;
 	}
-
+	//endregion
+	
+	//region Montage
+	// 착지 몽타주 등록.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> LandMontageRef(
 		TEXT("/Game/BZ/Character/Player/Animation/AM_Land.AM_Land")
 	);
@@ -161,7 +170,17 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		DashMontage = DashMontageRef.Object;
 	}
-
+	
+	// 히트 몽타주 등록.
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> HitMontageRef(
+		TEXT("/Game/BZ/Character/Player/Animation/AM_Hit.AM_Hit")
+	);
+	if (HitMontageRef.Succeeded())
+	{
+		HitMontage = HitMontageRef.Object;
+	}
+	//endregion
+	
 	/*
 	* 작성자: 강수연
 	* 작성일: 26.05.11
@@ -209,6 +228,13 @@ void ABZPlayerCharacter::BeginPlay()
 			CombatComponent,
 			&UBZPlayerCombatComponent::OnAttackHit
 		);
+	}
+	
+	// Land 몽타주 끝날 때 처리룰 위한 델리게이트 바인딩.
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+	{
+		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnLandMontageEnded);
 	}
 }
 
@@ -297,6 +323,10 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	if (Stat)
 	{
 		Stat->ApplyDamage(DamageAmount);
+		
+		// Todo: 추후 데미지 분기 처리를 해서 재생 섹션을 다르게 해야함.
+		// Todo: 논의 내용으로 FDamageEvent, UDamageType, DamageAmount 값을 통한 분기 처리 등이 있음.
+		PlayAnimMontage(HitMontage);
 	}
 	
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -312,6 +342,11 @@ void ABZPlayerCharacter::PostInitializeComponents()
 
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
 {
+	if (bIsLanding)
+	{
+		return;
+	}
+	
 	FVector2D Movement = Value.Get<FVector2D>().GetSafeNormal();
 
 	FRotator Rotation = GetControlRotation();
@@ -365,6 +400,12 @@ void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 {
+	// 추락 중일 경우 대쉬 불가.
+	if (GetCharacterMovement()->IsFalling())
+	{
+		return;
+	}
+	
 	// 타이머가 도는 중이면 대쉬 로직 실행하지 않음.
 	if (GetWorldTimerManager().IsTimerActive(DashCoolDownTimerHandle))
 	{
@@ -374,12 +415,14 @@ void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
-		OnDashStart.Execute();
 		FVector InputVector = GetLastMovementInputVector();
 		float Direction = AnimInstance->CalculateDirection(InputVector, GetActorRotation());
 		
 		FName SectionName = GetDashSectionName(Direction);
 		PlayAnimMontage(DashMontage, 1.18f, SectionName);
+		
+		// 대시 시작 시 마찰 값을 높여 빠르게 멈추도록 설정.
+		GetCharacterMovement()->FallingLateralFriction = 5.0f;
 	}
 	
 	// 타이머 실행.
@@ -413,6 +456,15 @@ FName ABZPlayerCharacter::GetDashSectionName(float Direction)
 	return TEXT("ForwardLeft");
 }
 
+void ABZPlayerCharacter::OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == LandMontage && !bInterrupted)
+	{
+		bIsLanding = false;
+		GetCharacterMovement()->FallingLateralFriction = 0.0f; // 착지 후 마찰 값을 원래대로 설정.
+	}
+}
+
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
@@ -426,7 +478,7 @@ void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, u
 void ABZPlayerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
-	
+	bIsLanding = true;
 	GetMesh()->GetAnimInstance()->Montage_JumpToSection("Land", LandMontage); 
 }
 
@@ -458,7 +510,6 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 
 		// Minimap.
 		InHUDWidget->SetupPlayer(this);
-
 	}
 }
 

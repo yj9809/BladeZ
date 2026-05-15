@@ -7,11 +7,6 @@
 #include "Common/BZLog.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
-void UBZPlayerAnimInstance::SetDash(bool bInDashing)
-{
-	bIsDashing = bInDashing;
-}
-
 void UBZPlayerAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -23,12 +18,6 @@ void UBZPlayerAnimInstance::NativeInitializeAnimation()
 	if (Owner)
 	{
 		Movement = Owner->GetCharacterMovement();
-		Owner->OnDashStart.BindLambda(
-			[this]()
-			{
-				bIsDashing = true;
-			}
-		);
 	}
 }
 
@@ -36,7 +25,7 @@ void UBZPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 	
-	if (Movement && !bIsDashing)
+	if (Movement)
 	{
 		Velocity = Movement->Velocity;
 		Speed = Velocity.Size2D();

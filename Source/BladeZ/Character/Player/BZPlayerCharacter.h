@@ -11,7 +11,6 @@
 #include "BZPlayerCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
-DECLARE_DELEGATE(FOnDashStart)
 
 class ABZWeaponActor;
 
@@ -32,11 +31,10 @@ public:
 	
 	FORCEINLINE ABZWeaponActor* GetWeapon() const { return Weapon; }
 
-protected:
+public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -44,6 +42,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
+    	
+    virtual void Landed(const FHitResult& Hit) override;
 	
 public:
 	/*
@@ -71,16 +73,15 @@ private:
 	
 	FName GetDashSectionName(float Direction);
 	
-	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
-	
-	virtual void Landed(const FHitResult& Hit) override;
+	// 착지 처리를 마무리 하기 위한 함수.
+	UFUNCTION()
+	void OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
 	FOnBossAttack OnBossAttack;
 	
-	// 대시 시작을 알리는 델리게이트.
-	FOnDashStart OnDashStart;
+	// Component private.
 private:
 	// 카메라 세팅.
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -97,6 +98,8 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = CameraShake)
 	TObjectPtr<class UBZCameraShakeComponent> CameraShakeComponent;
 	
+	// Input private.
+private:
 	// 플레이어 입력 매핑.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -124,6 +127,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> DashAction;
 	
+	// Weapon private.
+private:
 	// 웨폰 세팅.
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TSubclassOf<ABZWeaponActor> WeaponClass;
@@ -131,21 +136,35 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<ABZWeaponActor> Weapon;	
 	
+	// Montage private.
+private:
 	// 착지를 위한 몽타주.
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> LandMontage;
 	
-	// 대쉬 몽타주
+	// 대쉬 몽타주.
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> DashMontage;
 	
+	// 히트 몽타주.
+	UPROPERTY(VisibleAnywhere, Category = Animation)
+	TObjectPtr<UAnimMontage> HitMontage;
+	
+	// Dash value private.
+private:
 	// 대쉬 쿨다운 타이머 핸들.
 	FTimerHandle DashCoolDownTimerHandle;
 	
 	// 대쉬 타이머 값.
 	UPROPERTY(EditAnywhere, Category = Dash)
 	float DashCoolDownTime = 1.0f;
-
+	
+	// Land value private.
+private:
+	// Land 상태 값.
+	UPROPERTY(VisibleAnywhere, Category = Land)
+	bool bIsLanding = false;
+	
 private:
 	/*
 	* 작성자: 강수연

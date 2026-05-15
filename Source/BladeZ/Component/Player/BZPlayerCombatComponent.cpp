@@ -180,7 +180,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const AActor* Enemy)
 	{
 		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
 	}
-
+	
 	UGameplayStatics::ApplyDamage(
 		const_cast<AActor*>(Enemy),
 		CurrentData ? CurrentData->Damage : 0.0f, // 데이터가 없을 경우 기본 데미지 10.

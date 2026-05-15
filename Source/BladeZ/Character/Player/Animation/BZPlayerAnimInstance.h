@@ -15,8 +15,6 @@ class BLADEZ_API UBZPlayerAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 	
 public:	
-	void SetDash(bool bIsDashing);
-	
 	// 초기화 완료 시 실행되는 함수.
 	virtual void NativeInitializeAnimation() override;
 	// 애니메이션 실행 시 매 프레임마다 실행되는 함수.
@@ -46,12 +44,4 @@ private:
 	// 방향 변수.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character, meta=(AllowPrivateAccess = true))
 	float Direction;
-	
-	// 추락 판별 변수.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character, meta=(AllowPrivateAccess = true))
-	bool bIsFalling;
-	
-	// 대시 판별 변수.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character, meta=(AllowPrivateAccess = true))
-	bool bIsDashing;
 };
