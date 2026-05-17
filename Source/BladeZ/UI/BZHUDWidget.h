@@ -40,7 +40,7 @@ public:
 
 	void RegisterMinimapActor(AActor* Actor);
 
-	void UnregisterMinimapActor(AActor* Actor);
+	void RemoveMinimapActor(AActor* Actor);
 
 
 	// For KillCount.

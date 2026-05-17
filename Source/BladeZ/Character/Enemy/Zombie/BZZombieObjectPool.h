@@ -16,7 +16,7 @@ class ABZZombie;
 * 나중에 KillCount, Quest 등 다른 Sytem에서도 사용 가능하므로 
 * MultiCast로 설정.
 */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnZombiePoolActorChanged, ABZZombie*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnZombiePoolActorChanged, AActor*);
 
 /**
  * 

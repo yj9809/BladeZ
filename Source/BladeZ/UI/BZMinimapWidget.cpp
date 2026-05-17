@@ -70,19 +70,41 @@ void UBZMinimapWidget::NativeTick(
 	}
 }
 
-void UBZMinimapWidget::UpdateMinimap()
+bool UBZMinimapWidget::ShouldTrackActor(const AActor* Actor) const
 {
-	if (!IsValid(CachedPlayerActor))
+	return IsValid(Actor) && !Actor->IsHidden();
+}
+
+TSubclassOf<UUserWidget> UBZMinimapWidget::GetIconClassForActor(const AActor* Actor) const
+{
+	if (!Actor)
 	{
-		CachedPlayerActor = UGameplayStatics::GetPlayerPawn(this, 0);
+		return nullptr;
 	}
 
-	if (!IsValid(CachedPlayerActor))
+	// Boss면 BoosIcon으로
+	if (Actor->ActorHasTag(TEXT("BossTank")))
+	{
+		return BossIconWidget;
+	}
+
+	// 그렇지 않으면 ZombieIcon으로.
+	return ZombieIconWidget;
+
+	// 더 추가되면 수정해야 함!
+}
+
+
+
+void UBZMinimapWidget::UpdateMinimap()
+{
+	AActor* PlayerActor = CachedPlayerActor;
+	if (!IsValid(PlayerActor))
 	{
 		return;
 	}
 
-	const FVector PlayerLocation = CachedPlayerActor->GetActorLocation();
+	const FVector PlayerLocation = PlayerActor->GetActorLocation();
 
 	const float WorldToMinimapScale = 0.05f;
 	const float MaxIconDistance = 120.0f;
@@ -90,30 +112,32 @@ void UBZMinimapWidget::UpdateMinimap()
 	for (int32 Index = TrackedActors.Num() - 1; Index >= 0; --Index)
 	{
 		AActor* Actor = TrackedActors[Index].Get();
-		
+
 		// 먼저, Invalid한 TracedActor를 삭제. 
 		// RemoveInvalidActors.
 		if (!IsValid(Actor))
 		{
-			if (TObjectPtr<UUserWidget>* Icon = ActorIconMap.Find(TrackedActors[Index]))
-			{
-				if (*Icon)
-				{
-					(*Icon)->RemoveFromParent();
-				}
-			}
+			RemoveTrackedActorAt(Index);
+			continue;
+		}
 
-			ActorIconMap.Remove(TrackedActors[Index]);
+		UUserWidget* IconWidget = ActorIconMap.FindRef(TrackedActors[Index]);
+
+		// 만약에 IconWidget을 찾았는데 이미 없으면 TrackedActor도 삭제 처리.
+		if (!IconWidget)
+		{
 			TrackedActors.RemoveAt(Index);
 			continue;
 		}
 
-		// 만약에 Widget이 없으면 넘기기
-		UUserWidget* IconWidget = ActorIconMap.FindRef(Actor);
-		if (!IconWidget)
+		// Actor가 Hidden이면 Icon도 Hide.
+		if (!ShouldTrackActor(Actor))
 		{
+			IconWidget->SetVisibility(ESlateVisibility::Hidden);
 			continue;
 		}
+
+		// ======      Exception Handling 끝       ====== //
 
 		// Minimap 위의 실제 위치로 만들기
 		FVector Delta = Actor->GetActorLocation() - PlayerLocation;
@@ -140,36 +164,21 @@ void UBZMinimapWidget::UpdateMinimap()
 	}
 }
 
-void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
+
+UUserWidget* UBZMinimapWidget::CreateTrackedIcon(AActor* Actor)
 {
-	if (!IsValid(Actor) || !TrackedIconOverlay)
+	// Icon Class 잡아주기.
+	TSubclassOf<UUserWidget> IconClass = GetIconClassForActor(Actor);
+	if (!IconClass)
 	{
-		return;
-	}
-
-	if (ActorIconMap.Contains(Actor))
-	{
-		return;
-	}
-
-	TSubclassOf<UUserWidget> IconClass = nullptr;
-
-	// Boss면 BossIcon으로
-	if (Actor->ActorHasTag(TEXT("BossTank")))
-	{
-		IconClass = BossIconWidget;
-	}
-	// 그렇재 않으면 일반 좀비 아이콘으로 (RedDot)
-	else
-	{
-		IconClass = ZombieIconWidget;
+		return nullptr;
 	}
 
 	// Icon 실제로 만들기
 	UUserWidget* IconWidget = CreateWidget<UUserWidget>(GetOwningPlayer(), IconClass);
 	if (!IconWidget)
 	{
-		return;
+		return nullptr;
 	}
 
 	// 아래에서 중앙 정렬하기 전에 Hidden하지 않으면,
@@ -186,20 +195,48 @@ void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
 		OverlaySlot->SetVerticalAlignment(VAlign_Center);
 	}
 
+	return IconWidget;
+}
+
+
+void UBZMinimapWidget::RegisterTrackedActor(AActor* Actor)
+{
+	// Exception Handling.
+	if (!IsValid(Actor) || !TrackedIconOverlay)
+	{
+		return;
+	}
+
+	const TWeakObjectPtr<AActor> ActorKey = Actor;
+
+	// 이미 Track 되고 있었다면 Visibility를 true로 설정하고 넘어감.
+	if (ActorIconMap.Contains(ActorKey))
+	{
+		SetTrackedActorVisible(Actor, true);
+		return;
+	}
+
+	// IconWidget을 실제로 만들기.
+	UUserWidget* IconWidget = CreateTrackedIcon(Actor);
+	if (!IconWidget)
+	{
+		return;
+	}
+
 	// 관리 중인 배열과 Map에 추가
 	TrackedActors.Add(Actor);
 	ActorIconMap.Add(Actor, IconWidget);
 }
 
-
-void UBZMinimapWidget::UnregisterTrackedActor(AActor* Actor)
+void UBZMinimapWidget::RemoveTrackedActor(AActor* Actor)
 {
+	// ExceptionHandling.
 	if (!Actor)
 	{
 		return;
 	}
 
-	TWeakObjectPtr<AActor> ActorKey = Actor;
+	const TWeakObjectPtr<AActor> ActorKey = Actor;
 
 	if (TObjectPtr<UUserWidget>* IconWidget = ActorIconMap.Find(ActorKey))
 	{
@@ -211,4 +248,48 @@ void UBZMinimapWidget::UnregisterTrackedActor(AActor* Actor)
 
 	ActorIconMap.Remove(ActorKey);
 	TrackedActors.Remove(ActorKey);
+}
+
+void UBZMinimapWidget::SetTrackedActorVisible(AActor* Actor, bool bVisible)
+{
+	if (!Actor)
+	{
+		return;
+	}
+
+	const TWeakObjectPtr<AActor> ActorKey = Actor;
+
+	if (TObjectPtr<UUserWidget>* IconWidget = ActorIconMap.Find(ActorKey))
+	{
+		if (*IconWidget)
+		{
+			(*IconWidget)->SetVisibility(
+				bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden
+			);
+		}
+	}
+}
+
+void UBZMinimapWidget::RemoveTrackedActorAt(int32 Index)
+{
+	// Exception Handling (OOB)
+	if (!TrackedActors.IsValidIndex(Index))
+	{
+		return;
+	}
+
+	const TWeakObjectPtr<AActor> ActorKey = TrackedActors[Index];
+
+	if (TObjectPtr<UUserWidget>* IconWidget = ActorIconMap.Find(ActorKey))
+	{
+		// IconWidget이 연결되어있으면, 먼저 삭제 처리.
+		if (*IconWidget)
+		{
+			(*IconWidget)->RemoveFromParent();
+		}
+	}
+
+	// 관리되고 있는 배열에서도 삭제 처리.
+	ActorIconMap.Remove(ActorKey);
+	TrackedActors.RemoveAt(Index);
 }

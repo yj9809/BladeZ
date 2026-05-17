@@ -45,9 +45,9 @@ void UBZHUDWidget::RegisterMinimapActor(AActor* Actor)
 	MinimapWidget->RegisterTrackedActor(Actor);
 }
 
-void UBZHUDWidget::UnregisterMinimapActor(AActor* Actor)
+void UBZHUDWidget::RemoveMinimapActor(AActor* Actor)
 {
-	MinimapWidget->UnregisterTrackedActor(Actor);
+	MinimapWidget->RemoveTrackedActor(Actor);
 }
 
 void UBZHUDWidget::UpdateHpBar(float NewCurrentHp)

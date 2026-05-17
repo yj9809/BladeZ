@@ -11,6 +11,7 @@
  */
 
 class ABZZombie;
+class UBZHUDWidget;
 
 UCLASS()
 class BLADEZ_API ABZPlayerController : public APlayerController
@@ -34,13 +35,16 @@ public:
 	*/
 	void RegisterBoss(AActor* BossActor);
 
-	// 좀비 Actor들을 Minimap에서 등록/해제.
-	void RegisterMinimapActor(AActor* Actor);
-	void UnregisterMinimapActor(AActor* Actor);
-
 private:
-	void HandleZombieActivated(ABZZombie* Zombie);
-	void HandleZombieDeactivated(ABZZombie* Zombie);
+	// 내부에서 HUDWidget Cast + Lazy Create 중복 제거용 헬퍼.
+	UBZHUDWidget* GetMainHUDWidget();
+
+	// BeginPlay에서 게임 플레이에 필요한 Event들을 Bind하는 부분을 분리.
+	void BindGameplayEvents();
+
+	// Enemy Actor들을 Minimap에서 등록/해제.
+	void RegisterMinimapActor(AActor* Actor);
+	void RemoveMinimapActor(AActor* Actor);
 
 	// HUD.
 protected:

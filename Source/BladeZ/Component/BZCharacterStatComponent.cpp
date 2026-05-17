@@ -20,6 +20,11 @@ UBZCharacterStatComponent::UBZCharacterStatComponent()
 	BaseAttackPower = 0.0f;
 }
 
+void UBZCharacterStatComponent::ResetHp()
+{
+	SetHp(MaxHp);
+}
+
 void UBZCharacterStatComponent::SetHp(float InNewHp)
 {
 	// 현재 체력 값 갱신.
@@ -71,12 +76,14 @@ float UBZCharacterStatComponent::ApplyDamage(float InAdditiveDamage)
 			MaxHp
 		);
 
+	const bool bWasAlive = PrevHp > UE_KINDA_SMALL_NUMBER;
+
 	// 대미지 처리.
 	SetHp(PrevHp - ActualDamage);
 
 	// 죽었는지 여부(체력이 0인지) 확인.
-	// 오차 범위.
-	if (CurrentHp <= UE_KINDA_SMALL_NUMBER)
+	// 오차 범위와 이전에 처리 되었는지 확인.
+	if (bWasAlive && CurrentHp <= UE_KINDA_SMALL_NUMBER)
 	{
 		// 체력을 모두 소진했다(죽음)는 이벤트 발행.
 		OnHpZero.Broadcast();

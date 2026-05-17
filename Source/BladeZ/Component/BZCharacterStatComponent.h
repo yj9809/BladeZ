@@ -23,7 +23,9 @@ public:
 	// Sets default values for this component's properties
 	UBZCharacterStatComponent();
 
-
+public:
+	// ObjectPool을 활용하는 Zombie를 위함.
+	void ResetHp();
 
 protected:
 	// Set New value of hp.
@@ -44,6 +46,7 @@ public:
 	FORCEINLINE float GetMaxHp() const { return MaxHp; }
 	FORCEINLINE float GetCurrentHp() const { return CurrentHp; }
 	FORCEINLINE float GetBaseAttackPower() const { return BaseAttackPower; }
+
 
 	// 대미지 적용 함수.
 	float ApplyDamage(float InAdditiveDamage = 0);

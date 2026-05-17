@@ -2,12 +2,14 @@
 
 
 #include "BZPlayerController.h"
-#include "UI/BZUserWidget.h"
-#include "Kismet/GameplayStatics.h"
-#include "Interface/BZCharacterHUD.h"
-#include "UI/BZHUDWidget.h"
+
 #include "Character/Enemy/Zombie/BZZombieObjectPool.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
+#include "Game/BZEnemyEventSubsystem.h"
+#include "Interface/BZCharacterHUD.h"
+#include "UI/BZHUDWidget.h"
+#include "UI/BZUserWidget.h"
+
 
 ABZPlayerController::ABZPlayerController()
 {
@@ -38,18 +40,7 @@ void ABZPlayerController::BeginPlay()
 
 	CreatePlayerHUD();
 
-	if (UBZZombieObjectPool* ObjectPool = GetWorld()->GetSubsystem<UBZZombieObjectPool>())
-	{
-		ObjectPool->OnZombieActivated.AddUObject(
-			this,
-			&ABZPlayerController::HandleZombieActivated
-		);
-
-		ObjectPool->OnZombieDeactivated.AddUObject(
-			this,
-			&ABZPlayerController::HandleZombieDeactivated
-		);
-	}
+	BindGameplayEvents();
 
 	FInputModeGameOnly GameOnlyInputMode;
 	SetInputMode(GameOnlyInputMode);
@@ -57,12 +48,7 @@ void ABZPlayerController::BeginPlay()
 
 void ABZPlayerController::RegisterBoss(AActor* BossActor)
 {
-	if (!BossActor) return;
-
-	if (!HUDWidget)
-	{
-		CreatePlayerHUD();
-	}
+	if (!IsValid(BossActor)) return;
 
 	if (!BossHUDWidget)
 	{
@@ -74,19 +60,12 @@ void ABZPlayerController::RegisterBoss(AActor* BossActor)
 		}
 	}
 
-	if (!BossHUDWidget) return;
-
 	if (IBZCharacterHUD* HUDTarget = Cast<IBZCharacterHUD>(BossActor))
 	{
 		HUDTarget->SetupHUDWidget(BossHUDWidget);
 	}
 
-	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
-	{
-		MainHUDWidget->RegisterMinimapActor(BossActor);
-	}
-
-	
+	RegisterMinimapActor(BossActor);
 }
 
 void ABZPlayerController::CreatePlayerHUD()
@@ -107,57 +86,63 @@ void ABZPlayerController::CreatePlayerHUD()
 
 void ABZPlayerController::RegisterMinimapActor(AActor* Actor)
 {
-	if (!Actor) return;
-
-	if (!HUDWidget)
+	if (!Actor)
 	{
-		CreatePlayerHUD();
+		return;
 	}
 
-	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	if (UBZHUDWidget* MainHUDWidget = GetMainHUDWidget())
 	{
 		MainHUDWidget->RegisterMinimapActor(Actor);
 	}
 }
 
-void ABZPlayerController::UnregisterMinimapActor(AActor* Actor)
+void ABZPlayerController::RemoveMinimapActor(AActor* Actor)
 {
-	if (!Actor || !HUDWidget) return;
-
-	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
-	{
-		MainHUDWidget->UnregisterMinimapActor(Actor);
-	}
-}
-
-void ABZPlayerController::HandleZombieActivated(ABZZombie* Zombie)
-{
-	if (!Zombie)
+	if (!Actor || !HUDWidget)
 	{
 		return;
 	}
 
+	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	{
+		MainHUDWidget->RemoveMinimapActor(Actor);
+	}
+}
+
+UBZHUDWidget* ABZPlayerController::GetMainHUDWidget()
+{
 	if (!HUDWidget)
 	{
 		CreatePlayerHUD();
 	}
 
-	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
-	{
-		MainHUDWidget->RegisterMinimapActor(Zombie);
-	}
+	return Cast<UBZHUDWidget>(HUDWidget);
 }
 
-void ABZPlayerController::HandleZombieDeactivated(ABZZombie* Zombie)
+void ABZPlayerController::BindGameplayEvents()
 {
-	if (!Zombie || !HUDWidget)
+	// Enemy가 HP 0이 되면 즉시 Minimap에서 사라지도록 하는 부분.
+	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
 	{
-		return;
+		EnemyEvents->OnEnemyDied.AddUObject(
+			this,
+			&ABZPlayerController::RemoveMinimapActor
+		);
 	}
 
-	if (UBZHUDWidget* MainHUDWidget = Cast<UBZHUDWidget>(HUDWidget))
+	// ZombieObjectPool에서 Zombie가 
+	// Active/Deactive 될 때마다 Minimap에서 처리해주는 부분.
+	if (UBZZombieObjectPool* ObjectPool = GetWorld()->GetSubsystem<UBZZombieObjectPool>())
 	{
-		MainHUDWidget->UnregisterMinimapActor(Zombie);
+		ObjectPool->OnZombieActivated.AddUObject(
+			this,
+			&ABZPlayerController::RegisterMinimapActor
+		);
+
+		ObjectPool->OnZombieDeactivated.AddUObject(
+			this,
+			&ABZPlayerController::RemoveMinimapActor
+		);
 	}
 }
-

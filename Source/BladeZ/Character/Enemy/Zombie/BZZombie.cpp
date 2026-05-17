@@ -1,4 +1,4 @@
-#include "Character/Enemy/Zombie/BZZombie.h"
+﻿#include "Character/Enemy/Zombie/BZZombie.h"
 
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -16,6 +16,9 @@
 #include "State/DeadState.h"
 
 #include"Common/BZLog.h" 
+
+#include "Game/BZEnemyEventSubsystem.h"
+
 
 ABZZombie::ABZZombie()
 {
@@ -76,6 +79,16 @@ void ABZZombie::PostInitializeComponents()
 
 void ABZZombie::OnHpZero()
 {
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.17
+	* 작성 사유: UI/Quest에서 적 죽음 처리를 위해 추가.
+	*/
+	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
+	{
+		EnemyEvents->BroadcastEnemyDied(this);
+	}
+
 	SetZombieState(EZombieState::Dead);
 }
 
@@ -83,6 +96,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
                             class AController* EventInstigator, AActor* DamageCauser)
 {
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	
 	Stat->ApplyDamage();
 	//GetMesh()->SetSimulatePhysics(true);
 		
@@ -148,6 +162,16 @@ void ABZZombie::InitializeFSM(AActor* InTargetActor)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Enter InitializeFSM"));
 		return;
+	}
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.17
+	* 작성 사유: HP Reset 처리가 안 되어있어 추가.
+	*/
+	if (Stat)
+	{
+		Stat->ResetHp();
 	}
 
 	// 상태머신 초기화.

@@ -26,8 +26,11 @@ public:
 	// 미니맵에서 추적할 Actor를 등록. => TrackedActors
 	void RegisterTrackedActor(AActor* Actor);
 
-	// 미니맵에 등록된 추적 Actor를 해제.
-	void UnregisterTrackedActor(AActor* Actor);
+	/*
+	* 미니맵에 등록된 추적 Actor를 Map에서 찾아 삭제하고,
+	* 관계된 Widget도 삭제 처리.
+	*/
+	void RemoveTrackedActor(AActor* Actor);
 
 protected:
 	// UMG가 초기화될 때 호출되는 함수.
@@ -52,8 +55,27 @@ private:
 	// Minimap이 받은 정보를 바탕으로 UI 갱신.
 	void UpdateMinimap();
 
+	/*
+	* Minimap 내부에서 Actor의 유효성 판단에 사용.
+	* Valid하지 않거나, Hide되어있음.
+	*/
+	bool ShouldTrackActor(const AActor* Actor) const;
+
+	// Update마다 Remove를 호출할 때, 간추리는 용.
+	void RemoveTrackedActorAt(int32 Index);
+
+	// 이미 Track되고 있던 Actor는 다시 Visibility값 설정만 해줌.
+	void SetTrackedActorVisible(AActor* Actor, bool bVisible);
+
+	// === Register 함수를 간추리는 용. === //
+	// Actor에 따라 Minimap에 올린 Icon의 WidgetClass를 return하는 함수.
+	TSubclassOf<UUserWidget> GetIconClassForActor(const AActor* Actor) const;
+
+	// IconWidget을 실제로 만드는 함수.
+	UUserWidget* CreateTrackedIcon(AActor* Actor);
+
 protected:
-	// 전체 Contents를 담은 Panel.
+	// 적 Icon들을 담을 Panel.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UOverlay> TrackedIconOverlay;
 
@@ -91,5 +113,4 @@ private:
 
 	// TrackedActor 각각에 대한 아이콘 Widget을 관리.
 	TMap<TWeakObjectPtr<AActor>, TObjectPtr<UUserWidget>> ActorIconMap;
-
 };
