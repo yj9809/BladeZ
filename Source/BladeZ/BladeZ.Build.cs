@@ -22,6 +22,7 @@ public class BladeZ : ModuleRules
 			"Slate",
 			"Niagara",
 			"GameplayCameras",
+			"RuntimeInspector"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "EngineCameras" });
@@ -40,7 +41,7 @@ public class BladeZ : ModuleRules
 			"BladeZ/Variant_SideScrolling/AI",
 			"BladeZ/Variant_SideScrolling/Gameplay",
 			"BladeZ/Variant_SideScrolling/Interfaces",
-			"BladeZ/Variant_SideScrolling/UI"
+			"BladeZ/Variant_SideScrolling/UI",
 		});
 
 		// Uncomment if you are using Slate UI

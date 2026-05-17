@@ -21,6 +21,8 @@ public:
 	
 	// Getter.
 	FORCEINLINE bool GetIsAttacking() const { return bIsAttacking; }
+	
+	FORCEINLINE UBZPlayerAttackData* GetAttackData() const { return AttackData; }
 
 protected:
 	// Called when the game starts
@@ -97,4 +99,12 @@ private:
 	// HitStop 지속 시간.
 	UPROPERTY(VisibleAnywhere, Category = HitStop)
 	float HitStopEndTime = 0.0f;
+	
+	// Widget Test
+private:
+	UPROPERTY(VisibleAnywhere, Category=Widget)
+	TSubclassOf<class URuntimeInspectorWidget> InspectorWidgetClass;
+	
+	UPROPERTY(VisibleAnywhere, Category=Widget)
+	TObjectPtr<URuntimeInspectorWidget> InspectorWidget;
 };

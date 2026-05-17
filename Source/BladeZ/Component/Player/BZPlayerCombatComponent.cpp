@@ -4,11 +4,14 @@
 #include "BZPlayerCombatComponent.h"
 
 #include "NiagaraFunctionLibrary.h"
+#include "Blueprint/UserWidget.h"
 #include "Character/Player/BZPlayerCharacter.h"
 #include "Common/BZLog.h"
 #include "Common/FBZDamageEvent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "RuntimeInspectorWidget.h"
 
 // Sets default values for this component's properties
 UBZPlayerCombatComponent::UBZPlayerCombatComponent()
@@ -33,6 +36,15 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	if (AttackMontageRef.Succeeded())
 	{
 		AttackMontage = AttackMontageRef.Object;
+	}
+
+	// Test: Widget Test중.
+	static ConstructorHelpers::FClassFinder<URuntimeInspectorWidget> InspectorWidgetClassRef(
+		TEXT("/Game/BZ/UI/Test/WB_TestWidget.WB_TestWidget_C")
+	);
+	if (InspectorWidgetClassRef.Succeeded())
+	{
+		InspectorWidgetClass = InspectorWidgetClassRef.Class;
 	}
 }
 
@@ -59,6 +71,16 @@ void UBZPlayerCombatComponent::BeginPlay()
 		FName key = *FString::Printf(TEXT("%s_%d"), *Data.CurrentSectionName.ToString(), (int32)Data.AttackInputType);
 		AttackSectionMap.Add(key, Data.NextSectionName);
 	}
+
+	// Test: Debug Widget.
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	InspectorWidget = CreateWidget<URuntimeInspectorWidget>(
+		PC,
+		InspectorWidgetClass
+	);
+	InspectorWidget->AddToViewport(100);
+	InspectorWidget->Inspect(AttackData);
+	InspectorWidget->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
@@ -108,6 +130,13 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 			bIsHitStop = false;
 			HitStopEndTime = 0.0f;
 		}
+	}
+	
+	// Test: Debug Widget.
+	if (GetWorld()->GetFirstPlayerController()->WasInputKeyJustPressed(EKeys::F9))
+	{
+		bool bVisible = InspectorWidget->GetVisibility() == ESlateVisibility::Visible;
+		InspectorWidget->SetVisibility(bVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
 	}
 }
 
@@ -203,8 +232,8 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
-	
-	
+
+
 	const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
 		CurrentData->Damage,
 		DamageEvent,
