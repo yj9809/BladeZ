@@ -27,7 +27,7 @@ public:
 	ABZPlayerCharacter();
 	
 	// 콤보 체크 실행 함수.
-	void StartComboCheck();
+	void StartComboCheck() const;
 	
 	FORCEINLINE ABZWeaponActor* GetWeapon() const { return Weapon; }
 
@@ -76,6 +76,23 @@ private:
 	// 착지 처리를 마무리 하기 위한 함수.
 	UFUNCTION()
 	void OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+	// 대시 마무리 하기 위한 함수.
+	UFUNCTION()
+	void OnDashMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	virtual void NotifyHit(class UPrimitiveComponent* MyComp, AActor* Other,
+		class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation,
+		FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
+
+	UFUNCTION()
+	void OnCapsuleOverlap(
+		UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
 	
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
@@ -152,12 +169,24 @@ private:
 	
 	// Dash value private.
 private:
-	// 대쉬 쿨다운 타이머 핸들.
+	// 대시 쿨다운 타이머 핸들.
 	FTimerHandle DashCoolDownTimerHandle;
 	
-	// 대쉬 타이머 값.
+	// 대시 타이머 값.
 	UPROPERTY(EditAnywhere, Category = Dash)
 	float DashCoolDownTime = 0.5f;
+	
+	// 대시 시 밀어내는 힘.
+	UPROPERTY(EditAnywhere, Category = Dash)
+	float DashPushForce = 1000.0f;
+	
+	// 대시 상태 확인 플래그.
+	UPROPERTY()
+	bool bIsDashing = false;
+	
+	// 대시 시 밀어낼 액터 배열.
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> DashHitActors;
 	
 	// Land value private.
 private:

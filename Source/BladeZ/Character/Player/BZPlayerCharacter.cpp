@@ -15,6 +15,7 @@
 #include "Weapon/BZWeaponActor.h"
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
@@ -192,7 +193,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
-void ABZPlayerCharacter::StartComboCheck()
+void ABZPlayerCharacter::StartComboCheck() const
 {
 	CombatComponent->CheckCombo();
 }
@@ -235,6 +236,7 @@ void ABZPlayerCharacter::BeginPlay()
 	if (AnimInstance)
 	{
 		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnLandMontageEnded);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnDashMontageEnded);
 	}
 }
 
@@ -418,6 +420,12 @@ void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 		FVector InputVector = GetLastMovementInputVector();
 		float Direction = AnimInstance->CalculateDirection(InputVector, GetActorRotation());
 		
+		bIsDashing = true;
+		DashHitActors.Empty();
+
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+		GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABZPlayerCharacter::OnCapsuleOverlap);
+
 		FName SectionName = GetDashSectionName(Direction);
 		PlayAnimMontage(DashMontage, 1.18f, SectionName);
 		
@@ -463,6 +471,42 @@ void ABZPlayerCharacter::OnLandMontageEnded(UAnimMontage* Montage, bool bInterru
 		bIsLanding = false;
 		GetCharacterMovement()->FallingLateralFriction = 0.0f; // 착지 후 마찰 값을 원래대로 설정.
 	}
+}
+
+void ABZPlayerCharacter::OnDashMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == DashMontage)
+	{
+		bIsDashing = false;
+		DashHitActors.Empty();
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &ABZPlayerCharacter::OnCapsuleOverlap);
+	}
+}
+
+void ABZPlayerCharacter::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!bIsDashing || !OtherActor || OtherActor == this) return;
+
+	ACharacter* Enemy = Cast<ACharacter>(OtherActor);
+	if (!Enemy || DashHitActors.Contains(OtherActor)) return;
+
+	FVector Forward = GetActorForwardVector();
+	FVector Right = FVector::CrossProduct(Forward, FVector::UpVector);
+	FVector ToEnemy = (OtherActor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	float Side = FVector::DotProduct(ToEnemy, Right);
+	FVector PushDir = (Side > 0.f ? Right : -Right);
+
+	Enemy->LaunchCharacter(PushDir * DashPushForce, true, false);
+	DashHitActors.Add(OtherActor);
+}
+
+void ABZPlayerCharacter::NotifyHit(class UPrimitiveComponent* MyComp, AActor* Other,
+	class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
 }
 
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)

@@ -44,6 +44,10 @@ public:
 	// 이펙트.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effect)
 	TArray<TObjectPtr<class UNiagaraSystem>> HitEffect;
+	
+	// 콤보 이름? 콤보 명칭??
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComboName)
+	FName ComboName;
 };
 
 /**

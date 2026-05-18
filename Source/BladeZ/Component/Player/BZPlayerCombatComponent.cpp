@@ -159,19 +159,7 @@ void UBZPlayerCombatComponent::StartComboAttack()
 
 	if (AttackMontage)
 	{
-		int32 StartAttack = FMath::RandRange(0, 1);
-		FName Key;
-
-		switch (StartAttack)
-		{
-		case 0:
-			Key = TEXT("L_1");
-			break;
-
-		case 1:
-			Key = TEXT("L_1_1");
-			break;
-		}
+		FName Key = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
 
 		Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
 
@@ -187,7 +175,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 		return;
 	}
 
-	int32 AttackInput = (int32)NextInputType;
+	int32 AttackInput = static_cast<int32>(NextInputType);
 	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
 
 	FName* SectionName = AttackSectionMap.Find(key);
@@ -228,14 +216,12 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 		UDamageType::StaticClass()
 	);
 
-	PLAYER_LOG(Log, "%s", *CurrentComboName.ToString());
-
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
 
 
 	const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
-		CurrentData->Damage,
+		CurrentData ? CurrentData->Damage : 0.0f,
 		DamageEvent,
 		Owner->GetController(),
 		Owner
