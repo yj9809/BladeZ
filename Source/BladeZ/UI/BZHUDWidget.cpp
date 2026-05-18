@@ -1,10 +1,13 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BZHUDWidget.h"
+
 #include "Interface/BZCharacterHUD.h"
-#include "UI/BZHpBarWidget.h"
+#include "BZHpBarWidget.h"
 #include "BZBossHUDWidget.h"
 #include "BZMinimapWidget.h"
+#include "BZQuestInfoWidget.h"
+#include "Quest/BZQuestActor.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -48,6 +51,30 @@ void UBZHUDWidget::RegisterMinimapActor(AActor* Actor)
 void UBZHUDWidget::RemoveMinimapActor(AActor* Actor)
 {
 	MinimapWidget->RemoveTrackedActor(Actor);
+}
+
+void UBZHUDWidget::BindQuestActor(ABZQuestActor* QuestActor)
+{
+	if (!IsValid(QuestActor) || !QuestInfoWidget)
+	{
+		return;
+	}
+
+	QuestActor->OnQuestProgressChanged.AddDynamic(
+		this,
+		&UBZHUDWidget::UpdateQuestProgress
+	);
+
+	const FBZQuestData& QuestData = QuestActor->GetQuestData();
+
+	QuestInfoWidget->SetQuestInfo(QuestData);
+
+	QuestActor->RefreshQuestProgress();
+}
+
+void UBZHUDWidget::UpdateQuestProgress(int32 NewValue, int32 MaxValue)
+{
+	QuestInfoWidget->UpdateQuestProgress(NewValue, MaxValue);
 }
 
 void UBZHUDWidget::UpdateHpBar(float NewCurrentHp)

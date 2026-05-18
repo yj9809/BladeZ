@@ -25,9 +25,6 @@ public:
 public:
 	virtual void BeginPlay() override;
 
-	// Player HUD를 만드는 함수.
-	void CreatePlayerHUD();
-
 	/*
 	* Boss측에서 호출해 BossHUD를 만들면서
 	* 자기 자신에게 만들어진 HUD를 등록.
@@ -36,6 +33,9 @@ public:
 	void RegisterBoss(AActor* BossActor);
 
 private:
+	// Player HUD를 만드는 함수.
+	void CreatePlayerHUD();
+
 	// 내부에서 HUDWidget Cast + Lazy Create 중복 제거용 헬퍼.
 	UBZHUDWidget* GetMainHUDWidget();
 
@@ -63,5 +63,4 @@ protected:
 	// 실제 생성된 UI 객체.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
 	TObjectPtr<class UBZUserWidget> BossHUDWidget;
-
 };

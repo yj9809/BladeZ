@@ -9,6 +9,8 @@
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHUDWidget.h"
 #include "UI/BZUserWidget.h"
+#include "Kismet/GameplayStatics.h"
+#include "Quest/BZQuestActor.h"
 
 
 ABZPlayerController::ABZPlayerController()
@@ -144,5 +146,18 @@ void ABZPlayerController::BindGameplayEvents()
 			this,
 			&ABZPlayerController::RemoveMinimapActor
 		);
+	}
+
+
+	// QuestActor를 지금 Level에서 찾아, MainHUD의 BindQuestActor를 호출
+	// => QuestInfoWidget에 정보 전달됨
+	if (UBZHUDWidget* MainHUDWidget = GetMainHUDWidget())
+	{
+		if (ABZQuestActor* QuestActor = Cast<ABZQuestActor>(
+			UGameplayStatics::GetActorOfClass(this, ABZQuestActor::StaticClass())
+		))
+		{
+			MainHUDWidget->BindQuestActor(QuestActor);
+		}
 	}
 }

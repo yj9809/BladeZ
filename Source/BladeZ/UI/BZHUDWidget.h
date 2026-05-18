@@ -43,11 +43,18 @@ public:
 	void RemoveMinimapActor(AActor* Actor);
 
 
-	// For KillCount.
+	// For KillCount: None
 
 
 	// For QuestInfo.
+	void BindQuestActor(class ABZQuestActor* QuestActor);
 
+	/*
+	* OnQuestProgressChanged가 DECLARE_DYNAMIC_MULTICAST_DELEGATE라서
+	* UFUNCTION으로 선언해줘야 제대로 실행됨.
+	*/
+	UFUNCTION()
+	void UpdateQuestProgress(int32 NewValue, int32 MaxValue);
 
 
 	void UpdateHpBar(float NewCurrentHp);
@@ -69,7 +76,7 @@ protected:
 	TObjectPtr<UUserWidget> KillCountWidget;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUserWidget> QuestInfoWidget;
+	TObjectPtr<class UBZQuestInfoWidget> QuestInfoWidget;
 
 };
  

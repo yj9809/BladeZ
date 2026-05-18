@@ -11,6 +11,7 @@
 #include "Character/Player/BZPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/BZBossHUDWidget.h"
+#include "Game/BZEnemyEventSubsystem.h"
 #include "GameFramework/DamageType.h"
 #include "DrawDebugHelpers.h"
 
@@ -194,6 +195,17 @@ float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const
 void ABZTankCharacter::SetDead()
 {
 	BOSS_LOG(Warning, "BossDead");
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.18
+	* 작성 사유: UI/Quest에서 보스 죽음 처리를 위해 추가.
+	* Dead Event BroadCast.
+	*/
+	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
+	{
+		EnemyEvents->BroadcastEnemyDied(this);
+	}
 }
 
 void ABZTankCharacter::PostInitializeComponents()

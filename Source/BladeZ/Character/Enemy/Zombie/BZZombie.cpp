@@ -15,8 +15,6 @@
 #include "State/AttackState.h"
 #include "State/DeadState.h"
 
-#include"Common/BZLog.h" 
-
 #include "Game/BZEnemyEventSubsystem.h"
 
 
