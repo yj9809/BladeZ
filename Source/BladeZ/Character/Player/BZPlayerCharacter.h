@@ -80,11 +80,7 @@ private:
 	// 대시 마무리 하기 위한 함수.
 	UFUNCTION()
 	void OnDashMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
-	virtual void NotifyHit(class UPrimitiveComponent* MyComp, AActor* Other,
-		class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation,
-		FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
-
+	
 	UFUNCTION()
 	void OnCapsuleOverlap(
 		UPrimitiveComponent* OverlappedComp,

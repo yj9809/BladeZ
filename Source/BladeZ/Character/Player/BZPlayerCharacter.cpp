@@ -502,13 +502,6 @@ void ABZPlayerCharacter::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, A
 	DashHitActors.Add(OtherActor);
 }
 
-void ABZPlayerCharacter::NotifyHit(class UPrimitiveComponent* MyComp, AActor* Other,
-	class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal,
-	FVector NormalImpulse, const FHitResult& Hit)
-{
-	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
-}
-
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);

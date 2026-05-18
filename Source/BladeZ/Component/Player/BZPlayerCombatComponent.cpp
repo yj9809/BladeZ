@@ -175,13 +175,13 @@ void UBZPlayerCombatComponent::CheckCombo()
 		return;
 	}
 
+	UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
 	int32 AttackInput = static_cast<int32>(NextInputType);
 	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
-
+	
 	FName* SectionName = AttackSectionMap.Find(key);
 	if (SectionName)
 	{
-		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
 		if (AnimInstance && AttackMontage)
 		{
 			AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
@@ -189,6 +189,15 @@ void UBZPlayerCombatComponent::CheckCombo()
 
 		CurrentComboName = *SectionName;
 	}
+	else
+	{
+		// 마지막 콤보 → 랜덤으로 첫 섹션으로 점프 (몽타주 재시작 X)
+		FName NextKey = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
+		AnimInstance->Montage_JumpToSection(NextKey, AttackMontage);
+		CurrentComboName = NextKey;
+	}
+
+	
 	bHasNextInput = false;
 }
 
@@ -260,6 +269,5 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 		return;
 	}
 
-	// 공격이 끝났을 때 입력값 초기화.
 	bIsAttacking = false;
 }
