@@ -16,6 +16,7 @@
 
 
 #include "BZBossPhaseComponent.h"
+#include "Common/BZLog.h"
 
 ABZTankCharacter::ABZTankCharacter()
 {
@@ -190,6 +191,11 @@ float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const
 	return Damage;
 }
 
+void ABZTankCharacter::SetDead()
+{
+	BOSS_LOG(Warning, "BossDead");
+}
+
 void ABZTankCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -271,7 +277,9 @@ void ABZTankCharacter::BeginPlay()
 		PhaseComponent->Initialize(Stat, PhaseDataAsset);
 		PhaseComponent->OnPhaseChanged.AddUObject(this, &ABZTankCharacter::OnBossPhaseChanged);
 	}
-
+	
+	// 죽음 델리게이트 연결
+	Stat->OnHpZero.AddUObject(this, &ABZTankCharacter::SetDead);
 
 	/*
 	* 작성자: 강수연

@@ -46,6 +46,8 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
 
+	void SetDead();
+	
 public:
 	/*
 	* 작성자: 강수연
