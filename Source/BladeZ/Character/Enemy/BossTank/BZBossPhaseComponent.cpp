@@ -18,8 +18,11 @@ void UBZBossPhaseComponent::Initialize(UBZCharacterStatComponent* InStat, UBZBos
 
 	if (StatComponent)
 	{
-		// StatComponent의 HP 변경 델리게이트를 구독 (가정: OnHpChanged 델리게이트 존재)
+		// 1. HP 변경 시마다 페이즈 체크하도록 델리게이트 연결
 		StatComponent->OnHpChanged.AddUObject(this, &UBZBossPhaseComponent::CheckPhaseTransition);
+
+		// 2. 초기화 시점에 즉시 현재 HP를 기준으로 페이즈 설정
+		CheckPhaseTransition(StatComponent->GetCurrentHp());
 	}
 }
 

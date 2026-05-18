@@ -52,5 +52,9 @@ void UBZTankState_SprintAttack::OnExit(AActor* Owner)
 
 void UBZTankState_SprintAttack::OnSprintAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (bInterrupted)
+	{
+		return;
+	}
 	TankCharacter->StateMachine->ChangeState(TankCharacter->KeepDistanceStateInstance);
 }

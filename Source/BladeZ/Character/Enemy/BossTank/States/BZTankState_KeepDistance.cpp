@@ -14,7 +14,21 @@ void UBZTankState_KeepDistance::OnEnter(AActor* Owner)
 
 	// 타이머 초기화
 	DistanceCheckTimer = 1.0f;
-	StateDurationTimer = 0.0f; // 3초 실행 타이머
+	StateDurationTimer = 0.0f; // n초 실행 타이머
+	
+	if (TankCharacter->CurrentPhase == EBossPhase::Phase1)
+	{
+		MaxStateDuration = 2;
+	}
+	else if (TankCharacter->CurrentPhase == EBossPhase::Phase2)
+	{
+		MaxStateDuration = 1;
+	}
+	else
+	{
+		MaxStateDuration = 0.2f;
+	}
+	
 	bHasBackMoveTarget = false;
 	BackMoveTarget = FVector::ZeroVector;
 

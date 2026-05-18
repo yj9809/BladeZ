@@ -177,6 +177,7 @@ void ABZTankCharacter::Tick(float DeltaTime)
 		}
 	}
 
+	// 타이머 업데이트
 	UpdateTimers(DeltaTime);
 }
 
@@ -216,11 +217,26 @@ void ABZTankCharacter::PostInitializeComponents()
 	//Stat->OnHpZero.AddUObject(this, &ABZTankCharacter::SetDead);
 }
 
-// Called when the game starts or when spawned
 void ABZTankCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitializeBoss();
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.15
+	* 작성 사유: Boss HUD 처리를 위해 추가.
+	* Player 화면에 추가하기 위해, PlayerController에 자신의 Actor pointer를 전달
+	*/
+	if (ABZPlayerController* PlayerController = Cast<ABZPlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		PlayerController->RegisterBoss(this);
+	}
+}
+
+void ABZTankCharacter::InitializeBoss()
+{
 	// 상태 인스턴스 실제 생성 (메모리 할당)
 	if (IdleStateClass)
 	{
@@ -291,30 +307,43 @@ void ABZTankCharacter::BeginPlay()
 	}
 	
 	// 죽음 델리게이트 연결
-	Stat->OnHpZero.AddUObject(this, &ABZTankCharacter::SetDead);
-
-	/*
-	* 작성자: 강수연
-	* 작성일: 26.05.15
-	* 작성 사유: Boss HUD 처리를 위해 추가.
-	* Player 화면에 추가하기 위해, PlayerController에 자신의 Actor pointer를 전달
-	*/
-	if (ABZPlayerController* PlayerController = Cast<ABZPlayerController>(GetWorld()->GetFirstPlayerController()))
+	if (Stat)
 	{
-		PlayerController->RegisterBoss(this);
+		Stat->OnHpZero.AddUObject(this, &ABZTankCharacter::SetDead);
 	}
 }
 
 void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 {
-	// 페이즈 전환 시 공통 처리 (예: 포효 상태로 강제 전환)
-	const FBossPhaseData* PhaseData = PhaseComponent->GetCurrentPhaseData();
-	if (PhaseData && PhaseData->TransitionMontage)
+	CurrentPhase = NewPhase;
+
+	// 페이즈 전환 시 공통 처리
+	if (PhaseComponent)
 	{
-		// 포효 상태가 있다면 해당 상태로 전이
-		if (RoarStateInstance)
+		const FBossPhaseData* PhaseData = PhaseComponent->GetCurrentPhaseData();
+		if (PhaseData && PhaseData->TransitionMontage)
 		{
-			StateMachine->ChangeState(RoarStateInstance);
+			// 1. 현재 상태 기동 중단 및 몽타주 재생
+			if (StateMachine)
+			{
+				// 현재 상태를 빠져나와서 대기 상태로 (혹은 상태 머신을 일시적으로 무력화)
+				StateMachine->ChangeState(nullptr);
+			}
+
+			// 2. 전이 몽타주 재생
+			float Duration = PlayAnimMontage(PhaseData->TransitionMontage);
+			if (Duration > 2.0f)
+			{
+				// 몽타주 종료 델리게이트 연결
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &ABZTankCharacter::OnTransitionMontageEnded);
+				GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, PhaseData->TransitionMontage);
+			}
+			else
+			{
+				// 재생 실패 시 즉시 다음 단계로
+				OnTransitionMontageEnded(PhaseData->TransitionMontage, false);
+			}
 		}
 	}
 
@@ -322,10 +351,20 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 	UE_LOG(LogTemp, Warning, TEXT("Boss Phase Changed to: %d"), (uint8)NewPhase);
 }
 
+void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	// 몽타주가 끝난 후 다음 행동(스킬 선택)으로 전환
+	if (StateMachine && SkillSelectionStateInstance)
+	{
+		StateMachine->ChangeState(SkillSelectionStateInstance);
+	}
+}
+
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
 {
 	DefaultAttackCooldown.CurrentTime += DeltaTime;
 	JumpToCooldown.CurrentTime += DeltaTime;
+	ThrowObjectCooldown.CurrentTime += DeltaTime;
 	BackUpCooldown.CurrentTime += DeltaTime;
 }
 

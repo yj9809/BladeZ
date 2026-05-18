@@ -10,13 +10,13 @@
 void UBZTankState_BackUp::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
-	
+
 	BackUpMontageEndDelegate.BindUObject(this, &UBZTankState_BackUp::OnBackUpMontageEnded);
 
 	TankCharacter->CustomMoveTo->SetEnabled(true, true);
-	
+	TankCharacter->SetBlendingMotion(false);
+
 	TankCharacter->PlayAnimMontage(TankCharacter->BackUpMontage);
-	
 	// 몽타주 종료 델리게이트 연결
 	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -29,16 +29,26 @@ void UBZTankState_BackUp::OnEnter(AActor* Owner)
 void UBZTankState_BackUp::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
+
+	// 1페이즈만 짧게 뛰기
+	if (TankCharacter->CurrentPhase == EBossPhase::Phase1 && TankCharacter->DistanceToTarget >= 800.0f)
+	{
+		TankCharacter->StopAnimMontage(TankCharacter->BackUpMontage);
+	}
 }
 
 void UBZTankState_BackUp::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
-	
+
 	TankCharacter->BackUpCooldown.Reset();
 }
 
 void UBZTankState_BackUp::OnBackUpMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (bInterrupted)
+	{
+		return;
+	}
 	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
 }

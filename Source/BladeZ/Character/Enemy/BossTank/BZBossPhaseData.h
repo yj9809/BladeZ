@@ -45,7 +45,6 @@ struct FBossPhaseData
 	TArray<TSubclassOf<class UBZTankStateBase>> AllowedSkillStates;
 };
 
-
 // 보스 페이즈 설정을 위한 데이터 에셋
 UCLASS()
 class BLADEZ_API UBZBossPhaseDataAsset : public UDataAsset

@@ -27,7 +27,7 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 	TankCharacter->SetBlendingMotion(false);
 
 	// 여러종류의 Attack 중 랜덤으로 고르기
-	uint8 RandIndex = FMath ::RandRange(0, 2);
+	uint8 RandIndex = FMath::RandRange(0, 2);
 	if (RandIndex == 0)
 	{
 		TankCharacter->SetBlendingMotion(true);
@@ -41,11 +41,6 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 	{
 		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "3rdAttack");
 	}
-}
-
-void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
-{
-	Super::OnUpdate(Owner, DeltaTime);
 
 	if (TankCharacter && TankCharacter->AttackMontage)
 	{
@@ -58,6 +53,11 @@ void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
 	}
 }
 
+void UBZTankState_Attack::OnUpdate(AActor* Owner, float DeltaTime)
+{
+	Super::OnUpdate(Owner, DeltaTime);
+}
+
 void UBZTankState_Attack::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
@@ -67,11 +67,9 @@ void UBZTankState_Attack::OnExit(AActor* Owner)
 
 void UBZTankState_Attack::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	// 사정거리 확인
-	// if (TankCharacter->AttackRange >= FVector::Dist(TankCharacter->GetActorLocation(),
-	//                                                 TankCharacter->TargetActor->GetActorLocation()))
-	// {
+	if (bInterrupted)
+	{
+		return;
+	}
 	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
-	TankCharacter->CustomMoveTo->SetEnabled(true);
-	// }
 }

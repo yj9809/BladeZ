@@ -5,13 +5,26 @@
 
 #include "BZTankStateMachine.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
+#include "Character/Enemy/BossTank/BZBossPhaseComponent.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 
 void UBZTankState_SkillSelection::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
+	
 	TankCharacter->CustomMoveTo->SetEnabled(false);
+	
 	SelectionTimer = 0.0f;
+	
+	// 선택 시간 난이도 따라 가변
+	if (TankCharacter->CurrentPhase == EBossPhase::Phase1)
+	{
+		SelectionDuration = 1.0f;
+	}
+	else
+	{
+		SelectionDuration = 0.2f;
+	}
 }
 
 void UBZTankState_SkillSelection::OnUpdate(AActor* Owner, float DeltaTime)
@@ -74,11 +87,36 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 
 void UBZTankState_SkillSelection::AddStateIfValid(TArray<UBZTankStateBase*>& States, UBZTankStateBase* State) const
 {
-	// 생성된 상태 인스턴스만 후보에 추가
-	if (State)
+	if (!State || !TankCharacter) return;
+
+	// 페이즈 컴포넌트로부터 현재 페이즈 데이터 가져오기
+	if (TankCharacter->PhaseComponent)
 	{
-		States.Add(State);
+		const FBossPhaseData* PhaseData = TankCharacter->PhaseComponent->GetCurrentPhaseData();
+
+		// 허용된 스킬 리스트가 정의되어 있다면 필터링 수행
+		if (PhaseData && PhaseData->AllowedSkillStates.Num() > 0)
+		{
+			bool bIsAllowed = false;
+			for (const TSubclassOf<UBZTankStateBase>& AllowedClass : PhaseData->AllowedSkillStates)
+			{
+				// 해당 상태 인스턴스가 허용된 클래스이거나 그 자식 클래스인지 확인
+				if (State->IsA(AllowedClass))
+				{
+					bIsAllowed = true;
+					break;
+				}
+			}
+
+			if (!bIsAllowed)
+			{
+				// 허용되지 않은 스킬이면 후보군에 넣지 않음
+				return;
+			}
+		}
 	}
+
+	States.Add(State);
 }
 
 void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const
@@ -94,15 +132,32 @@ void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateB
 void UBZTankState_SkillSelection::BuildMiddleSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
 	AddStateIfValid(States, TankCharacter->SprintStateInstance);
+
+	// 임시 1페이즈 스킬
+	if (TankCharacter->CurrentPhase == EBossPhase::Phase1)
+	{
+		AddStateIfValid(States, TankCharacter->ChaseStateInstance);
+	}
 }
 
 void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
 	// 멀 때
 	AddStateIfValid(States, TankCharacter->SprintStateInstance);
-	AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
+
+	if (TankCharacter->ThrowObjectCooldown.IsTimeout())
+	{
+		AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
+	}
+
 	if (TankCharacter->JumpToCooldown.IsTimeout())
 	{
 		AddStateIfValid(States, TankCharacter->JumpToStateInstance);
+	}
+
+	// 임시 1페이즈 스킬
+	if (TankCharacter->CurrentPhase == EBossPhase::Phase1)
+	{
+		AddStateIfValid(States, TankCharacter->ChaseStateInstance);
 	}
 }

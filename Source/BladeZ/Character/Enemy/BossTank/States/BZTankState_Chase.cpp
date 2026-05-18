@@ -29,11 +29,14 @@ void UBZTankState_Chase::OnEnter(AActor* Owner)
 void UBZTankState_Chase::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
-	
+
 	ElapsedTime += DeltaTime;
 	if (ElapsedTime >= MaxFollowTime)
 	{
-		TankCharacter->StateMachine->ChangeState(TankCharacter->SprintStateInstance);
+		if (TankCharacter->CurrentPhase != EBossPhase::Phase1)
+		{
+			TankCharacter->StateMachine->ChangeState(TankCharacter->SprintStateInstance);
+		}
 	}
 
 	if (TankCharacter->DistanceToTarget <= TankCharacter->AttackRange)

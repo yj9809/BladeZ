@@ -13,7 +13,7 @@ void UBZTankState_Roar::OnEnter(AActor* Owner)
 
 	// 몽타주 종료 델리게이트 연결
 	MontageEndDelegate.BindUObject(this, &UBZTankState_Roar::OnMontageEnded);
-	
+
 	if (TankCharacter && TankCharacter->RoarMontage)
 	{
 		if (UBZCustomMoveTo* MoveComp = TankCharacter->CustomMoveTo)
@@ -24,19 +24,19 @@ void UBZTankState_Roar::OnEnter(AActor* Owner)
 		// 애니메이션 재생
 		TankCharacter->SetBlendingMotion(false);
 		TankCharacter->PlayAnimMontage(TankCharacter->RoarMontage);
+
+		// 몽타주 종료 델리게이트 연결
+		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, TankCharacter->RoarMontage);
+		}
 	}
 }
 
 void UBZTankState_Roar::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
-
-	// 몽타주 종료 델리게이트 연결
-	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
-	if (AnimInstance)
-	{
-		AnimInstance->Montage_SetEndDelegate(MontageEndDelegate, TankCharacter->RoarMontage);
-	}
 }
 
 void UBZTankState_Roar::OnExit(AActor* Owner)

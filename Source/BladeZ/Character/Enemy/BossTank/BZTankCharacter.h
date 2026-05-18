@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,6 +19,9 @@ class BLADEZ_API ABZTankCharacter
 	GENERATED_BODY()
 
 public:
+	// 보스 초기화 (상태 및 컴포넌트)
+	void InitializeBoss();
+
 	// Sets default values for this character's properties
 	ABZTankCharacter();
 
@@ -77,8 +80,9 @@ protected:
 	TObjectPtr<class UParticleSystem> GroundEffect;
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	// 현재 페이즈 정보
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	EBossPhase CurrentPhase = EBossPhase::Phase1;
 
 	// 상태 머신 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "FSM")
@@ -187,11 +191,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* BackUpMontage;
 
+public:
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 private:
 	void UpdateTimers(float DeltaTime);
 
 	UFUNCTION()
 	void OnBossPhaseChanged(EBossPhase NewPhase);
+
+	UFUNCTION()
+	void OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 private:
 	bool bIsPlayingCustomRootMotion;
@@ -213,7 +224,7 @@ private:
 
 public:
 	// State에서 쓰일 변수들
-	float AttackRange = 400.0f;
+	float AttackRange = 300.0f;
 	float MiddleSkillRange = 900.0f;
 	float FarSkillRange = 1500.0f;
 	float DistanceToTarget = 1000.0f;
@@ -223,10 +234,13 @@ public:
 	FSkillCooldown DefaultAttackCooldown{3.0f};
 
 	UPROPERTY()
-	FSkillCooldown JumpToCooldown{3.0f};
+	FSkillCooldown JumpToCooldown{5.0f};
 	
 	UPROPERTY()
-	FSkillCooldown BackUpCooldown{5.0f};
+	FSkillCooldown ThrowObjectCooldown{5.0f};
+	
+	UPROPERTY()
+	FSkillCooldown BackUpCooldown{7.0f};
 
 private:
 	/*
