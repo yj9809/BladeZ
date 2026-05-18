@@ -35,6 +35,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	
 
 public:
 	virtual void PostInitializeComponents() override;
@@ -57,7 +59,9 @@ public:
 	//Setter
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	void SetZombieState(EZombieState NewState = EZombieState::Dead);
-
+	
+	FORCEINLINE void SetMovementLockedByAnim(bool LockedByAnim) { bMovementLockedByAnim = LockedByAnim; };
+	
 	//좀비 풀 Setter
 	void SetZombieObjectPool(UBZZombieObjectPool* InZombieObjectPool)
 	{
@@ -154,6 +158,12 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> ZombieDeathAnim;
+	
+	//떨어지고 나서 애니메이션이 끝났는지 확인용
+	UPROPERTY()
+	bool bMovementLockedByAnim = false;
+	
+	
 
 private:
 	//스탯 컴포넌트

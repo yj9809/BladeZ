@@ -17,6 +17,11 @@ void ChaseState::OnEnter()
 void ChaseState::OnUpdate(float DeltaTime)
 {
 	//예외처리.
+	if (Owner->bMovementLockedByAnim)
+	{
+		return;
+	}
+	
 	if (!IsValid(Owner->TargetActor))
 	{
 		Owner->SetZombieState(EZombieState::Idle);

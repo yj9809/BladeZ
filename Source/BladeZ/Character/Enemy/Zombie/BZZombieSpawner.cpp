@@ -4,6 +4,7 @@
 #include "BZZombieSpawner.h"
 
 #include "BZZombieObjectPool.h"
+#include "MyClass.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -21,6 +22,14 @@ ABZZombieSpawner::ABZZombieSpawner()
 	SpawnerLocationComponent->SetRelativeLocation(FVector(300.f, 0.f, 0.f));
 	
 	SpawnArea->SetBoxExtent(FVector(300.0f, 300.0f, 500.0f));
+	
+	static ConstructorHelpers::FClassFinder<ABZZombie> ZombieRef(
+		TEXT("/Game/BZ/Enemy/Zombie/Blueprint/BP_Zombie.BP_Zombie_C")	
+	);
+	if (ZombieRef.Succeeded())
+	{
+		ZombieClass = ZombieRef.Class;
+	}
 }
 
 // Called when the game starts or when spawned
