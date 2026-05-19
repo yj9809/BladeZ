@@ -219,14 +219,18 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
+	DamageEvent.SetKnockback(CheckKnockbackCombo(CurrentComboName));
 
-	const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
-		CurrentData ? CurrentData->Damage : 0.0f,
-		DamageEvent,
-		Owner->GetController(),
-		Owner
-	);
-
+	if (Enemy->GetActor())
+	{
+		const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
+			CurrentData ? CurrentData->Damage : 0.0f,
+			DamageEvent,
+			Owner->GetController(),
+			Owner
+		);
+	}
+	
 	if (!CurrentData->HitStopValue.IsEmpty() && !bIsHitStop)
 	{
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), CurrentData->HitStopValue[1]);
@@ -261,4 +265,14 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 	}
 
 	bIsAttacking = false;
+}
+
+bool UBZPlayerCombatComponent::CheckKnockbackCombo(const FName& SectionName) const
+{
+	if (SectionName == "LLLL_4" || SectionName == "LLLLR_5")
+	{
+		return true;
+	}
+	
+	return false;
 }

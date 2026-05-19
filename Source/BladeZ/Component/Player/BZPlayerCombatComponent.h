@@ -52,6 +52,9 @@ public:
 	FOnCameraShake OnCameraShake;
 	
 private:
+	bool CheckKnockbackCombo(const FName& SectionName) const;
+	
+private:
 	// 컴포넌트를 가지고 있는 캐릭터.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	ACharacter* Owner;
