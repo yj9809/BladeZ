@@ -35,13 +35,23 @@ ABZZombie::ABZZombie()
 	GetCharacterMovement()->SetMovementMode(MOVE_None);
 
 	// 죽음 몽타주 애셋 로드.
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> MonTageRef(
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadMonTageRef(
 		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_ZombieDeath.AM_ZombieDeath")
 	);
 
-	if (MonTageRef.Succeeded())
+	if (DeadMonTageRef.Succeeded())
 	{
-		ZombieDeathAnim = MonTageRef.Object;
+		ZombieDeathAnim = DeadMonTageRef.Object;
+	}
+
+	//맞는 몽타주 애셋 로드
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> HitMonTageRef(
+		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_Hit.AM_Hit")
+	);
+
+	if (HitMonTageRef.Succeeded())
+	{
+		ZombieHitAnim = HitMonTageRef.Object;
 	}
 }
 
@@ -93,57 +103,30 @@ void ABZZombie::OnHpZero()
 float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
                             class AController* EventInstigator, AActor* DamageCauser)
 {
+	UE_LOG(LogTemp, Log, TEXT("In Damage Event"));
+	//이미 죽은 상황인데 AM_Hit 재생을 막기 위한 용도
+	if (CurrentState == EZombieState::Dead)
+	{
+		KnockBack(DamageEvent);
+		return 0.0;
+	}
+
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	
-	Stat->ApplyDamage();
-	//GetMesh()->SetSimulatePhysics(true);
-		
-	
-	// GetCharacterMovement()->Launch(GetActorLocation()*FVector(1000.0f,0.0f,0.0f));
-	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
-	{
-		UE_LOG(LogTemp, Log, TEXT("Damage Event"));
-		AAIController* AiCon = Cast<AAIController>(GetController());
-		if (AiCon)
-		{
-			AiCon->StopMovement();
-			const FBZDamageEvent* PointDamageEvent =
-			static_cast<const FBZDamageEvent*>(&DamageEvent);
-		
-			FVector ExtraVector = PointDamageEvent->HitInfo.ImpactNormal;
-			ExtraVector.Z = 10000;
-			LaunchCharacter( ExtraVector,true,true);
-			UE_LOG(LogTemp, Log, TEXT("%f,%f,%f"), ExtraVector.X,ExtraVector.Y,ExtraVector.Z );
-		}
-		//GetMesh()->AddImpulse(PointDamageEvent->HitInfo.ImpactNormal * 100000,NAME_None,true);
-	
-		
-	}
-	 	//if (PointDamageEvent->IsKnockback())
-	 	//{
-			// 피격자(자신) → 공격자 방향
-			// FVector Direction = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
-			// // 포물선을 위해 위쪽 성분 추가
-			// Direction.Z += 0.5f;
-			// Direction = Direction.GetSafeNormal();
-			// FVector LaunchVelocity = Direction * 100.0f;
-			// PLAYER_LOG(Log, "%f, %f, %f", LaunchVelocity.X, LaunchVelocity.Y, LaunchVelocity.Z);
-			// LaunchCharacter(LaunchVelocity, true, true);
-	// 	}
-	// }
-	
-	if (IsValid(DamageCauser) && CurrentState != EZombieState::Dead)
-	{
-		FVector KnockbackDirection = GetActorLocation() - DamageCauser->GetActorLocation();
-		KnockbackDirection.Z = 0.0f;
-		KnockbackDirection = KnockbackDirection.GetSafeNormal();
+	Stat->ApplyDamage(DamageAmount);
 
-		FVector LaunchVelocity = KnockbackDirection * 600.0f;
-		LaunchVelocity.Z = 150.0f;
-
-		LaunchCharacter(LaunchVelocity, true, true);
+	//이번 공격에서 죽었는지 체크 
+	if (CurrentState == EZombieState::Dead)
+	{
+		KnockBack(DamageEvent);
+		return DamageAmount;
 	}
 
+	KnockBack(DamageEvent);
+
+	if (ZombieHitAnim)
+	{
+		PlayAnimMontage(ZombieHitAnim);
+	}
 
 	return DamageAmount;
 }
@@ -393,6 +376,30 @@ void ABZZombie::PerformAttackTrace()
 			this,
 			nullptr
 		);
+	}
+}
+
+void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
+{
+	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Damage Event"));
+		AAIController* AiCon = Cast<AAIController>(GetController());
+		if (AiCon)
+		{
+			AiCon->StopMovement();
+			const FBZDamageEvent* PointDamageEvent =
+				static_cast<const FBZDamageEvent*>(&DamageEvent);
+
+			// if (PointDamageEvent->IsKnockback())
+			// {
+			FVector ExtraVector = PointDamageEvent->HitInfo.ImpactNormal;
+			ExtraVector.Z = 3;
+			LaunchCharacter(ExtraVector * LaunchForce, true, true);
+			UE_LOG(LogTemp, Log, TEXT("%f,%f,%f"), ExtraVector.X, ExtraVector.Y, ExtraVector.Z);
+			//}
+		
+		}
 	}
 }
 

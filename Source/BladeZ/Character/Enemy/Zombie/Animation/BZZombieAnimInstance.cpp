@@ -40,10 +40,6 @@ void UBZZombieAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		GroundSpeed = Velocity.Size2D();
 		bIsIdle = GroundSpeed < MovingThreshold;
 		bIsFalling = Movement->IsFalling();
-		if (bIsFalling)
-		{
-			Zombie->SetMovementLockedByAnim(true);
-		}
 		bIsJumping = bIsFalling && (Velocity.Z > JumpingThreshold);
 		
 	}

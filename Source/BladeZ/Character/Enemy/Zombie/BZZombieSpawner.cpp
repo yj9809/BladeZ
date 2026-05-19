@@ -4,7 +4,6 @@
 #include "BZZombieSpawner.h"
 
 #include "BZZombieObjectPool.h"
-#include "MyClass.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 

@@ -60,8 +60,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	void SetZombieState(EZombieState NewState = EZombieState::Dead);
 	
-	FORCEINLINE void SetMovementLockedByAnim(bool LockedByAnim) { bMovementLockedByAnim = LockedByAnim; };
-	
 	//좀비 풀 Setter
 	void SetZombieObjectPool(UBZZombieObjectPool* InZombieObjectPool)
 	{
@@ -87,6 +85,7 @@ private:
 	//거리 구하는 함수
 	float GetDistanceToTarget2D() const;
 	void PerformAttackTrace();
+	void KnockBack(FDamageEvent const& DamageEvent);
 	
 	virtual FName GetStatRowName() const override;
 
@@ -156,12 +155,17 @@ protected:
 	UPROPERTY()
 	FTimerHandle DeathReturnTimerHandle;
 	
+	//몽타주 변수
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> ZombieDeathAnim;
 	
-	//떨어지고 나서 애니메이션이 끝났는지 확인용
 	UPROPERTY()
-	bool bMovementLockedByAnim = false;
+	TObjectPtr<UAnimMontage> ZombieHitAnim;
+	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Data")
+	FVector LaunchForce = FVector::One();
+	
 	
 	
 
