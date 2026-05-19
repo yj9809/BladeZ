@@ -9,6 +9,7 @@
 #include "BZZombieObjectPool.h"
 #include "Common/BZLog.h"
 #include "Common/FBZDamageEvent.h"
+#include "Engine/AssetManager.h"
 
 #include "State/IdleState.h"
 #include "State/ChaseState.h"
@@ -36,7 +37,7 @@ ABZZombie::ABZZombie()
 
 	// 죽음 몽타주 애셋 로드.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadMonTageRef(
-		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_ZombieDeath1.AM_ZombieDeath1")
+		TEXT("/Script/Engine.AnimMontage'/Game/BZ/Enemy/Zombie/Animation/AM_ZombieDeath1.AM_ZombieDeath1'")
 	);
 
 	if (DeadMonTageRef.Succeeded())
@@ -46,7 +47,7 @@ ABZZombie::ABZZombie()
 
 	//맞는 몽타주 애셋 로드
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> HitMonTageRef(
-		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_Hit1.AM_Hit1")
+		TEXT("/Script/Engine.AnimMontage'/Game/BZ/Enemy/Zombie/Animation/AM_Hit1.AM_Hit1'")
 	);
 
 	if (HitMonTageRef.Succeeded())
@@ -83,7 +84,17 @@ void ABZZombie::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	ensure(ZombieMeshes.Num() > 0);
+
+	int32 RandIndex = FMath::RandRange(0, ZombieMeshes.Num() - 1);
 	Stat->OnHpZero.AddUObject(this, &ABZZombie::OnHpZero);
+	ZombieMeshHandle = UAssetManager::Get().
+	                   GetStreamableManager().
+	                   RequestAsyncLoad(
+		                   ZombieMeshes[RandIndex],
+		                   FStreamableDelegate::CreateUObject(
+			                   this,
+			                   &ABZZombie::ZombieMeshLoadCompleted));
 }
 
 void ABZZombie::OnHpZero()
@@ -127,14 +138,12 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
 	{
 		const FBZDamageEvent* BZDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
-			
-		
 	}
 
-	// if (ZombieHitAnim)
-	// {
-	// 	PlayAnimMontage(ZombieHitAnim);
-	// }
+	if (ZombieHitAnim)
+	{
+		PlayAnimMontage(ZombieHitAnim);
+	}
 
 	return DamageAmount;
 }
@@ -180,6 +189,21 @@ void ABZZombie::TickFSM(float DeltaTime)
 void ABZZombie::ClearAttackHitActors()
 {
 	AttackHitActors.Empty();
+}
+
+void ABZZombie::ZombieMeshLoadCompleted()
+{
+	if (ZombieMeshHandle.IsValid())
+	{
+ 		USkeletalMesh* ZombieMesh = Cast<USkeletalMesh>(ZombieMeshHandle->GetLoadedAsset());
+		
+		if (ZombieMesh)
+		{
+			GetMesh()->SetSkeletalMesh(ZombieMesh);
+		}
+	}
+	
+	ZombieMeshHandle->ReleaseHandle();
 }
 
 void ABZZombie::SetZombieState(EZombieState NewState)
@@ -393,7 +417,7 @@ void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 	{
 		return;
 	}
-	
+
 	const FBZDamageEvent* PointDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
 	UE_LOG(LogTemp, Log, TEXT("Damage Event"));
 
@@ -412,7 +436,7 @@ void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 	// PreviousPawnCollisionResponse = GetCapsuleComponent()->GetCollisionResponseToChannel(ECC_Pawn);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-	//bCanDamageOverlappedZombies = !PointDamageEvent->IsChainDamage();
+	bCanDamageOverlappedZombies = true;
 	KnockbackDamagedActors.Empty();
 
 	GetWorldTimerManager().ClearTimer(KnockbackOverlapTimerHandle);
@@ -427,7 +451,7 @@ void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 
 void ABZZombie::EndKnockbackOverlapDamage()
 {
-	//bCanDamageOverlappedZombies = false;
+	bCanDamageOverlappedZombies = false;
 	KnockbackDamagedActors.Empty();
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, PreviousPawnCollisionResponse);
 }
@@ -439,10 +463,10 @@ void ABZZombie::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
                                       bool bFromSweep,
                                       const FHitResult& SweepResult)
 {
-	// if (!bCanDamageOverlappedZombies)
-	// {
-	// 	return;
-	// }
+	if (!bCanDamageOverlappedZombies)
+	{
+		return;
+	}
 
 	ABZZombie* OtherZombie = Cast<ABZZombie>(OtherActor);
 	if (!IsValid(OtherZombie) || OtherZombie == this || KnockbackDamagedActors.Contains(OtherZombie))

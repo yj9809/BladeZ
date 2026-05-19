@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Interface/BZStatRowNameProvider.h"
 #include "Component/BZCharacterStatComponent.h"
+#include "Engine/StreamableManager.h"
 #include "State/IState.h"
 #include "BZZombie.generated.h"
 
@@ -21,7 +22,7 @@ enum class EZombieState : uint8
 	Inactive UMETA(DisplayName = "Inactive"),
 };
 
-UCLASS()
+UCLASS(config=BladeZ)
 class BLADEZ_API ABZZombie : public ACharacter, public IBZStatRowNameProvider
 {
 	friend class IdleState;
@@ -84,6 +85,9 @@ public:
 	
 	// AttackHitActors 배열 변수 클리어 함수.
 	void ClearAttackHitActors();
+	
+protected:
+	void ZombieMeshLoadCompleted();
 	
 private:
 	//거리 구하는 함수
@@ -175,6 +179,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> ZombieHitAnim;
 	
+	//매시 변수
+	UPROPERTY(config)
+	TArray<FSoftObjectPath> ZombieMeshes;
+	
+	TSharedPtr<FStreamableHandle> ZombieMeshHandle;
+ 	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Data")
 	FVector LaunchForce = FVector::One();
