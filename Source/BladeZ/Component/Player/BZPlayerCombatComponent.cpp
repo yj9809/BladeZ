@@ -216,18 +216,9 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	{
 		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
 	}
-
-	UGameplayStatics::ApplyDamage(
-		const_cast<AActor*>(Enemy->GetActor()),
-		CurrentData ? CurrentData->Damage : 0.0f, // 데이터가 없을 경우 기본 데미지 10.
-		Owner->GetController(),
-		Owner,
-		UDamageType::StaticClass()
-	);
-
+	
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
-
 
 	const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
 		CurrentData ? CurrentData->Damage : 0.0f,

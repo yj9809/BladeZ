@@ -8,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Animation/BZPlayerAnimInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Character/Enemy/Zombie/BZZombie.h"
 #include "Common/BZLog.h"
 #include "Component/Player/BZCameraShakeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -327,8 +328,12 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		Stat->ApplyDamage(DamageAmount);
 		
 		// Todo: 추후 데미지 분기 처리를 해서 재생 섹션을 다르게 해야함.
-		// Todo: 논의 내용으로 FDamageEvent, UDamageType, DamageAmount 값을 통한 분기 처리 등이 있음.
-		//PlayAnimMontage(HitMontage);
+		// Todo: 논의 내용으로 FDamageEvent 분기 처리 등이 있음.
+		// Todo: 중간 보스가 구현되면 중간 보스부터 아닐 경우 보스만 피격 허용.
+		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
+		{
+			PlayAnimMontage(HitMontage, 2.0f);
+		}
 	}
 	
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -403,7 +408,7 @@ void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 {
 	// 추락 중일 경우 대쉬 불가.
-	if (GetCharacterMovement()->IsFalling())
+	if (GetCharacterMovement()->IsFalling() || bIsLanding)
 	{
 		return;
 	}
