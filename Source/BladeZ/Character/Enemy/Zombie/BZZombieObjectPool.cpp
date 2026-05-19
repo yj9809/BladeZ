@@ -39,8 +39,12 @@ ABZZombie* UBZZombieObjectPool::GetZombieFromPool(const FVector& InLocation, con
 		Zombie->InitializeFSM(TargetCharacter);
 		//위치 설정 
 		Zombie->SetActorLocationAndRotation(InLocation, InRotation);
+		//좀비 속도 설정
+		Zombie->SetChaseSpeed(FMath::RandRange(400,500));
+		
 		//활성화
 		ActiveZombies(Zombie);
+		
 	}
 
 	return Zombie;

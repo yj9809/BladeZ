@@ -36,7 +36,7 @@ ABZZombie::ABZZombie()
 
 	// 죽음 몽타주 애셋 로드.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadMonTageRef(
-		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_ZombieDeath.AM_ZombieDeath")
+		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_ZombieDeath1.AM_ZombieDeath1")
 	);
 
 	if (DeadMonTageRef.Succeeded())
@@ -46,7 +46,7 @@ ABZZombie::ABZZombie()
 
 	//맞는 몽타주 애셋 로드
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> HitMonTageRef(
-		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_Hit.AM_Hit")
+		TEXT("/Game/BZ/Enemy/Zombie/Motion/AM_Hit1.AM_Hit1")
 	);
 
 	if (HitMonTageRef.Succeeded())
@@ -67,6 +67,7 @@ void ABZZombie::BeginPlay()
 
 	GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABZZombie::OnCapsuleBeginOverlap);
 
 	//플레이어 탐색, 유효하지 않으면 설정. 
 	if (!IsValid(TargetActor))
@@ -123,10 +124,17 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 
 	KnockBack(DamageEvent);
 
-	if (ZombieHitAnim)
+	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
 	{
-		PlayAnimMontage(ZombieHitAnim);
+		const FBZDamageEvent* BZDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
+			
+		
 	}
+
+	// if (ZombieHitAnim)
+	// {
+	// 	PlayAnimMontage(ZombieHitAnim);
+	// }
 
 	return DamageAmount;
 }
@@ -381,26 +389,88 @@ void ABZZombie::PerformAttackTrace()
 
 void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 {
-	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
+	if (!DamageEvent.IsOfType(FBZDamageEvent::ClassID))
 	{
-		UE_LOG(LogTemp, Log, TEXT("Damage Event"));
-		AAIController* AiCon = Cast<AAIController>(GetController());
-		if (AiCon)
-		{
-			AiCon->StopMovement();
-			const FBZDamageEvent* PointDamageEvent =
-				static_cast<const FBZDamageEvent*>(&DamageEvent);
-
-			// if (PointDamageEvent->IsKnockback())
-			// {
-			FVector ExtraVector = PointDamageEvent->HitInfo.ImpactNormal;
-			ExtraVector.Z = 3;
-			LaunchCharacter(ExtraVector * LaunchForce, true, true);
-			UE_LOG(LogTemp, Log, TEXT("%f,%f,%f"), ExtraVector.X, ExtraVector.Y, ExtraVector.Z);
-			//}
-		
-		}
+		return;
 	}
+	
+	const FBZDamageEvent* PointDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
+	UE_LOG(LogTemp, Log, TEXT("Damage Event"));
+
+	if (AAIController* AiCon = Cast<AAIController>(GetController()))
+	{
+		AiCon->StopMovement();
+	}
+
+	FVector ExtraVector = GetCharacterMovement()->GetForwardVector();
+	LaunchForce.X *= PointDamageEvent->GetKnockbackPower();
+	LaunchForce.Y *= PointDamageEvent->GetKnockbackPower();
+	LaunchCharacter(ExtraVector * LaunchForce, true, true);
+	UE_LOG(LogTemp, Log, TEXT("%f,%f,%f"), ExtraVector.X, ExtraVector.Y, ExtraVector.Z);
+
+
+	// PreviousPawnCollisionResponse = GetCapsuleComponent()->GetCollisionResponseToChannel(ECC_Pawn);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	//bCanDamageOverlappedZombies = !PointDamageEvent->IsChainDamage();
+	KnockbackDamagedActors.Empty();
+
+	GetWorldTimerManager().ClearTimer(KnockbackOverlapTimerHandle);
+	GetWorldTimerManager().SetTimer(
+		KnockbackOverlapTimerHandle,
+		this,
+		&ABZZombie::EndKnockbackOverlapDamage,
+		KnockbackOverlapDuration,
+		false
+	);
+}
+
+void ABZZombie::EndKnockbackOverlapDamage()
+{
+	//bCanDamageOverlappedZombies = false;
+	KnockbackDamagedActors.Empty();
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, PreviousPawnCollisionResponse);
+}
+
+void ABZZombie::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+                                      AActor* OtherActor,
+                                      UPrimitiveComponent* OtherComp,
+                                      int32 OtherBodyIndex,
+                                      bool bFromSweep,
+                                      const FHitResult& SweepResult)
+{
+	// if (!bCanDamageOverlappedZombies)
+	// {
+	// 	return;
+	// }
+
+	ABZZombie* OtherZombie = Cast<ABZZombie>(OtherActor);
+	if (!IsValid(OtherZombie) || OtherZombie == this || KnockbackDamagedActors.Contains(OtherZombie))
+	{
+		return;
+	}
+
+	if (OtherZombie->GetZombieState() == EZombieState::Dead)
+	{
+		return;
+	}
+
+	KnockbackDamagedActors.Add(OtherZombie);
+
+	FBZDamageEvent ChainDamageEvent;
+	ChainDamageEvent.SetKnockback(true);
+	//ChainDamageEvent.SetChainDamage(true);
+	ChainDamageEvent.HitInfo = SweepResult;
+
+	FVector ChainDirection = OtherZombie->GetActorLocation() - GetActorLocation();
+	ChainDirection.Z = 0.0f;
+	if (ChainDirection.IsNearlyZero())
+	{
+		ChainDirection = GetActorForwardVector();
+	}
+
+	//ChainDamageEvent.HitInfo.ImpactNormal = ChainDirection.GetSafeNormal(); 
+	OtherZombie->TakeDamage(KnockbackOverlapDamage, ChainDamageEvent, nullptr, this);
 }
 
 FName ABZZombie::GetStatRowName() const

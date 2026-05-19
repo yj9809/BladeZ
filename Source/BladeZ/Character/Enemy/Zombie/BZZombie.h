@@ -9,6 +9,7 @@
 
 class IState;
 class UBZZombieObjectPool;
+class UPrimitiveComponent;
 
 UENUM(BlueprintType)
 enum class EZombieState : uint8
@@ -43,6 +44,7 @@ public:
 
 	void OnHpZero();
 
+	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	virtual float TakeDamage(float DamageAmount,
 	                         struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator,
@@ -59,6 +61,8 @@ public:
 	//Setter
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	void SetZombieState(EZombieState NewState = EZombieState::Dead);
+	
+	void SetChaseSpeed(float Speed) { ChaseSpeed = Speed; };
 	
 	//좀비 풀 Setter
 	void SetZombieObjectPool(UBZZombieObjectPool* InZombieObjectPool)
@@ -86,6 +90,15 @@ private:
 	float GetDistanceToTarget2D() const;
 	void PerformAttackTrace();
 	void KnockBack(FDamageEvent const& DamageEvent);
+	void EndKnockbackOverlapDamage();
+
+	UFUNCTION()
+	void OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+	                           AActor* OtherActor,
+	                           UPrimitiveComponent* OtherComp,
+	                           int32 OtherBodyIndex,
+	                           bool bFromSweep,
+	                           const FHitResult& SweepResult);
 	
 	virtual FName GetStatRowName() const override;
 
@@ -165,6 +178,12 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Data")
 	FVector LaunchForce = FVector::One();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Knockback")
+	float KnockbackOverlapDamage = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Knockback")
+	float KnockbackOverlapDuration = 0.5f;
 	
 	
 	
@@ -180,8 +199,17 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<AActor>> AttackHitActors;
 
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<AActor>> KnockbackDamagedActors;
+
+	UPROPERTY()
+	FTimerHandle KnockbackOverlapTimerHandle;
+
 	UPROPERTY()
 	UBZZombieObjectPool* ZombieObjectPool;
+
+	bool bCanDamageOverlappedZombies = false;
+	ECollisionResponse PreviousPawnCollisionResponse = ECR_Block;
 	
 private:
 	// FSM 관련.

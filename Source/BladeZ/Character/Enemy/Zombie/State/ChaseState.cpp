@@ -2,6 +2,7 @@
 
 #include "AIController.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 void ChaseState::OnEnter()
@@ -11,6 +12,7 @@ void ChaseState::OnEnter()
 	{
 		AAIController* AIController = Cast<AAIController>(Controller);
 		AIController->StopMovement();
+		Owner->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	}
 }
 

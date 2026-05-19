@@ -25,6 +25,7 @@ void IdleState::OnUpdate(float DeltaTime)
 	if (Owner->GetDistanceToTarget2D() <= Owner->DetectRange)
 	{
 		Owner->SetZombieState(EZombieState::Chase);
+		
 	}
 }
 
