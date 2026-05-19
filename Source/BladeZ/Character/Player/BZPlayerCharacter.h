@@ -81,6 +81,7 @@ private:
 	UFUNCTION()
 	void OnDashMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	
+	// 대시 시 적을 밀치기 위한 오버랩 함수.
 	UFUNCTION()
 	void OnCapsuleOverlap(
 		UPrimitiveComponent* OverlappedComp,
@@ -93,6 +94,10 @@ private:
 	// 죽음 이벤트.
 	UFUNCTION()
 	void SetDead();
+	
+	// 죽음 처리를 마무리 하기 위한 함수.
+	UFUNCTION()
+	void OnDeadMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.

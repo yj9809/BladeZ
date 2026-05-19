@@ -19,6 +19,7 @@
 #include "UI/BZHUDWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
@@ -250,6 +251,7 @@ void ABZPlayerCharacter::BeginPlay()
 	{
 		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnLandMontageEnded);
 		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnDashMontageEnded);
+		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnDeadMontageEnded);
 	}
 }
 
@@ -551,6 +553,25 @@ void ABZPlayerCharacter::SetDead()
 		{
 			InputSystem->RemoveMappingContext(InputMappingContext);
 		}
+	}
+}
+
+void ABZPlayerCharacter::OnDeadMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == DeadMontage && !bInterrupted)
+	{
+		FString MapName = GetWorld()->GetMapName();                                                                                                                                         
+		int32 LastUnderscoreIndex;                                                                                                                                                        
+		MapName.FindLastChar('_', LastUnderscoreIndex); // 마지막 _ 기준으론 안됨
+
+		// UEDPIE_0_ 접두사 제거
+		FString Prefix = TEXT("UEDPIE_0_");
+		if (MapName.StartsWith(Prefix))
+		{
+			MapName = MapName.RightChop(Prefix.Len());
+		}
+		PLAYER_LOG(Log, "Player has died. Restarting level..., %s", *MapName);
+		UGameplayStatics::OpenLevel(this, FName(MapName));
 	}
 }
 
