@@ -13,8 +13,9 @@
 void UBZTankState_JumpTo::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
+	TankCharacter->GetCharacterMovement()->GravityScale = 10.0f;
 
-	TankCharacter->CustomMoveTo->SetEnabled(true, false);
+	TankCharacter->CustomMoveTo->SetEnabled(true, true);
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(true);
 
 	// End 델리게이트 연결
@@ -40,9 +41,10 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		"Floating")
 	{
 		// 점프
-		FVector direction = TankCharacter->TargetActor->GetActorLocation() - TankCharacter->GetActorLocation();
-		direction.Z += sqrt(TankCharacter->DistanceToTarget) + 1100;
-		TankCharacter->LaunchCharacter(direction, true, true);
+		FVector TargetDir = (TankCharacter->TargetActor->GetActorLocation() - TankCharacter->GetActorLocation())
+			* sqrt(TankCharacter->DistanceToTarget) / 10;
+		TargetDir.Z += sqrt(TankCharacter->DistanceToTarget) + 2000;
+		TankCharacter->LaunchCharacter(TargetDir, true, true);
 	}
 
 	ElapsedTime += DeltaTime;
@@ -63,10 +65,10 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 			if (DetectGround(GroundHit, 550.0f))
 			{
 				TankCharacter->GetCharacterMovement()->GravityScale = 5.0f;
-				TankCharacter->LaunchCharacter(FVector(0, 0, -1000), true, true);
-				TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
+				TankCharacter->LaunchCharacter(FVector(0, 0, -2000), true, true);
+				TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1.2, "Land");
 				TankCharacter->SetBlendingMotion(true);
-				
+
 				UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 				if (AnimInstance)
 				{
@@ -81,7 +83,7 @@ void UBZTankState_JumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->JumpMontage)
 		== "Loop")
 	{
-		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Land");
+		TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1.2, "Land");
 		TankCharacter->SetBlendingMotion(true);
 
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();

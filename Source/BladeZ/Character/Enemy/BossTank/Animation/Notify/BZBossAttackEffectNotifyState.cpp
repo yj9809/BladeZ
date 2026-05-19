@@ -12,6 +12,6 @@ void UBZBossAttackEffectNotifyState::Notify(USkeletalMeshComponent* MeshComp, UA
 	if (MeshComp && MeshComp->GetOwner())
 	{
 		ABZTankCharacter* Owner = Cast<ABZTankCharacter>(MeshComp->GetOwner());
-		Owner->PlayEffect();
+		Owner->PlayEffect(bIsGroundEffect);
 	}
 }

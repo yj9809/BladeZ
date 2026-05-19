@@ -112,7 +112,12 @@ FVector UBZTankState_ThrowObject::CalculateThrowVelocity() const
 	// 1. 1차 예측: 직선 거리를 기반으로 도달 시간 및 예측 위치 계산
 	float Distance = FVector::Dist(StartPos, TankCharacter->TargetActor->GetActorLocation());
 	float LookAheadTime = Distance / ProjectileSpeed;
-	FVector PredictedLocation = TankCharacter->TargetActor->GetActorLocation() + (TankCharacter->TargetActor->GetVelocity() * LookAheadTime);
+
+	// 타겟 속도에 상한선(Cap)을 적용하여 과도한 리드샷 방지
+	const float MaxTargetVelocity = 800.0f; 
+	FVector CappedVelocity = TankCharacter->TargetActor->GetVelocity().GetClampedToMaxSize(MaxTargetVelocity);
+
+	FVector PredictedLocation = TankCharacter->TargetActor->GetActorLocation() + (CappedVelocity * LookAheadTime);
 
 	// 2. 수학적으로 정확한 발사 속도 계산 (포물선 궤도 계산)
 	FVector OutLaunchVelocity;

@@ -10,6 +10,9 @@
 #include "BZBossPhaseData.h"
 #include "BZTankCharacter.generated.h"
 
+// 스턴 게이지 델리게이트 선언
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnStunChangedDelegate, float /*CurrentStun*/);
+
 UCLASS()
 class BLADEZ_API ABZTankCharacter
 	: public ACharacter
@@ -40,17 +43,18 @@ public:
 
 	// State에서 공격 콜리전 및 대미지 설정하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea = false, float AttackDamage = 0.0f);
+	void EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea = false,
+	                  bool bEnableSpine = false, float AttackDamage = 0.0f);
 
 	// 이펙트 재생 함수
-	void PlayEffect(); 
-	
+	void PlayEffect(bool IsGroundEffect = true);
+
 	// 데미지 받는 함수
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
 
 	void SetDead();
-	
+
 public:
 	/*
 	* 작성자: 강수연
@@ -63,21 +67,30 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
+
 	// 이전 프레임의 소켓 위치 저장용 변수
 	FVector LastRHandLocation;
 	FVector LastLHandLocation;
 	FVector LastAreaLocation;
+	FVector LastSpineLocation;
 
 	// 공격이 시작된 첫 프레임인지 체크 (순간이동 스윕 방지용)
 	bool bIsFirstAttackFrame = true;
 
 	// 대미지
 	float AttackDamageValue = 0.0f;
-	
+
 	// 내려찍는 효과
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	TObjectPtr<class UParticleSystem> GroundEffect;
+
+	// 공격 전 효과
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TObjectPtr<class UParticleSystem> PreAttackEffect;
+
+	// 김나는 효과
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TObjectPtr<class UParticleSystem> SteamEffect;
 
 public:
 	// 현재 페이즈 정보
@@ -134,6 +147,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> BackUpStateClass;
 
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> PushThroughStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> StunStateClass;
+
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
 	UPROPERTY()
@@ -165,9 +184,15 @@ public:
 
 	UPROPERTY()
 	class UBZTankStateBase* ThrowObjectStateInstance;
-	
+
 	UPROPERTY()
 	class UBZTankStateBase* BackUpStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* PushThroughStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* StunStateInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	AActor* TargetActor;
@@ -191,12 +216,23 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* BackUpMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* PushThroughMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* StunMontage;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Hp가 변동될 때마다 발행할 델리게이트.
+	FOnStunChangedDelegate OnStunChanged;
+
 private:
 	void UpdateTimers(float DeltaTime);
+
+	void UpdateStun(float InStun);
 
 	UFUNCTION()
 	void OnBossPhaseChanged(EBossPhase NewPhase);
@@ -213,10 +249,15 @@ private:
 	bool bCurrentEnableRight = false;
 	bool bCurrentEnableLeft = false;
 	bool bCurrentEnableArea = false;
+	bool bCurrentEnableSpine = false;
+	bool bIsStun = false;
+	float StunRecoveryRate = 0.15f;
+	float DamageToStunRatio = 0.015f;
 	float CurrentAttackDamage = 0.0f;
 	float CurrentSpeed = 0.0f;
 	float WalkSpeed = 300.0f;
 	float SprintSpeed = 800.0f;
+	float CurrentStun = 0.0f;
 
 	// 공격 시 이미 Hit된 액터를 저장하여 중복 Hit 방지
 	UPROPERTY()
@@ -228,19 +269,22 @@ public:
 	float MiddleSkillRange = 900.0f;
 	float FarSkillRange = 1500.0f;
 	float DistanceToTarget = 1000.0f;
-	
+
 	// 각종 쿨타임 변수
 	UPROPERTY()
 	FSkillCooldown DefaultAttackCooldown{3.0f};
 
 	UPROPERTY()
 	FSkillCooldown JumpToCooldown{5.0f};
-	
+
 	UPROPERTY()
 	FSkillCooldown ThrowObjectCooldown{5.0f};
-	
+
 	UPROPERTY()
 	FSkillCooldown BackUpCooldown{7.0f};
+
+	UPROPERTY()
+	FSkillCooldown PushThroughCooldown{7.0f};
 
 private:
 	/*

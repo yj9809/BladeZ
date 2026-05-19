@@ -15,9 +15,13 @@
 #include "GameFramework/DamageType.h"
 #include "DrawDebugHelpers.h"
 
-
 #include "BZBossPhaseComponent.h"
 #include "Common/BZLog.h"
+#include "Distributions/DistributionFloatConstant.h"
+#include "Particles/ParticleEmitter.h"
+#include "Particles/ParticleLODLevel.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Particles/Spawn/ParticleModuleSpawn.h"
 
 ABZTankCharacter::ABZTankCharacter()
 {
@@ -47,13 +51,14 @@ ABZTankCharacter::ABZTankCharacter()
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
 }
 
-void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea,
+void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea, bool bEnableSpine,
                                     float AttackDamage)
 {
 	bIsAttackOn = bIsOn;
 	bCurrentEnableRight = bEnableRight;
 	bCurrentEnableLeft = bEnableLeft;
 	bCurrentEnableArea = bEnableArea;
+	bCurrentEnableSpine = bEnableSpine;
 	CurrentAttackDamage = AttackDamage;
 
 	if (!bIsOn)
@@ -63,14 +68,21 @@ void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableL
 	}
 }
 
-void ABZTankCharacter::PlayEffect()
+void ABZTankCharacter::PlayEffect(bool IsGroundEffect)
 {
-	if (GroundEffect)
+	if (IsGroundEffect)
 	{
 		FVector Offset = GetActorForwardVector() * 150 + FVector(0, 0, -185);
 		UGameplayStatics::SpawnEmitterAtLocation(
 			GetWorld(), GroundEffect, GetActorLocation() + Offset,
 			FRotator::ZeroRotator, FVector(0.5f, 0.5f, 0.5f));
+	}
+	else
+	{
+		FVector Offset = FVector(0, 0, 0);
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(), PreAttackEffect, GetActorLocation() + Offset,
+			FRotator::ZeroRotator, FVector(5.0f, 5.0f, 5.0f));
 	}
 }
 
@@ -91,6 +103,7 @@ void ABZTankCharacter::Tick(float DeltaTime)
 			FVector CurrentRHandLocation = MeshComp->GetSocketLocation(FName("RHandAttackSocket"));
 			FVector CurrentLHandLocation = MeshComp->GetSocketLocation(FName("LHandAttackSocket"));
 			FVector CurrentAreaLocation = MeshComp->GetSocketLocation(FName("HandSocket"));
+			FVector CurrentSpineLocation = MeshComp->GetSocketLocation(FName("SpineSocket"));
 
 			// 공격이 막 시작된 첫 프레임에는 이전 위치 데이터가 없으므로 현재 위치로 동기화합니다.
 			if (bIsFirstAttackFrame)
@@ -98,12 +111,14 @@ void ABZTankCharacter::Tick(float DeltaTime)
 				LastRHandLocation = CurrentRHandLocation;
 				LastLHandLocation = CurrentLHandLocation;
 				LastAreaLocation = CurrentAreaLocation;
+				LastSpineLocation = CurrentSpineLocation;
 				bIsFirstAttackFrame = false;
 			}
 			bool bIsDebugEnabled = false;
 			
 			float HandRadius = 55.0f;
 			float AreaRadius = 100.0f;
+			float SpineRadius = 150.0f;
 			FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
 			TraceParams.bReturnPhysicalMaterial = false;
 			TraceParams.bTraceComplex = true;
@@ -167,13 +182,30 @@ void ABZTankCharacter::Tick(float DeltaTime)
 					FCollisionShape::MakeSphere(AreaRadius),
 					TraceParams
 				);
-				if (bIsDebugEnabled) DrawDebugSphere(GetWorld(), CurrentLHandLocation, AreaRadius, 16, FColor::Green, false, 0.5f);
+				if (bIsDebugEnabled) DrawDebugSphere(GetWorld(), CurrentAreaLocation, AreaRadius, 16, FColor::Green, false, 0.5f);
 				if (bHit) ProcessHits(HitResults);
 			}
 
+			if (bCurrentEnableSpine)
+			{
+				TArray<FHitResult> HitResults;
+				bool bHit = GetWorld()->SweepMultiByChannel(
+					HitResults,
+					LastSpineLocation,
+					CurrentSpineLocation,
+					FQuat::Identity,
+					ECollisionChannel::ECC_Pawn,
+					FCollisionShape::MakeSphere(SpineRadius),
+					TraceParams
+				);
+				if (bIsDebugEnabled) DrawDebugSphere(GetWorld(), CurrentSpineLocation, SpineRadius, 16, FColor::Yellow, false, 0.5f);
+				if (bHit) ProcessHits(HitResults);
+			}
+			
 			LastRHandLocation = CurrentRHandLocation;
 			LastLHandLocation = CurrentLHandLocation;
 			LastAreaLocation = CurrentAreaLocation;
+			LastSpineLocation = CurrentSpineLocation;
 		}
 	}
 
@@ -189,6 +221,8 @@ float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const
 	{
 		Stat->ApplyDamage(Damage);
 	}
+
+	UpdateStun(Damage);
 
 	return Damage;
 }
@@ -292,6 +326,16 @@ void ABZTankCharacter::InitializeBoss()
 	{
 		BackUpStateInstance = NewObject<UBZTankStateBase>(this, BackUpStateClass);
 	}
+	
+	if (PushThroughStateClass)
+	{
+		PushThroughStateInstance = NewObject<UBZTankStateBase>(this, PushThroughStateClass);
+	}
+
+	if (StunStateClass)
+	{
+		StunStateInstance = NewObject<UBZTankStateBase>(this, StunStateClass);
+	}
 
 	// 초기 상태 설정 (예: Idle로 시작)
 	if (StateMachine && IdleStateInstance)
@@ -326,13 +370,13 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 			// 1. 현재 상태 기동 중단 및 몽타주 재생
 			if (StateMachine)
 			{
-				// 현재 상태를 빠져나와서 대기 상태로 (혹은 상태 머신을 일시적으로 무력화)
+				// 현재 상태를 빠져나와서 상태 머신을 일시적으로 중단
 				StateMachine->ChangeState(nullptr);
 			}
 
 			// 2. 전이 몽타주 재생
 			float Duration = PlayAnimMontage(PhaseData->TransitionMontage);
-			if (Duration > 2.0f)
+			if (Duration > 0.0f)
 			{
 				// 몽타주 종료 델리게이트 연결
 				FOnMontageEnded EndDelegate;
@@ -346,9 +390,31 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 			}
 		}
 	}
+	if ((uint8)CurrentPhase == 1)
+	{
+		FVector Offset = FVector(0, 0, 300);
+		UParticleSystemComponent* PSC = UGameplayStatics::SpawnEmitterAttached(
+			SteamEffect, GetMesh(), NAME_None, Offset,
+			FRotator::ZeroRotator, FVector(2.0f, 2.0f, 2.0f),
+			EAttachLocation::KeepRelativeOffset);
+		
+		// 빨간 정도
+		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+		MID->SetScalarParameterValue(FName("Redness"), 0.5f); // float
+		
+		// 연기 스폰
+		UParticleEmitter* Emitter = SteamEffect->Emitters[0]; // 0번 에미터
+		UParticleLODLevel* LOD = Emitter->GetLODLevel(0);
+		UParticleModuleSpawn* Spawn = LOD->SpawnModule;
+
+		if (UDistributionFloatConstant* Dist = Cast<UDistributionFloatConstant>(Spawn->Rate.Distribution))
+		{
+			Dist->Constant = 15.0f;
+		}
+	}
 
 	// 로그 기록
-	UE_LOG(LogTemp, Warning, TEXT("Boss Phase Changed to: %d"), (uint8)NewPhase);
+	BOSS_LOG(Warning, "Boss Phase Changed to: %d", (uint8)NewPhase);
 }
 
 void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -366,6 +432,41 @@ void ABZTankCharacter::UpdateTimers(float DeltaTime)
 	JumpToCooldown.CurrentTime += DeltaTime;
 	ThrowObjectCooldown.CurrentTime += DeltaTime;
 	BackUpCooldown.CurrentTime += DeltaTime;
+	PushThroughCooldown.CurrentTime += DeltaTime;
+
+	// 스턴 회복 로직
+	if (bIsStun)
+	{
+		CurrentStun -= StunRecoveryRate * DeltaTime;
+		if (CurrentStun <= 0.0f)
+		{
+			CurrentStun = 0.0f;
+			bIsStun = false;
+
+			// 스턴 종료 시 다음 행동으로 전환
+			StateMachine->ChangeState(KeepDistanceStateInstance);
+		}
+		OnStunChanged.Broadcast(CurrentStun);
+	}
+}
+
+void ABZTankCharacter::UpdateStun(float DamageAmount)
+{
+	if (bIsStun) return;
+
+	CurrentStun += DamageAmount * DamageToStunRatio;
+	CurrentStun = FMath::Clamp(CurrentStun, 0.0f, 1.0f);
+	
+	OnStunChanged.Broadcast(CurrentStun);
+
+	if (CurrentStun >= 1.0f)
+	{
+		bIsStun = true;
+		if (StateMachine && StunStateInstance)
+		{
+			StateMachine->ChangeState(StunStateInstance);
+		}
+	}
 }
 
 FName ABZTankCharacter::GetStatRowName() const
@@ -390,5 +491,8 @@ void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		// 전달받은 위젯의 함수를 스탯 컴포넌트가 발생하는 
 		// 델리게이트에 연결(바인딩).
 		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateHpBar);
+		
+		// 스턴 게이지 바인딩. 주석 해제 후 사용.
+		// OnStunChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateStunBar);
 	}
 }

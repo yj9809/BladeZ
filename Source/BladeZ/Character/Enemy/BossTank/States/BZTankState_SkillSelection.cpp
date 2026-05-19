@@ -126,6 +126,12 @@ void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateB
 	{
 		AddStateIfValid(States, TankCharacter->BackUpStateInstance);
 	}
+	
+	if (TankCharacter->PushThroughCooldown.IsTimeout())
+	{
+		AddStateIfValid(States, TankCharacter->PushThroughStateInstance);
+	}
+	
 	AddStateIfValid(States, TankCharacter->ChaseStateInstance);
 }
 

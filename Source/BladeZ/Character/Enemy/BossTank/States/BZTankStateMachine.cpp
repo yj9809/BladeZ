@@ -19,12 +19,20 @@ UBZTankStateMachine::UBZTankStateMachine()
 
 void UBZTankStateMachine::ChangeState(UBZTankStateBase* NewState)
 {
-	if (!NewState || CurrentState == NewState) return;
+	if (CurrentState == NewState) return;
 
 	if (CurrentState) CurrentState->OnExit(GetOwner());
 	CurrentState = NewState;
-	BOSS_LOG(Log, "New State: %s", *CurrentState->GetName());
-	if (CurrentState) CurrentState->OnEnter(GetOwner());
+	
+	if (CurrentState)
+	{
+		BOSS_LOG(Log, "New State: %s", *CurrentState->GetName());
+		CurrentState->OnEnter(GetOwner());
+	}
+	else
+	{
+		BOSS_LOG(Log, "State Machine Stopped (nullptr)");
+	}
 }
 
 void UBZTankStateMachine::TickComponent(float DeltaTime, ELevelTick TickType,
