@@ -14,6 +14,7 @@
 class UTextBlock;
 class UProgressBar;
 class UImage;
+class UOverlay;
 
 UCLASS()
 class BLADEZ_API UBZQuestInfoWidget : public UBZUserWidget
@@ -46,6 +47,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> ContentTextBlock;
+
+	// 진행도 ProgressBar와 Text 전용 Overlay.
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UOverlay> PbOverlay;
 
 	/*
 	* 진행도 ProgressBar.

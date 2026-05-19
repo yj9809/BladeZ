@@ -5,6 +5,7 @@
 
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/Image.h"
 #include "Quest/QuestData.h"
@@ -22,6 +23,7 @@ void UBZQuestInfoWidget::NativeConstruct()
 	// 모두 제대로 바인딩 됐는지 확인.
 	ensureAlways(TitleTextBlock);
 	ensureAlways(ContentTextBlock);
+	ensureAlways(PbOverlay);
 	ensureAlways(Pb_Quest);
 	ensureAlways(PbTextBlock);
 	ensureAlways(BG_Black);
@@ -37,8 +39,7 @@ void UBZQuestInfoWidget::SetQuestInfo(const FBZQuestData InData)
 	// Target을 하나만 죽이는 것이면, ProgressBar 필요 없음.
 	if (QuestType == EQuestType::KillOneTarget)
 	{
-		Pb_Quest->SetVisibility(ESlateVisibility::Hidden);
-		PbTextBlock->SetVisibility(ESlateVisibility::Hidden);
+		PbOverlay->SetVisibility(ESlateVisibility::Hidden);
 
 		if (UOverlaySlot* ImageSlot = Cast<UOverlaySlot>(BG_Black->Slot))
 		{
