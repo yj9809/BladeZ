@@ -90,6 +90,10 @@ private:
 		bool bFromSweep,
 		const FHitResult& SweepResult);
 	
+	// 죽음 이벤트.
+	UFUNCTION()
+	void SetDead();
+	
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
 	FOnBossAttack OnBossAttack;
@@ -162,6 +166,10 @@ private:
 	// 히트 몽타주.
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> HitMontage;
+	
+	// Dead 몽타주.
+	UPROPERTY(VisibleAnywhere, Category = Animation)
+	TObjectPtr<UAnimMontage> DeadMontage;
 	
 	// Dash value private.
 private:

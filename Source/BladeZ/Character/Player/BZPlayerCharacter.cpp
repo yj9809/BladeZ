@@ -10,6 +10,7 @@
 #include "Camera/CameraComponent.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
 #include "Common/BZLog.h"
+#include "Common/FBZDamageEvent.h"
 #include "Component/Player/BZCameraShakeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -17,6 +18,7 @@
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/DamageEvents.h"
 
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
@@ -181,6 +183,16 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		HitMontage = HitMontageRef.Object;
 	}
+	
+	// Dead 몽타주 등록.
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadMontageRef(
+		TEXT("/Game/BZ/Character/Player/Animation/AM_Dead.AM_Dead")
+	);
+	if (DeadMontageRef.Succeeded())
+	{
+		DeadMontage = DeadMontageRef.Object;
+	}
+	
 	//endregion
 	
 	/*
@@ -327,12 +339,30 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 	{
 		Stat->ApplyDamage(DamageAmount);
 		
-		// Todo: 추후 데미지 분기 처리를 해서 재생 섹션을 다르게 해야함.
-		// Todo: 논의 내용으로 FDamageEvent 분기 처리 등이 있음.
-		// Todo: 중간 보스가 구현되면 중간 보스부터 아닐 경우 보스만 피격 허용.
+		// 중간 보스가 구현되면 중간 보스부터 아닐 경우 보스만 피격 허용.
 		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
 		{
-			PlayAnimMontage(HitMontage, 2.0f);
+			FName SectionName;
+			if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
+			{
+				FBZDamageEvent* DE = static_cast<FBZDamageEvent*>(const_cast<FDamageEvent*>(&DamageEvent));
+				
+				switch (DE->GetDamageType())
+				{
+				default:
+				case 0:
+					SectionName = "Hit_Light";
+					break;
+				case 1:
+					SectionName = "Hit_Heavy";
+					break;
+				case 2:
+					SectionName = "Knockdown";
+					break;
+				}
+			}
+			
+			PlayAnimMontage(HitMontage, 2.0f, SectionName);
 		}
 	}
 	
@@ -344,7 +374,7 @@ void ABZPlayerCharacter::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	// 만약 죽음 처리 함수를 만든다면 아래와 같이 추가하세요.
-	//Stat->OnHpZero.AddUObject(this, &ABZPlayerCharacter::SetDead);
+	Stat->OnHpZero.AddUObject(this, &ABZPlayerCharacter::SetDead);
 }
 
 void ABZPlayerCharacter::PlayerMove(const FInputActionValue& Value)
@@ -505,6 +535,23 @@ void ABZPlayerCharacter::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, A
 
 	Enemy->LaunchCharacter(PushDir * DashPushForce, true, false);
 	DashHitActors.Add(OtherActor);
+}
+
+void ABZPlayerCharacter::SetDead()
+{
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	PlayAnimMontage(DeadMontage);
+	
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());                                                                                                     
+	if (PlayerController)                                                                                                                                                               
+	{                                                                                                                                                                                   
+		UEnhancedInputLocalPlayerSubsystem* InputSystem                                                                                                                               
+			= ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+		if (InputSystem)
+		{
+			InputSystem->RemoveMappingContext(InputMappingContext);
+		}
+	}
 }
 
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)

@@ -220,6 +220,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
 	DamageEvent.SetKnockback(CheckKnockbackCombo(CurrentComboName));
+	DamageEvent.SetKnockback(CurrentData ? CurrentData->KnockbackPower : 1.0f);
 
 	if (Enemy->GetActor())
 	{

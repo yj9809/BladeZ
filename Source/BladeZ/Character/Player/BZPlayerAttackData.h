@@ -48,6 +48,10 @@ public:
 	// 콤보 이름? 콤보 명칭??
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComboName)
 	FName ComboName;
+	
+	// Knockback Power 1~3 배수 범위.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Knockback)
+	float KnockbackPower = 0.0f;
 };
 
 /**
