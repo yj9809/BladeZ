@@ -27,6 +27,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	bool bEnableArea = false;
+	
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	bool bEnableSpine = false;
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	float AttackDamage = 10.0f;

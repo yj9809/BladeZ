@@ -12,11 +12,7 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
 
-	// 쿨타임 안돌았으면 리턴
-	if (!TankCharacter->DefaultAttackCooldown.IsTimeout())
-	{
-		TankCharacter->StateMachine->ChangeState(TankCharacter->KeepDistanceStateInstance);
-	}
+	if (!TankCharacter) return;
 
 	AttackMontageEndDelegate.BindUObject(this, &UBZTankState_Attack::OnAttackMontageEnded);
 
@@ -42,14 +38,13 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "3rdAttack");
 	}
 
-	if (TankCharacter && TankCharacter->AttackMontage)
+	if (TankCharacter->AttackMontage)
 	{
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
 			AnimInstance->Montage_SetEndDelegate(AttackMontageEndDelegate, TankCharacter->AttackMontage);
 		}
-		TankCharacter->DefaultAttackCooldown.Reset();
 	}
 }
 

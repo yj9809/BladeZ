@@ -12,7 +12,7 @@ void UBZTankState_Chase::OnEnter(AActor* Owner)
 	Super::OnEnter(Owner);
 
 	if (!TankCharacter) return;
-
+	
 	if (TankCharacter && TankCharacter->TargetActor)
 	{
 		// 컴포넌트를 찾아 타겟을 꽂아줌
@@ -24,6 +24,7 @@ void UBZTankState_Chase::OnEnter(AActor* Owner)
 		TankCharacter->SetBlendingMotion(false);
 		TankCharacter->CustomMoveTo->SetSprinting(false);
 	}
+	ElapsedTime = 0.0f;
 }
 
 void UBZTankState_Chase::OnUpdate(AActor* Owner, float DeltaTime)

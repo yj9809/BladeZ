@@ -13,8 +13,12 @@ UCLASS()
 class BLADEZ_API UBZBossAttackEffectNotifyState : public UAnimNotify
 {
 	GENERATED_BODY()
-	
+
 public:
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
-	
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	                    const FAnimNotifyEventReference& EventReference) override;
+
+protected:
+	UPROPERTY(EditAnywhere, Category = "Effect")
+	bool bIsGroundEffect = true;
 };
