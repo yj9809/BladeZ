@@ -16,9 +16,9 @@
 #include "Character/Player/Weapon/BZWeaponPickup.h"
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
+#include "UI/BZGameOverWidget.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
-#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
@@ -612,18 +612,8 @@ void ABZPlayerCharacter::SetDead()
 void ABZPlayerCharacter::OnDeadMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (Montage == DeadMontage && !bInterrupted)
-	{
-		FString MapName = GetWorld()->GetMapName();                                                                                                                                         
-		int32 LastUnderscoreIndex;                                                                                                                                                        
-		MapName.FindLastChar('_', LastUnderscoreIndex); // 마지막 _ 기준으론 안됨
-
-		// UEDPIE_0_ 접두사 제거
-		FString Prefix = TEXT("UEDPIE_0_");
-		if (MapName.StartsWith(Prefix))
-		{
-			MapName = MapName.RightChop(Prefix.Len());
-		}
-		UGameplayStatics::OpenLevel(this, FName(MapName));
+	{	
+		OnPlayerDead.ExecuteIfBound();
 	}
 }
 
@@ -653,25 +643,26 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 {
 	if (!InWidget) return;
 
-	UBZHUDWidget* InHUDWidget = Cast<UBZHUDWidget>(InWidget);
-	if (InHUDWidget)
+	// Ingame Player 상태 Widget.
+	UBZHUDWidget* PlayerHUD = Cast<UBZHUDWidget>(InWidget);
+	if (PlayerHUD)
 	{
 		// Hp Bar.
 		
 		// Stat 정보를 HUD에 전달.
 		// 아직 Stat의 MaxHP만 활용하고 있음. (26.05.12)
-		InHUDWidget->UpdateStat(Stat->GetMaxHp());
+		PlayerHUD->UpdateStat(Stat->GetMaxHp());
 
 		// currentHP 정보도 HUD에 전달.
-		InHUDWidget->UpdateHpBar(Stat->GetCurrentHp());
+		PlayerHUD->UpdateHpBar(Stat->GetCurrentHp());
 
 		// 전달받은 위젯의 함수를 스탯 컴포넌트가 발생하는 
 		// 델리게이트에 연결(바인딩).
-		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZHUDWidget::UpdateHpBar);
-
+		Stat->OnHpChanged.AddUObject(PlayerHUD, &UBZHUDWidget::UpdateHpBar);
 
 		// Minimap.
-		InHUDWidget->SetupPlayer(this);
+		PlayerHUD->SetupPlayer(this);
+		return;
 	}
 }
 

@@ -12,6 +12,7 @@
 
 class ABZZombie;
 class UBZHUDWidget;
+class UBZGameOverWidget;
 
 UCLASS()
 class BLADEZ_API ABZPlayerController : public APlayerController
@@ -32,9 +33,19 @@ public:
 	*/
 	void RegisterBoss(AActor* BossActor);
 
+	/*
+	* Player가 죽으면 GameOverHUD를 보여주고, 
+	* 이 Controller의 InputMode를 바꿈.
+	* => 순서가 꼬일 가능성이 있으므로 그냥 여기서 처리.
+	*/
+	void ShowGameOverHUD();
+
 private:
 	// Player HUD를 만드는 함수.
 	void CreatePlayerHUD();
+
+	// GameOver HUD를 만드는 함수.
+	void CreateGameOverHUD();
 
 	// 내부에서 HUDWidget Cast + Lazy Create 중복 제거용 헬퍼.
 	UBZHUDWidget* GetMainHUDWidget();
@@ -49,18 +60,26 @@ private:
 	// HUD.
 protected:
 	// Class 정보 => 실제 HUD 객체 생성
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerHUD)
 	TSubclassOf<class UBZUserWidget> HUDWidgetClass;
 
 	// 실제 생성된 UI 객체.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerHUD)
 	TObjectPtr<class UBZUserWidget> HUDWidget;
 
 	// Class 정보 => 실제 HUD 객체 생성
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BossHUD)
 	TSubclassOf<class UBZUserWidget> BossHUDWidgetClass;
 
 	// 실제 생성된 UI 객체.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BossHUD)
 	TObjectPtr<class UBZUserWidget> BossHUDWidget;
+
+	// Class 정보 => 실제 HUD 객체 생성
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GameOverHUD)
+	TSubclassOf<UBZGameOverWidget> GameOverWidgetClass;
+
+	// 실제 생성된 UI 객체.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GameOverHUD)
+	TObjectPtr<UBZGameOverWidget> GameOverWidget;
 };

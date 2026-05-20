@@ -12,6 +12,13 @@
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 
+/// <summary>
+/// 작성자: 강수연
+/// 작성일: 2026.05.20
+/// 작성 사유: Player의 죽음 Event에 대한 처리를 다른 Class에서 해주기 위해 추가.
+/// </summary>  
+DECLARE_DELEGATE(FOnPlayerDead)
+
 class UBZPlayerCombatComponent;
 class ABZWeaponActor;
 class ABZWeaponPickup;
@@ -59,6 +66,13 @@ public:
 	* 모든 컴포넌트의 초기화가 끝나면 실행.
 	*/
 	virtual void PostInitializeComponents() override;
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.20
+	* 작성 사유: PlayerDead Event Binding 처리를 위해 추가.
+	*/
+	FOnPlayerDead OnPlayerDead;
 
 private:
 	void PlayerMove(const FInputActionValue& Value);

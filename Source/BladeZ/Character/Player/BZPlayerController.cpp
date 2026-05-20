@@ -9,13 +9,17 @@
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHUDWidget.h"
 #include "UI/BZUserWidget.h"
+#include "UI/BZGameOverWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Quest/BZQuestActor.h"
+#include "BZPlayerCharacter.h"
 
 
 ABZPlayerController::ABZPlayerController()
 {
-	// Project에서 Class 정보 가져오기.
+	// ================== Load Widget Assets ============================= //
+
+	// PlayerHUD
 	static ConstructorHelpers::FClassFinder<UBZUserWidget> HUDWidgetClassRef(
 		TEXT("/Game/BZ/UI/WBP_HUD.WBP_HUD_C")
 	);
@@ -25,7 +29,7 @@ ABZPlayerController::ABZPlayerController()
 		HUDWidgetClass = HUDWidgetClassRef.Class;
 	}
 
-	// Project에서 Class 정보 가져오기.
+	// BossHUD
 	static ConstructorHelpers::FClassFinder<UBZUserWidget> BossHUDWidgetClassRef(
 		TEXT("/Game/BZ/UI/WBP_BossHUD.WBP_BossHUD_C")
 	);
@@ -34,6 +38,16 @@ ABZPlayerController::ABZPlayerController()
 	{
 		BossHUDWidgetClass = BossHUDWidgetClassRef.Class;
 	}
+
+	// GameOver Overlay
+	static ConstructorHelpers::FClassFinder<UBZUserWidget> GameOverWidgetClassRef(
+		TEXT("/Game/BZ/UI/WBP_GameOver.WBP_GameOver_C")
+	);
+
+	if (GameOverWidgetClassRef.Succeeded())
+	{
+		GameOverWidgetClass = GameOverWidgetClassRef.Class;
+	}
 }
 
 void ABZPlayerController::BeginPlay()
@@ -41,6 +55,7 @@ void ABZPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	CreatePlayerHUD();
+	CreateGameOverHUD();
 
 	BindGameplayEvents();
 
@@ -70,6 +85,23 @@ void ABZPlayerController::RegisterBoss(AActor* BossActor)
 	RegisterMinimapActor(BossActor);
 }
 
+void ABZPlayerController::ShowGameOverHUD()
+{
+	if (GameOverWidget)
+	{
+		GameOverWidget->ShowGameOver();
+
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+		SetInputMode(InputMode);
+		bShowMouseCursor = true;
+
+		UGameplayStatics::SetGamePaused(this, true);
+	}
+}
+
 void ABZPlayerController::CreatePlayerHUD()
 {
 	if (HUDWidget) return;
@@ -82,6 +114,21 @@ void ABZPlayerController::CreatePlayerHUD()
 		// 화면에 추가해 UI가 보일 수 있도록 설정.
 		// Parameter: ZOrder. 높을 수록 위에 보인다.
 		HUDWidget->AddToViewport(0);
+	}
+}
+
+
+void ABZPlayerController::CreateGameOverHUD()
+{
+	if (GameOverWidget) return;
+
+	// Widget 생성.
+	GameOverWidget = CreateWidget<UBZGameOverWidget>(this, GameOverWidgetClass);
+
+	if (GameOverWidget)
+	{
+		// 화면에 추가하고, BossHUD보다 높은 Order로 설정.
+		GameOverWidget->AddToViewport(15);
 	}
 }
 
@@ -159,5 +206,12 @@ void ABZPlayerController::BindGameplayEvents()
 		{
 			MainHUDWidget->BindQuestActor(QuestActor);
 		}
+	}
+
+
+	// Player의 죽음 Delegate에 GameOverHUD를 보여주는 Event를 Bind.
+	if (ABZPlayerCharacter* player = Cast<ABZPlayerCharacter>(GetPawn()))
+	{
+		player->OnPlayerDead.BindUObject(this, &ABZPlayerController::ShowGameOverHUD);
 	}
 }

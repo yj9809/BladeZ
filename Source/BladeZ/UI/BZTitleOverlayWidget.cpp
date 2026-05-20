@@ -32,7 +32,11 @@ void UBZTitleOverlayWidget::NativeConstruct()
 
 void UBZTitleOverlayWidget::OpenIngame()
 {
-
+	/*
+	* UObject* WorldContextObject parameter는,
+	* 월드를 가져올 수 있는 (->GetWorld())가 있는 Object면 뭐든지 가능.
+	* 그래서 this를 전달 가능하다.
+	*/
 	UGameplayStatics::OpenLevel(
 		this,
 		IngameLevelName
