@@ -1,27 +1,50 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Character/Player/Weapon/BZWeaponPickup.h"
 
-// Sets default values
+#include "Character/Player/BZPlayerCharacter.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+
 ABZWeaponPickup::ABZWeaponPickup()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMesh"));
+	RootComponent = PickupMesh;
+	PickupMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	PickupMesh->SetSimulatePhysics(true);
+
+	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	SphereComponent->SetupAttachment(RootComponent);
+	SphereComponent->SetSphereRadius(150.0f);
+	SphereComponent->SetCollisionProfileName(TEXT("Trigger"));
 }
 
-// Called when the game starts or when spawned
 void ABZWeaponPickup::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABZWeaponPickup::OnSphereBeginOverlap);
+	SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABZWeaponPickup::OnSphereEndOverlap);
 }
 
-// Called every frame
-void ABZWeaponPickup::Tick(float DeltaTime)
+void ABZWeaponPickup::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::Tick(DeltaTime);
-
+	ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(OtherActor);
+	if (Player)
+	{
+		Player->SetNearbyPickup(this);
+	}
 }
 
+void ABZWeaponPickup::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(OtherActor);
+	if (Player)
+	{
+		Player->SetNearbyPickup(nullptr);
+	}
+}

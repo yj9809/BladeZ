@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Weapon/BZWeaponActor.h"
+#include "Character/Player/Weapon/BZWeaponPickup.h"
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
 #include "Components/CapsuleComponent.h"
@@ -151,16 +152,14 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		ParryAction = ParryActionRef.Object;
 	}
-	//endregion
-	
-	//region Weapon
-	// 무기 세팅.
-	static ConstructorHelpers::FClassFinder<ABZWeaponActor> WeaponClassRef(
-		TEXT("/Game/BZ/Character/Player/BP_Weapon.BP_Weapon_C")
+
+	// 인터랙트 액션 가져오기.
+	static ConstructorHelpers::FObjectFinder<UInputAction> InteractActionRef(
+		TEXT("/Game/BZ/Input/IA_Interact.IA_Interact")
 	);
-	if (WeaponClassRef.Succeeded())
+	if (InteractActionRef.Succeeded())
 	{
-		WeaponClass = WeaponClassRef.Class;
+		InteractAction = InteractActionRef.Object;
 	}
 	//endregion
 	
@@ -224,12 +223,6 @@ void ABZPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	if (WeaponClass)
-	{
-		Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(WeaponClass);
-		Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-								  TEXT("WeaponSocket"));
-	}	
 	
 	if (CombatComponent && CameraShakeComponent)
 	{
@@ -241,14 +234,6 @@ void ABZPlayerCharacter::BeginPlay()
 		OnBossAttack.BindUObject(
 			CameraShakeComponent,
 			&UBZCameraShakeComponent::OnCameraShake
-		);
-	}
-	
-	if (Weapon)
-	{
-		Weapon->OnAttackHit.BindUObject(
-			CombatComponent,
-			&UBZPlayerCombatComponent::OnAttackHit
 		);
 	}
 	
@@ -351,6 +336,13 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			ETriggerEvent::Completed,
 			this,
 			&ABZPlayerCharacter::PlayerParryEnd
+		);
+
+		EnhancedInputComponent->BindAction(
+			InteractAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerInteract
 		);
 	}
 }
@@ -469,6 +461,8 @@ void ABZPlayerCharacter::PlayerRunEnd(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 {
+	if (!Weapon) return;
+
 	if (!CombatComponent->GetIsAttacking())
 	{
 		CombatComponent->StartComboAttack();
@@ -481,6 +475,8 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 {
+	if (!Weapon) return;
+
 	CombatComponent->SetAttackInput(EBZAttackInputType::Right);
 }
 
@@ -677,5 +673,22 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		// Minimap.
 		InHUDWidget->SetupPlayer(this);
 	}
+}
+
+void ABZPlayerCharacter::PlayerInteract(const FInputActionValue& Value)
+{
+	if (!NearbyPickup || !NearbyPickup->GetWeaponClass()) return;
+
+	if (Weapon)
+	{
+		Weapon->Destroy();
+	}
+
+	Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(NearbyPickup->GetWeaponClass());
+	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+	Weapon->OnAttackHit.BindUObject(CombatComponent, &UBZPlayerCombatComponent::OnAttackHit);
+
+	NearbyPickup->Destroy();
+	NearbyPickup = nullptr;
 }
 
