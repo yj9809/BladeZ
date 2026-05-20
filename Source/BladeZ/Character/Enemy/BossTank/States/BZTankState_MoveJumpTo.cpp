@@ -42,7 +42,7 @@ void UBZTankState_MoveJumpTo::OnUpdate(AActor* Owner, float DeltaTime)
 		// 목표 좌표로 점프 추진력 계산
 		float Dist = FVector::Dist(TankCharacter->GetActorLocation(), TargetLocation);
 		FVector TargetDir = (TargetLocation - TankCharacter->GetActorLocation()) * FMath::Sqrt(Dist) / 10.0f;
-		TargetDir.Z += FMath::Sqrt(Dist) + 2000.0f;
+		TargetDir.Z += FMath::Sqrt(Dist) + 1000.0f;
 		
 		TankCharacter->LaunchCharacter(TargetDir, true, true);
 	}
