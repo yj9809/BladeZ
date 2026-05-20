@@ -12,7 +12,7 @@ void UBZBossAttackNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAn
 	{
 		if (ABZTankCharacter* TankCharacter = Cast<ABZTankCharacter>(MeshComp->GetOwner()))
 		{
-			TankCharacter->EnableAttack(true, bEnableRight, bEnableLeft, bEnableArea, bEnableSpine, AttackDamage);
+			TankCharacter->EnableAttack(true, bEnableRight, bEnableLeft, bEnableArea, bEnableSpine, AttackDamage, DamageType);
 		}
 	}
 }

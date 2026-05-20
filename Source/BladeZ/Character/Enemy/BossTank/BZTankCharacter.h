@@ -8,6 +8,7 @@
 #include "Interface/BZStatRowNameProvider.h"
 #include "Interface/BZCharacterHUD.h"
 #include "BZBossPhaseData.h"
+#include "Common/FBZDamageEvent.h"
 #include "BZTankCharacter.generated.h"
 
 // 스턴 게이지 델리게이트 선언
@@ -44,13 +45,13 @@ public:
 	// State에서 공격 콜리전 및 대미지 설정하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea = false,
-	                  bool bEnableSpine = false, float AttackDamage = 0.0f);
+	                  bool bEnableSpine = false, float AttackDamage = 0.0f, int DamageType = 0);
 
 	// 이펙트 재생 함수
 	void PlayEffect(bool IsGroundEffect = true);
 
 	// 데미지 받는 함수
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& InDamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
 
 	void SetDead();
@@ -269,12 +270,14 @@ private:
 	bool bCurrentEnableSpine = false;
 	bool bIsStun = false;
 	float StunRecoveryRate = 0.1f;
-	float DamageToStunRatio = 0.005f;
+	float DamageToStunRatio = 0.01f;
 	float CurrentAttackDamage = 0.0f;
 	float CurrentSpeed = 0.0f;
 	float WalkSpeed = 300.0f;
 	float SprintSpeed = 800.0f;
 	float CurrentStun = 0.0f;
+	
+	FBZDamageEvent DamageEvent;
 
 	// 공격 시 이미 Hit된 액터를 저장하여 중복 Hit 방지
 	UPROPERTY()
@@ -299,11 +302,11 @@ public:
 	FSkillCooldown ThrowObjectCooldown{5.0f};
 
 	UPROPERTY()
-	FSkillCooldown BackUpCooldown{7.0f};
+	FSkillCooldown BackUpCooldown{5.0f};
 
 	UPROPERTY()
-	FSkillCooldown PushThroughCooldown{7.0f};
-
+	FSkillCooldown PushThroughCooldown{5.0f};
+	
 private:
 	/*
 	* 작성자: 강수연

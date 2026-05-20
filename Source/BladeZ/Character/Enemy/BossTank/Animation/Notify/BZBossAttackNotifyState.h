@@ -33,4 +33,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	float AttackDamage = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	int32 DamageType = 0;
 };

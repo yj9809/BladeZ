@@ -17,6 +17,7 @@
 
 #include "BZBossPhaseComponent.h"
 #include "Common/BZLog.h"
+#include "Common/FBZDamageEvent.h"
 #include "Distributions/DistributionFloatConstant.h"
 #include "Particles/ParticleEmitter.h"
 #include "Particles/ParticleLODLevel.h"
@@ -53,7 +54,7 @@ ABZTankCharacter::ABZTankCharacter()
 }
 
 void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableLeft, bool bEnableArea, bool bEnableSpine,
-                                    float AttackDamage)
+                                    float AttackDamage, int DamageType)
 {
 	bIsAttackOn = bIsOn;
 	bCurrentEnableRight = bEnableRight;
@@ -61,6 +62,7 @@ void ABZTankCharacter::EnableAttack(bool bIsOn, bool bEnableRight, bool bEnableL
 	bCurrentEnableArea = bEnableArea;
 	bCurrentEnableSpine = bEnableSpine;
 	CurrentAttackDamage = AttackDamage;
+	DamageEvent.SetDamageType(DamageType);
 
 	if (!bIsOn)
 	{
@@ -119,7 +121,7 @@ void ABZTankCharacter::Tick(float DeltaTime)
 			
 			float HandRadius = 55.0f;
 			float AreaRadius = 100.0f;
-			float SpineRadius = 150.0f;
+			float SpineRadius = 175.0f;
 			FCollisionQueryParams TraceParams(FName("AttackTrace"), true, this);
 			TraceParams.bReturnPhysicalMaterial = false;
 			TraceParams.bTraceComplex = true;
@@ -132,8 +134,8 @@ void ABZTankCharacter::Tick(float DeltaTime)
 					AActor* HitActor = HitResult.GetActor();
 					if (HitActor && HitActor != this && !HitActors.Contains(HitActor))
 					{
-						UGameplayStatics::ApplyDamage(HitActor, CurrentAttackDamage, GetController(), this,
-						                              UDamageType::StaticClass());
+						HitActor->TakeDamage(CurrentAttackDamage, DamageEvent, GetController(), this);
+						
 						HitActors.Add(HitActor);
 					}
 				}
@@ -214,10 +216,10 @@ void ABZTankCharacter::Tick(float DeltaTime)
 	UpdateTimers(DeltaTime);
 }
 
-float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& InDamageEvent,
                                    class AController* EventInstigator, AActor* DamageCauser)
 {
-	const float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	const float Damage = Super::TakeDamage(DamageAmount, InDamageEvent, EventInstigator, DamageCauser);
 	if (Stat)
 	{
 		Stat->ApplyDamage(Damage);

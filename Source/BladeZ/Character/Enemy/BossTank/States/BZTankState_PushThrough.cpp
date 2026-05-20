@@ -14,6 +14,7 @@ void UBZTankState_PushThrough::OnEnter(AActor* Owner)
 	TankCharacter->PlayAnimMontage(TankCharacter->PushThroughMontage, TankCharacter->CurrentAnimPlayRate);
 	TankCharacter->CustomMoveTo->SetEnabled(true, false);
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(true);
+	TankCharacter->CustomMoveTo->SetSprinting(true);
 
 	PushThroughMontageEndDelegate.BindUObject(this, &UBZTankState_PushThrough::OnPushThroughMontageEnded);
 
@@ -42,6 +43,7 @@ void UBZTankState_PushThrough::OnExit(AActor* Owner)
 	
 	TankCharacter->CustomMoveTo->SetEnabled(true);
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(false);
+	TankCharacter->CustomMoveTo->SetSprinting(false);
 }
 
 void UBZTankState_PushThrough::OnPushThroughMontageEnded(UAnimMontage* Montage, bool bInterrupted)
