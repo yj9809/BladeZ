@@ -14,6 +14,7 @@ DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 
 class UBZPlayerCombatComponent;
 class ABZWeaponActor;
+class ABZWeaponPickup;
 
 UCLASS()
 class BLADEZ_API ABZPlayerCharacter 
@@ -77,8 +78,10 @@ private:
 	FName GetDashSectionName(float Direction);
 	
 	void PlayerParryStart(const FInputActionValue& Value);
-	
+
 	void PlayerParryEnd(const FInputActionValue& Value);
+
+	void PlayerInteract(const FInputActionValue& Value);
 	
 	// 착지 처리를 마무리 하기 위한 함수.
 	UFUNCTION()
@@ -109,6 +112,9 @@ private:
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
 	FOnBossAttack OnBossAttack;
+	
+public:
+	FORCEINLINE void SetNearbyPickup(ABZWeaponPickup* Pickup) { NearbyPickup = Pickup; }
 	
 	// Component private.
 private:
@@ -159,15 +165,20 @@ private:
 	// 패리 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> ParryAction;
+
+	// 인터랙트 액션.
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> InteractAction;
 	
 	// Weapon private.
 private:
 	// 웨폰 세팅.
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TSubclassOf<ABZWeaponActor> WeaponClass;
-	
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	TObjectPtr<ABZWeaponActor> Weapon;	
+	TObjectPtr<ABZWeaponActor> Weapon;
+
+	// 근처 픽업 참조.
+	UPROPERTY()
+	TObjectPtr<ABZWeaponPickup> NearbyPickup;
 	
 	// Montage private.
 private:

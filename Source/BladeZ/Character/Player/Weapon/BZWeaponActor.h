@@ -19,7 +19,7 @@ public:
 	
 	// 적 감지 시작 코드.
 	void StartTrace();
-	
+
 	// 적 감지 종료 코드.
 	void EndTrace();
 

@@ -12,16 +12,8 @@ ABZWeaponActor::ABZWeaponActor()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> WeaponMeshRef(
-		TEXT("/Game/BZ/Character/Player/TestCrowbar.TestCrowbar")
-	);
-	if (WeaponMeshRef.Succeeded())
-	{
-		WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-		WeaponMesh->SetStaticMesh(WeaponMeshRef.Object);
-		RootComponent = WeaponMesh;
-	}
-
+	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	RootComponent = WeaponMesh;
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
