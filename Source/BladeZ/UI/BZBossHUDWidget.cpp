@@ -4,6 +4,7 @@
 #include "BZBossHUDWidget.h"
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHpBarWidget.h"
+#include "UI/BZBossStunBarWidget.h"
 
 
 UBZBossHUDWidget::UBZBossHUDWidget(const FObjectInitializer& ObjectInitializer)
@@ -17,6 +18,7 @@ void UBZBossHUDWidget::NativeConstruct()
 
 	// 제대로 Bind 됐는지 확인.
 	ensureAlways(BossHpBarWidget);
+	ensureAlways(BossStunBarWidget);
 }
 
 void UBZBossHUDWidget::UpdateStat(
@@ -30,4 +32,9 @@ void UBZBossHUDWidget::UpdateHpBar(float NewCurrentHp)
 {
 	// HpBar Widget에 Message 전달.
 	BossHpBarWidget->UpdateHpBar(NewCurrentHp);
+}
+
+void UBZBossHUDWidget::UpdateStunBar(float InProgress, bool InLight)
+{
+	BossStunBarWidget->UpdateStunBar(InProgress, InLight);
 }

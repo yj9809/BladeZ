@@ -18,7 +18,7 @@ public:
 	UBZBossStunBarWidget(const FObjectInitializer& ObjectInitializer);
 
 	// Light 설정은 아직 안함.
-	void UpdateProgress(float InProgress, bool InLightOn);
+	void UpdateStunBar(float InProgress, bool InLightOn);
 
 protected:
 	// UMG가 초기화될 때 호출되는 함수.

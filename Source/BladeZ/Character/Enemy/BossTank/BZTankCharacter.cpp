@@ -558,6 +558,6 @@ void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateHpBar);
 		
 		// 스턴 게이지 바인딩. 주석 해제 후 사용.
-		// OnStunChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateProgress);
+		OnStunChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateStunBar);
 	}
 }
