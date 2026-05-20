@@ -30,14 +30,23 @@ protected:
 	* Wrapper 함수로, 이 Widget이 관리하는 하위 Widget에 Message 전달.
 	*/
 public:
-	// 아직 BaseStat을 통으로 쓰지 않고,
-	// StatComponent 내의 값으로 MaxHp를 관리 중이므로
-	// 해당 값만 전달함.
+
+	// For Stat.
+	/*
+	* 아직 BaseStat을 통으로 쓰지 않고,
+	* StatComponent 내의 값으로 MaxHp를 관리 중이므로
+	* 해당 값만 전달함.
+	*/
 	void UpdateStat(
 		const float NewMaxHp
 	);
 
+	// HP Bar Update.
 	void UpdateHpBar(float NewCurrentHp);
+
+
+	// For Stun ProgressBar.
+	void UpdateStunBar(float InProgress, bool InLight);
 
 	// HUD에 포함된 하위 Widgets.
 	// meta 정보를 BindWidget으로 설정하면, 
@@ -48,5 +57,8 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBZHpBarWidget> BossHpBarWidget;
 
+	// StunBarWidget.
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UBZBossStunBarWidget> BossStunBarWidget;
 };
 

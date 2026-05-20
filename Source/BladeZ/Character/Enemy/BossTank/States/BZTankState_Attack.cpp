@@ -27,15 +27,15 @@ void UBZTankState_Attack::OnEnter(AActor* Owner)
 	if (RandIndex == 0)
 	{
 		TankCharacter->SetBlendingMotion(true);
-		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "Default");
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, TankCharacter->CurrentAnimPlayRate, "Default");
 	}
 	else if (RandIndex == 1)
 	{
-		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "2ndAttack");
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, TankCharacter->CurrentAnimPlayRate, "2ndAttack");
 	}
 	else
 	{
-		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, 1.0f, "3rdAttack");
+		TankCharacter->PlayAnimMontage(TankCharacter->AttackMontage, TankCharacter->CurrentAnimPlayRate, "3rdAttack");
 	}
 
 	if (TankCharacter->AttackMontage)

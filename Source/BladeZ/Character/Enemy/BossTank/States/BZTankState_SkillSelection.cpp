@@ -11,11 +11,11 @@
 void UBZTankState_SkillSelection::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
-	
+
 	TankCharacter->CustomMoveTo->SetEnabled(false);
-	
+
 	SelectionTimer = 0.0f;
-	
+
 	// 선택 시간 난이도 따라 가변
 	if (TankCharacter->CurrentPhase == EBossPhase::Phase1)
 	{
@@ -54,15 +54,19 @@ void UBZTankState_SkillSelection::SelectRandomSkill()
 	TArray<UBZTankStateBase*> AvailableStates;
 
 	// 타겟과의 거리에 따라 후보 상태를 다르게 구성
-	if (TankCharacter->DistanceToTarget < TankCharacter->MiddleSkillRange)
+	if (TankCharacter->DistanceToTarget <= TankCharacter->AttackRange)
+	{
+		BuildCloseCloseSkillCandidates(AvailableStates);
+	}
+	else if (TankCharacter->DistanceToTarget <= TankCharacter->MiddleSkillRange)
 	{
 		BuildCloseSkillCandidates(AvailableStates);
 	}
-	else if (TankCharacter->DistanceToTarget < TankCharacter->FarSkillRange)
+	else if (TankCharacter->DistanceToTarget <= TankCharacter->FarSkillRange)
 	{
 		BuildMiddleSkillCandidates((AvailableStates));
 	}
-	else if (TankCharacter->DistanceToTarget >= TankCharacter->FarSkillRange)
+	else if (TankCharacter->DistanceToTarget > TankCharacter->FarSkillRange)
 	{
 		BuildFarSkillCandidates(AvailableStates);
 	}
@@ -119,6 +123,11 @@ void UBZTankState_SkillSelection::AddStateIfValid(TArray<UBZTankStateBase*>& Sta
 	States.Add(State);
 }
 
+void UBZTankState_SkillSelection::BuildCloseCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const
+{
+	AddStateIfValid(States, TankCharacter->AttackStateInstance);
+}
+
 void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateBase*>& States) const
 {
 	// 가까울 때
@@ -126,12 +135,12 @@ void UBZTankState_SkillSelection::BuildCloseSkillCandidates(TArray<UBZTankStateB
 	{
 		AddStateIfValid(States, TankCharacter->BackUpStateInstance);
 	}
-	
+
 	if (TankCharacter->PushThroughCooldown.IsTimeout())
 	{
 		AddStateIfValid(States, TankCharacter->PushThroughStateInstance);
 	}
-	
+
 	AddStateIfValid(States, TankCharacter->ChaseStateInstance);
 }
 
@@ -153,7 +162,8 @@ void UBZTankState_SkillSelection::BuildFarSkillCandidates(TArray<UBZTankStateBas
 
 	if (TankCharacter->ThrowObjectCooldown.IsTimeout())
 	{
-		AddStateIfValid(States, TankCharacter->ThrowObjectStateInstance);
+		AddStateIfValid(States, TankCharacter->ThrowCarStateInstance);
+		AddStateIfValid(States, TankCharacter->ThrowBarrelStateInstance);
 	}
 
 	if (TankCharacter->JumpToCooldown.IsTimeout())

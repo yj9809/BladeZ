@@ -25,7 +25,7 @@ void UBZTankState_SprintAttack::OnEnter(AActor* Owner)
 		{
 			// 애니메이션 재생
 			TankCharacter->SetBlendingMotion(false);
-			TankCharacter->PlayAnimMontage(TankCharacter->SprintAttackMontage);
+			TankCharacter->PlayAnimMontage(TankCharacter->SprintAttackMontage, TankCharacter->CurrentAnimPlayRate);
 
 			// 몽타주 종료 델리게이트 연결
 			UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();

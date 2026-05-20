@@ -9,7 +9,7 @@ UBZBossStunBarWidget::UBZBossStunBarWidget(const FObjectInitializer& ObjectIniti
 {
 }
 
-void UBZBossStunBarWidget::UpdateProgress(float InProgress, bool InLightOn)
+void UBZBossStunBarWidget::UpdateStunBar(float InProgress, bool InLightOn)
 {
 	Pb_Stun->SetPercent(InProgress);
 

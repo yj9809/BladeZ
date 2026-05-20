@@ -23,7 +23,7 @@ void UBZTankState_Roar::OnEnter(AActor* Owner)
 		}
 		// 애니메이션 재생
 		TankCharacter->SetBlendingMotion(false);
-		TankCharacter->PlayAnimMontage(TankCharacter->RoarMontage);
+		TankCharacter->PlayAnimMontage(TankCharacter->RoarMontage, TankCharacter->CurrentAnimPlayRate);
 
 		// 몽타주 종료 델리게이트 연결
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
@@ -48,5 +48,5 @@ void UBZTankState_Roar::OnExit(AActor* Owner)
 
 void UBZTankState_Roar::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	TankCharacter->StateMachine->ChangeState(TankCharacter->JumpToStateInstance);
+	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
 }

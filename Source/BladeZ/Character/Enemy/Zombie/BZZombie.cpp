@@ -83,11 +83,11 @@ void ABZZombie::BeginPlay()
 void ABZZombie::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	Stat->OnHpZero.AddUObject(this, &ABZZombie::OnHpZero);
 
 	ensure(ZombieMeshes.Num() > 0);
 
 	int32 RandIndex = FMath::RandRange(0, ZombieMeshes.Num() - 1);
-	Stat->OnHpZero.AddUObject(this, &ABZZombie::OnHpZero);
 	ZombieMeshHandle = UAssetManager::Get().
 	                   GetStreamableManager().
 	                   RequestAsyncLoad(
@@ -124,6 +124,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 	}
 
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	//좀비 대미지 적용
 	Stat->ApplyDamage(DamageAmount);
 
 	//이번 공격에서 죽었는지 체크 
@@ -132,14 +133,16 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 		KnockBack(DamageEvent);
 		return DamageAmount;
 	}
-
+	
 	KnockBack(DamageEvent);
 
+	//	Todo: 필요성 확인해야 됨 
 	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
 	{
 		const FBZDamageEvent* BZDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
 	}
-
+	
+	//Hit 애니메이션 재생
 	if (ZombieHitAnim)
 	{
 		PlayAnimMontage(ZombieHitAnim);
@@ -151,6 +154,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 void ABZZombie::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//매 프레임 상태 체크
 	TickFSM(DeltaTime);
 }
 
@@ -191,6 +195,7 @@ void ABZZombie::ClearAttackHitActors()
 	AttackHitActors.Empty();
 }
 
+//비동기 랜덤 매쉬 적용
 void ABZZombie::ZombieMeshLoadCompleted()
 {
 	if (ZombieMeshHandle.IsValid())
@@ -206,6 +211,7 @@ void ABZZombie::ZombieMeshLoadCompleted()
 	ZombieMeshHandle->ReleaseHandle();
 }
 
+//새로운 좀비 상태 적용
 void ABZZombie::SetZombieState(EZombieState NewState)
 {
 	if (CurrentState == NewState)
@@ -237,12 +243,14 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 	}
 }
 
+//오브젝트 풀에 좀비 넣는 함수
 void ABZZombie::ReturnZombieToPool()
 {
 	SetZombieState(EZombieState::Inactive);
 	ZombieObjectPool->ReturnZombieToPool(this);
 }
 
+// 타겟 방향 계산 함수
 float ABZZombie::GetDistanceToTarget2D() const
 {
 	if (!IsValid(TargetActor))
@@ -253,6 +261,7 @@ float ABZZombie::GetDistanceToTarget2D() const
 	return FVector::Dist2D(GetActorLocation(), TargetActor->GetActorLocation());
 }
 
+//트레이스 시작 함수 
 void ABZZombie::StartAttackTrace()
 {
 	if (CurrentState == EZombieState::Dead)
@@ -265,6 +274,7 @@ void ABZZombie::StartAttackTrace()
 	PerformAttackTrace();
 }
 
+//트레이스 디버깅용
 void ABZZombie::PerformAttackTrace()
 {
 	//예외처리
@@ -411,6 +421,7 @@ void ABZZombie::PerformAttackTrace()
 	}
 }
 
+//Todo : 넉백 함수 리팩토링 필요 
 void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 {
 	if (!DamageEvent.IsOfType(FBZDamageEvent::ClassID))
@@ -449,6 +460,7 @@ void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 	);
 }
 
+//넉백 끝나면 초기화 함수
 void ABZZombie::EndKnockbackOverlapDamage()
 {
 	bCanDamageOverlappedZombies = false;
@@ -456,6 +468,7 @@ void ABZZombie::EndKnockbackOverlapDamage()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, PreviousPawnCollisionResponse);
 }
 
+//넉백 연쇄 대미지 적용
 void ABZZombie::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
                                       AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp,

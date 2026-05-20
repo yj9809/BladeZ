@@ -36,6 +36,10 @@ struct FBossPhaseData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Phase")
 	float DamageMultiplier = 1.0f;
 
+	// 해당 페이즈의 애니메이션 재생 속도 배율
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Phase")
+	float AnimPlayRate = 1.0f;
+
 	// 페이즈 진입 시 재생할 몽타주 (예: 포효)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Phase")
 	class UAnimMontage* TransitionMontage = nullptr;
