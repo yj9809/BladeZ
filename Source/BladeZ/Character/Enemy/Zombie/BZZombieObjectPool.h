@@ -31,12 +31,16 @@ public:
 	
 	//좀비를 풀에서 빼오는 함수
 	ABZZombie* GetZombieFromPool(const FVector& InLocation, const FRotator& InRotation);
+	ABZZombie* GetNiagaraZombieFromPool(const FVector& InLocation, const FRotator& InRotation);
 	//좀비를 풀에 넣는 함수
 	void ReturnZombieToPool(ABZZombie* ReturnZombie);
+	void ReturnNiagaraZombieToPool(ABZZombie* ReturnZombie);
 	//Getter
 	TArray<ABZZombie*> GetZombiePool() const { return ZombiePool; };
+	TArray<ABZZombie*> GetNiagaraZombiePool() const { return NiagaraZombiePool; };
 	//처음 스폰하는 함수
 	void CreateZombie(TSubclassOf<ABZZombie> InZombieClass, int32 InZombiePoolSize);
+	void CreateNiagaraZombie(TSubclassOf<ABZZombie> InZombieClass, int32 InZombiePoolSize);
 	
 public:
 	/*
@@ -63,6 +67,9 @@ private:
 	//보이지 않는 좀비를 담을 풀
 	UPROPERTY(VisibleAnywhere)
 	TArray<ABZZombie*> ZombiePool;
+	
+	UPROPERTY(VisibleAnywhere)
+	TArray<ABZZombie*> NiagaraZombiePool;
 	
 	UPROPERTY()
 	ABZZombie* WantToDeleteZombie;

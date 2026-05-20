@@ -22,6 +22,13 @@ enum class EZombieState : uint8
 	Inactive UMETA(DisplayName = "Inactive"),
 };
 
+UENUM(BlueprintType)
+enum class EZombiePoolType : uint8
+{
+	Default UMETA(DisplayName = "Default"),
+	Niagara UMETA(DisplayName = "Niagara"),
+};
+
 UCLASS(config=BladeZ)
 class BLADEZ_API ABZZombie : public ACharacter, public IBZStatRowNameProvider
 {
@@ -70,6 +77,17 @@ public:
 	{
 		ZombieObjectPool = InZombieObjectPool;
 	}
+
+	void SetZombiePoolType(EZombiePoolType InPoolType) { ZombiePoolType = InPoolType; }
+
+	UFUNCTION(BlueprintPure, Category = "Zombie|Pool")
+	EZombiePoolType GetZombiePoolType() const { return ZombiePoolType; }
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie|Niagara")
+	void SetSourceParticleId(int32 InSourceParticleId) { SourceParticleId = InSourceParticleId; }
+
+	UFUNCTION(BlueprintPure, Category = "Zombie|Niagara")
+	int32 GetSourceParticleId() const { return SourceParticleId; }
 	
 	// State에서 호출할 래퍼(Wrapper) 함수.
 	void ReturnZombieToPool();
@@ -217,6 +235,12 @@ private:
 
 	UPROPERTY()
 	UBZZombieObjectPool* ZombieObjectPool;
+
+	UPROPERTY(VisibleAnywhere, Category = "Zombie|Pool")
+	EZombiePoolType ZombiePoolType = EZombiePoolType::Default;
+
+	UPROPERTY(VisibleAnywhere, Category = "Zombie|Niagara")
+	int32 SourceParticleId = INDEX_NONE;
 
 	bool bCanDamageOverlappedZombies = false;
 	ECollisionResponse PreviousPawnCollisionResponse = ECR_Block;

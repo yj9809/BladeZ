@@ -50,6 +50,29 @@ ABZZombie* UBZZombieObjectPool::GetZombieFromPool(const FVector& InLocation, con
 	return Zombie;
 }
 
+ABZZombie* UBZZombieObjectPool::GetNiagaraZombieFromPool(const FVector& InLocation, const FRotator& InRotation)
+{
+	if (NiagaraZombiePool.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	AActor* TargetCharacter = UGameplayStatics::GetPlayerPawn(this, 0);
+	ABZZombie* Zombie = NiagaraZombiePool.Pop();
+	if (!Zombie || Zombie->GetZombieState() != EZombieState::Inactive)
+	{
+		return nullptr;
+	}
+
+	Zombie->InitializeFSM(TargetCharacter);
+	Zombie->SetActorLocationAndRotation(InLocation, InRotation);
+	Zombie->SetChaseSpeed(FMath::RandRange(400, 500));
+	Zombie->SetZombiePoolType(EZombiePoolType::Niagara);
+	ActiveZombies(Zombie);
+
+	return Zombie;
+}
+
 void UBZZombieObjectPool::ReturnZombieToPool(ABZZombie* ReturnZombie)
 {
 	if (!IsValid(ReturnZombie))
@@ -98,6 +121,22 @@ void UBZZombieObjectPool::ReturnZombieToPool(ABZZombie* ReturnZombie)
 	// AnimInstance->Montage_SetEndDelegate(EndMontage,ZombieDeathAnim );
 }
 
+void UBZZombieObjectPool::ReturnNiagaraZombieToPool(ABZZombie* ReturnZombie)
+{
+	if (!IsValid(ReturnZombie))
+	{
+		return;
+	}
+
+	ReturnZombie->SetActorEnableCollision(false);
+	ReturnZombie->GetCharacterMovement()->SetMovementMode(MOVE_None);
+	ReturnZombie->SetSourceParticleId(INDEX_NONE);
+	ReturnZombie->SetZombiePoolType(EZombiePoolType::Niagara);
+
+	DeActiveZombies(ReturnZombie);
+	NiagaraZombiePool.Push(ReturnZombie);
+}
+
 void UBZZombieObjectPool::CreateZombie(TSubclassOf<ABZZombie> InZombieClass, int32 InZombiePoolSize)
 {
 	UWorld* World = GetWorld();
@@ -131,7 +170,42 @@ void UBZZombieObjectPool::CreateZombie(TSubclassOf<ABZZombie> InZombieClass, int
 		
 		Zombie->SetZombieState(EZombieState::Inactive);
 		Zombie->SetZombieObjectPool(this);
+		Zombie->SetZombiePoolType(EZombiePoolType::Default);
 		ReturnZombieToPool(Zombie);
+	}
+}
+
+void UBZZombieObjectPool::CreateNiagaraZombie(TSubclassOf<ABZZombie> InZombieClass, int32 InZombiePoolSize)
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Niagara Zombie Create Fail World Not Exist"));
+		return;
+	}
+	if (!InZombieClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Niagara Zombie Create Fail Zombie Not Exist"));
+		return;
+	}
+
+	for (int32 i = 0; i < InZombiePoolSize; i++)
+	{
+		ABZZombie* Zombie = GetWorld()->SpawnActor<ABZZombie>(
+			InZombieClass,
+			FVector(0.0f, 0.0f, 500.0f) * (i + 1),
+			FRotator::ZeroRotator
+		);
+
+		if (!Zombie)
+		{
+			continue;
+		}
+
+		Zombie->SetZombieState(EZombieState::Inactive);
+		Zombie->SetZombieObjectPool(this);
+		Zombie->SetZombiePoolType(EZombiePoolType::Niagara);
+		ReturnNiagaraZombieToPool(Zombie);
 	}
 }
 

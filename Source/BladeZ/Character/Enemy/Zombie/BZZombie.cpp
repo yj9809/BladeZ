@@ -247,6 +247,19 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 void ABZZombie::ReturnZombieToPool()
 {
 	SetZombieState(EZombieState::Inactive);
+	SourceParticleId = INDEX_NONE;
+
+	if (!ZombieObjectPool)
+	{
+		return;
+	}
+
+	if (ZombiePoolType == EZombiePoolType::Niagara)
+	{
+		ZombieObjectPool->ReturnNiagaraZombieToPool(this);
+		return;
+	}
+
 	ZombieObjectPool->ReturnZombieToPool(this);
 }
 
@@ -273,6 +286,8 @@ void ABZZombie::StartAttackTrace()
 	AttackHitActors.Empty();
 	PerformAttackTrace();
 }
+
+
 
 //트레이스 디버깅용
 void ABZZombie::PerformAttackTrace()
