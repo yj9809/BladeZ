@@ -24,35 +24,6 @@ public:
 	virtual void OnExit(AActor* Owner) override;
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float BaseThrowSpeed = 3000.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float AdditionalThrowSpeed = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float VerticalOffsetMultiplier = 0.1f;
-
-	bool bIsHoldingObject = false;
-	bool bIsSmall = true;
-
-	UPROPERTY()
-	ABZThrowable* ThrowTarget;
-
 	UPROPERTY()
 	TArray<AActor*> FoundThrowable;
-
-	FOnMontageEnded ThrowObjectMontageEndDelegate;
-
-	UFUNCTION()
-	AActor* GetAvailableObject();
-
-	UFUNCTION()
-	void ThrowObject();
-
-	FVector CalculateThrowVelocity() const;
-
-	UFUNCTION()
-	void OnThrowObjectMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-
 };

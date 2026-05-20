@@ -20,7 +20,7 @@ void UBZTankState_JumpTo::OnEnter(AActor* Owner)
 
 	// End 델리게이트 연결
 	JumpMontageEndDelegate.BindUObject(this, &UBZTankState_JumpTo::OnJumpMontageEnded);
-	TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, 1, "Jump");
+	TankCharacter->PlayAnimMontage(TankCharacter->JumpMontage, TankCharacter->CurrentAnimPlayRate, "Jump");
 	TankCharacter->JumpToCooldown.Reset();
 }
 

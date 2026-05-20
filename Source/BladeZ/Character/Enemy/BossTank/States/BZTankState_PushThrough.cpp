@@ -11,7 +11,7 @@ void UBZTankState_PushThrough::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
 
-	TankCharacter->PlayAnimMontage(TankCharacter->PushThroughMontage);
+	TankCharacter->PlayAnimMontage(TankCharacter->PushThroughMontage, TankCharacter->CurrentAnimPlayRate);
 	TankCharacter->CustomMoveTo->SetEnabled(true, false);
 	TankCharacter->CustomMoveTo->SetRootMotionOverride(true);
 

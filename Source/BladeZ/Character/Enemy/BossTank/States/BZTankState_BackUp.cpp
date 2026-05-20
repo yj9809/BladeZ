@@ -15,7 +15,7 @@ void UBZTankState_BackUp::OnEnter(AActor* Owner)
 
 	TankCharacter->CustomMoveTo->SetEnabled(true, true);
 	TankCharacter->SetBlendingMotion(false);
-	TankCharacter->PlayAnimMontage(TankCharacter->BackUpMontage);
+	TankCharacter->PlayAnimMontage(TankCharacter->BackUpMontage, TankCharacter->CurrentAnimPlayRate);
 
 	// 몽타주 종료 델리게이트 연결
 	UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();

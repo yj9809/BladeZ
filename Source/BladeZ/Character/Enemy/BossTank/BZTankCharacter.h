@@ -11,7 +11,7 @@
 #include "BZTankCharacter.generated.h"
 
 // 스턴 게이지 델리게이트 선언
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnStunChangedDelegate, float /*CurrentStun*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStunChangedDelegate, float /*CurrentStun*/, bool /*bIsLightOn*/);
 
 UCLASS()
 class BLADEZ_API ABZTankCharacter
@@ -145,6 +145,12 @@ public:
 	TSubclassOf<class UBZTankStateBase> ThrowObjectStateClass;
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> ThrowCarStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> ThrowBarrelStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> BackUpStateClass;
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
@@ -152,6 +158,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> StunStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> MoveJumpToStateClass;
 
 
 	// 실제 생성된 상태 인스턴스를 보관할 변수
@@ -186,6 +195,12 @@ public:
 	class UBZTankStateBase* ThrowObjectStateInstance;
 
 	UPROPERTY()
+	class UBZTankStateBase* ThrowCarStateInstance;
+
+	UPROPERTY()
+	class UBZTankStateBase* ThrowBarrelStateInstance;
+
+	UPROPERTY()
 	class UBZTankStateBase* BackUpStateInstance;
 
 	UPROPERTY()
@@ -194,6 +209,8 @@ public:
 	UPROPERTY()
 	class UBZTankStateBase* StunStateInstance;
 
+	UPROPERTY()
+	class UBZTankStateBase* MoveJumpToStateInstance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	AActor* TargetActor;
 
@@ -226,7 +243,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Hp가 변동될 때마다 발행할 델리게이트.
+	// 스턴 게이지가 변동될 때마다 발행할 델리게이트.
 	FOnStunChangedDelegate OnStunChanged;
 
 private:
@@ -251,8 +268,8 @@ private:
 	bool bCurrentEnableArea = false;
 	bool bCurrentEnableSpine = false;
 	bool bIsStun = false;
-	float StunRecoveryRate = 0.15f;
-	float DamageToStunRatio = 0.015f;
+	float StunRecoveryRate = 0.1f;
+	float DamageToStunRatio = 0.005f;
 	float CurrentAttackDamage = 0.0f;
 	float CurrentSpeed = 0.0f;
 	float WalkSpeed = 300.0f;
@@ -269,6 +286,7 @@ public:
 	float MiddleSkillRange = 900.0f;
 	float FarSkillRange = 1500.0f;
 	float DistanceToTarget = 1000.0f;
+	float CurrentAnimPlayRate = 1.0f;
 
 	// 각종 쿨타임 변수
 	UPROPERTY()

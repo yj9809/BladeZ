@@ -22,6 +22,7 @@
 #include "Particles/ParticleLODLevel.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/Spawn/ParticleModuleSpawn.h"
+#include "UI/BZBossStunBarWidget.h"
 
 ABZTankCharacter::ABZTankCharacter()
 {
@@ -321,6 +322,16 @@ void ABZTankCharacter::InitializeBoss()
 	{
 		ThrowObjectStateInstance = NewObject<UBZTankStateBase>(this, ThrowObjectStateClass);
 	}
+
+	if (ThrowCarStateClass)
+	{
+		ThrowCarStateInstance = NewObject<UBZTankStateBase>(this, ThrowCarStateClass);
+	}
+
+	if (ThrowBarrelStateClass)
+	{
+		ThrowBarrelStateInstance = NewObject<UBZTankStateBase>(this, ThrowBarrelStateClass);
+	}
 	
 	if (BackUpStateClass)
 	{
@@ -335,6 +346,11 @@ void ABZTankCharacter::InitializeBoss()
 	if (StunStateClass)
 	{
 		StunStateInstance = NewObject<UBZTankStateBase>(this, StunStateClass);
+	}
+
+	if (MoveJumpToStateClass)
+	{
+		MoveJumpToStateInstance = NewObject<UBZTankStateBase>(this, MoveJumpToStateClass);
 	}
 
 	// 초기 상태 설정 (예: Idle로 시작)
@@ -361,36 +377,45 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 {
 	CurrentPhase = NewPhase;
 
-	// 페이즈 전환 시 공통 처리
 	if (PhaseComponent)
 	{
+		// 페이즈 전환 시 공통 처리
 		const FBossPhaseData* PhaseData = PhaseComponent->GetCurrentPhaseData();
-		if (PhaseData && PhaseData->TransitionMontage)
+		if (PhaseData)
 		{
-			// 1. 현재 상태 기동 중단 및 몽타주 재생
-			if (StateMachine)
-			{
-				// 현재 상태를 빠져나와서 상태 머신을 일시적으로 중단
-				StateMachine->ChangeState(nullptr);
-			}
+			// 재생 속도 업데이트
+			CurrentAnimPlayRate = PhaseData->AnimPlayRate;
 
-			// 2. 전이 몽타주 재생
-			float Duration = PlayAnimMontage(PhaseData->TransitionMontage);
-			if (Duration > 0.0f)
+			if (PhaseData->TransitionMontage)
 			{
-				// 몽타주 종료 델리게이트 연결
-				FOnMontageEnded EndDelegate;
-				EndDelegate.BindUObject(this, &ABZTankCharacter::OnTransitionMontageEnded);
-				GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, PhaseData->TransitionMontage);
-			}
-			else
-			{
-				// 재생 실패 시 즉시 다음 단계로
-				OnTransitionMontageEnded(PhaseData->TransitionMontage, false);
+				// 1. 현재 상태 기동 중단 및 몽타주 재생
+				if (StateMachine)
+				{
+					// 현재 상태를 빠져나와서 상태 머신을 일시적으로 중단
+					StateMachine->ChangeState(nullptr);
+				}
+
+				// 2. 전이 몽타주 재생
+				float Duration = PlayAnimMontage(PhaseData->TransitionMontage);
+				if (Duration > 0.0f)
+				{
+					// 몽타주 종료 델리게이트 연결
+					FOnMontageEnded EndDelegate;
+					EndDelegate.BindUObject(this, &ABZTankCharacter::OnTransitionMontageEnded);
+					GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(EndDelegate, PhaseData->TransitionMontage);
+				}
+				else
+				{
+					// 재생 실패 시 즉시 다음 단계로
+					OnTransitionMontageEnded(PhaseData->TransitionMontage, false);
+				}
 			}
 		}
 	}
-	if ((uint8)CurrentPhase == 1)
+	
+	UE_LOG(LogTemp, Warning, TEXT("Boss Phase Changed to: %d, PlayRate: %.2f"), (uint8)NewPhase, CurrentAnimPlayRate);
+
+	if (CurrentPhase == EBossPhase::Phase2)
 	{
 		FVector Offset = FVector(0, 0, 300);
 		UParticleSystemComponent* PSC = UGameplayStatics::SpawnEmitterAttached(
@@ -398,6 +423,23 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 			FRotator::ZeroRotator, FVector(2.0f, 2.0f, 2.0f),
 			EAttachLocation::KeepRelativeOffset);
 		
+		// 빨간 정도
+		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+		MID->SetScalarParameterValue(FName("Redness"), 0.2f); // float
+		
+		// 연기 스폰
+		UParticleEmitter* Emitter = SteamEffect->Emitters[0]; // 0번 에미터
+		UParticleLODLevel* LOD = Emitter->GetLODLevel(0);
+		UParticleModuleSpawn* Spawn = LOD->SpawnModule;
+
+		if (UDistributionFloatConstant* Dist = Cast<UDistributionFloatConstant>(Spawn->Rate.Distribution))
+		{
+			Dist->Constant = 5.0f;
+		}
+	}
+	
+	else if (CurrentPhase == EBossPhase::Phase3)
+	{
 		// 빨간 정도
 		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
 		MID->SetScalarParameterValue(FName("Redness"), 0.5f); // float
@@ -409,7 +451,24 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 
 		if (UDistributionFloatConstant* Dist = Cast<UDistributionFloatConstant>(Spawn->Rate.Distribution))
 		{
-			Dist->Constant = 15.0f;
+			Dist->Constant = 10.0f;
+		}
+	}
+	
+	else if (CurrentPhase == EBossPhase::Enraged)
+	{
+		// 빨간 정도
+		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+		MID->SetScalarParameterValue(FName("Redness"), 1.0f); // float
+		
+		// 연기 스폰
+		UParticleEmitter* Emitter = SteamEffect->Emitters[0]; // 0번 에미터
+		UParticleLODLevel* LOD = Emitter->GetLODLevel(0);
+		UParticleModuleSpawn* Spawn = LOD->SpawnModule;
+
+		if (UDistributionFloatConstant* Dist = Cast<UDistributionFloatConstant>(Spawn->Rate.Distribution))
+		{
+			Dist->Constant = 20.0f;
 		}
 	}
 
@@ -419,7 +478,13 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 
 void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	// 몽타주가 끝난 후 다음 행동(스킬 선택)으로 전환
+	// 몽타주가 끝난 후 다음 행동 으로 전환
+	if (CurrentPhase == EBossPhase::Phase2)
+	{
+		StateMachine->ChangeState(MoveJumpToStateInstance);
+		return;
+	}
+	
 	if (StateMachine && SkillSelectionStateInstance)
 	{
 		StateMachine->ChangeState(SkillSelectionStateInstance);
@@ -446,7 +511,7 @@ void ABZTankCharacter::UpdateTimers(float DeltaTime)
 			// 스턴 종료 시 다음 행동으로 전환
 			StateMachine->ChangeState(KeepDistanceStateInstance);
 		}
-		OnStunChanged.Broadcast(CurrentStun);
+		OnStunChanged.Broadcast(CurrentStun, bIsStun);
 	}
 }
 
@@ -457,7 +522,7 @@ void ABZTankCharacter::UpdateStun(float DamageAmount)
 	CurrentStun += DamageAmount * DamageToStunRatio;
 	CurrentStun = FMath::Clamp(CurrentStun, 0.0f, 1.0f);
 	
-	OnStunChanged.Broadcast(CurrentStun);
+	OnStunChanged.Broadcast(CurrentStun, bIsStun);
 
 	if (CurrentStun >= 1.0f)
 	{
@@ -493,6 +558,6 @@ void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		Stat->OnHpChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateHpBar);
 		
 		// 스턴 게이지 바인딩. 주석 해제 후 사용.
-		// OnStunChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateStunBar);
+		// OnStunChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateProgress);
 	}
 }
