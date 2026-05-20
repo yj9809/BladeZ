@@ -6,10 +6,8 @@
 #include "Component/Player//BZPlayerCombatComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Animation/BZPlayerAnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
-#include "Common/BZLog.h"
 #include "Common/FBZDamageEvent.h"
 #include "Component/Player/BZCameraShakeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -143,6 +141,15 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	if (DashActionRef.Succeeded())
 	{
 		DashAction = DashActionRef.Object;
+	}
+	
+	// 패리 액션 가져오기.
+	static ConstructorHelpers::FObjectFinder<UInputAction> ParryActionRef(
+		TEXT("/Game/BZ/Input/IA_Parry.IA_Parry")
+	);
+	if (ParryActionRef.Succeeded())
+	{
+		ParryAction = ParryActionRef.Object;
 	}
 	//endregion
 	
@@ -331,6 +338,20 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerDash
 		);
+		
+		EnhancedInputComponent->BindAction(
+			ParryAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerParryStart
+		);
+		
+		EnhancedInputComponent->BindAction(
+			ParryAction,
+			ETriggerEvent::Completed,
+			this,
+			&ABZPlayerCharacter::PlayerParryEnd
+		);
 	}
 }
 
@@ -339,11 +360,37 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 {
 	if (Stat)
 	{
+		if (CombatComponent->IsPerfectParry())
+		{
+			CombatComponent->OnPerfectParrySucceeded();
+			return DamageAmount;
+		}
+		
+		if (CombatComponent->IsParry())
+		{
+			DamageAmount *= BlockDamageReduction;
+		}
+		
 		Stat->ApplyDamage(DamageAmount);
+
+		if (CombatComponent->IsParry())
+		{
+			CombatComponent->OnBlockHit();
+			return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+		}
+
+		if (CombatComponent->GetSuperArmored())
+		{
+			return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+		}
 		
 		// 중간 보스가 구현되면 중간 보스부터 아닐 경우 보스만 피격 허용.
 		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
 		{
+			if (GetMesh()->GetAnimInstance()->Montage_IsPlaying(HitMontage))
+			{			
+				return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+			}	
 			FName SectionName;
 			if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
 			{
@@ -501,6 +548,16 @@ FName ABZPlayerCharacter::GetDashSectionName(float Direction)
 	return TEXT("ForwardLeft");
 }
 
+void ABZPlayerCharacter::PlayerParryStart(const FInputActionValue& Value)
+{
+	CombatComponent->StartParry();
+}
+
+void ABZPlayerCharacter::PlayerParryEnd(const FInputActionValue& Value)
+{
+	CombatComponent->EndParry();
+}
+
 void ABZPlayerCharacter::OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (Montage == LandMontage && !bInterrupted)
@@ -570,7 +627,6 @@ void ABZPlayerCharacter::OnDeadMontageEnded(UAnimMontage* Montage, bool bInterru
 		{
 			MapName = MapName.RightChop(Prefix.Len());
 		}
-		PLAYER_LOG(Log, "Player has died. Restarting level..., %s", *MapName);
 		UGameplayStatics::OpenLevel(this, FName(MapName));
 	}
 }

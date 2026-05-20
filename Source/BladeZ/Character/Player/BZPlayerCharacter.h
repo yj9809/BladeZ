@@ -12,6 +12,7 @@
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 
+class UBZPlayerCombatComponent;
 class ABZWeaponActor;
 
 UCLASS()
@@ -30,6 +31,8 @@ public:
 	void StartComboCheck() const;
 	
 	FORCEINLINE ABZWeaponActor* GetWeapon() const { return Weapon; }
+	
+	FORCEINLINE UBZPlayerCombatComponent* GetCombatComponent() const { return CombatComponent; }
 
 public:
 	// Called when the game starts or when spawned
@@ -72,6 +75,10 @@ private:
 	void PlayerDash(const FInputActionValue& Value);
 	
 	FName GetDashSectionName(float Direction);
+	
+	void PlayerParryStart(const FInputActionValue& Value);
+	
+	void PlayerParryEnd(const FInputActionValue& Value);
 	
 	// 착지 처리를 마무리 하기 위한 함수.
 	UFUNCTION()
@@ -149,6 +156,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> DashAction;
 	
+	// 패리 액션.
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> ParryAction;
+	
 	// Weapon private.
 private:
 	// 웨폰 세팅.
@@ -202,6 +213,12 @@ private:
 	// Land 상태 값.
 	UPROPERTY(VisibleAnywhere, Category = Land)
 	bool bIsLanding = false;
+	
+	// Parry value private.
+private:
+	// 패리 시 데미지 감소율.
+	UPROPERTY(EditAnywhere, Category = Parry)
+	float BlockDamageReduction = 0.3f;
 	
 private:
 	/*

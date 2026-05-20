@@ -52,6 +52,11 @@ public:
 	// Knockback Power 1~3 배수 범위.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Knockback)
 	float KnockbackPower = 0.0f;
+	
+	// 슈퍼 아머.
+	// 우클릭으로 이어진 공격은 끊기지 않게 처리.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SuperArmor)
+	bool bSuperArmor = false;
 };
 
 /**

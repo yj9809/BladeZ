@@ -9,6 +9,7 @@
 #include "BZPlayerCombatComponent.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnCameraShake, float /* Camera Shake Amplitude */)
+DECLARE_DELEGATE(FOnParrySuccess)
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLADEZ_API UBZPlayerCombatComponent : public UActorComponent
@@ -23,6 +24,8 @@ public:
 	FORCEINLINE bool GetIsAttacking() const { return bIsAttacking; }
 	
 	FORCEINLINE UBZPlayerAttackData* GetAttackData() const { return AttackData; }
+	
+	bool GetSuperArmored() const;
 
 protected:
 	// Called when the game starts
@@ -47,12 +50,37 @@ public:
 	UFUNCTION()
 	void OnAttackEnded(UAnimMontage* Montage, bool bInterrupted);
 	
+	// 패리 플래그 세팅용 함수.
+	FORCEINLINE void SetIsPerfectParry(bool bNewParry) { bIsPerfectParry = bNewParry; }
+	FORCEINLINE bool IsPerfectParry() const { return bIsPerfectParry; }
+	
+	FORCEINLINE bool IsParry() const { return bIsParry; }
+	
+	// 패리 시작 및 종료 함수.
+	void StartParry();
+	void EndParry();
+	
+	// 패리 몽타주 종료 이벤트.
+	UFUNCTION()
+	void OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
+	// 퍼펙트 패링 성공 시 발생 이벤트.
+	void OnPerfectParrySucceeded();
+
+	// 일반 막기 피격 시 패리 몽타주 Hit 섹션으로 전환.
+	void OnBlockHit();
+	
 public:
 	// 카메라 셰이크 알림을 위한 델리게이트.
 	FOnCameraShake OnCameraShake;
 	
+	// 패리 성공을 알리기 위한 델리게이트.
+	FOnParrySuccess OnParrySuccess;
+	
 private:
 	bool CheckKnockbackCombo(const FName& SectionName) const;
+	
+	
 	
 private:
 	// 컴포넌트를 가지고 있는 캐릭터.
@@ -83,6 +111,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	TObjectPtr<UAnimMontage> AttackMontage;
 	
+	// 패리 애니메이션 몽타주.
+	UPROPERTY(VisibleAnywhere, Category = Parry)
+	TObjectPtr<UAnimMontage> ParryMontage;
+	
 	// 공격 상태 확인 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	bool bIsAttacking = false;
@@ -102,6 +134,14 @@ private:
 	// HitStop 지속 시간.
 	UPROPERTY(VisibleAnywhere, Category = HitStop)
 	float HitStopEndTime = 0.0f;
+	
+	// 패리 확인용 플래그.
+	UPROPERTY(VisibleAnywhere, Category = Parry)
+	bool bIsParry = false;
+	
+	// 퍼펙트 패리 확인용 플래그.
+	UPROPERTY(VisibleAnywhere, Category = Parry)
+	bool bIsPerfectParry = false;
 	
 	// Widget Test
 private:
