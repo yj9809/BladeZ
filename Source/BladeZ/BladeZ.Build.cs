@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -22,7 +22,9 @@ public class BladeZ : ModuleRules
 			"Slate",
 			"Niagara",
 			"GameplayCameras",
-			"RuntimeInspector"
+			"RuntimeInspector",
+			"MoviePlayer", // Used for loading screens.
+			//"LoadingScreenModule" // Used for loading screens.
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "EngineCameras" });
