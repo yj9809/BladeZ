@@ -15,6 +15,10 @@ public class LoadingScreenModule : ModuleRules
         PublicDependencyModuleNames.AddRange(new string[] {
             "Core",         // Core UE functionality
             "CoreUObject",  // Base UObject system.
+            "MoviePlayer",  // Movie player for loading screens.
+            "Engine",       // Main UE Engine module for UITexture2D
+            "Slate",        // UI framework
+            "SlateCore"     // Core Slate functionality
         });
     }
 }

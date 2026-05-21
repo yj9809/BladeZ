@@ -23,8 +23,8 @@ public class BladeZ : ModuleRules
 			"Niagara",
 			"GameplayCameras",
 			"RuntimeInspector",
-			"MoviePlayer", // Used for loading screens.
-			//"LoadingScreenModule" // Used for loading screens.
+			//"MoviePlayer", // Used for loading screens.
+			"LoadingScreenModule" // Used for loading screens.
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "EngineCameras" });

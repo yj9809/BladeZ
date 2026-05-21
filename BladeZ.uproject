@@ -1,4 +1,4 @@
-﻿{
+{
 	"FileVersion": 3,
 	"EngineAssociation": "5.6",
 	"Category": "",
@@ -18,7 +18,11 @@
 		{
 			"Name": "LoadingScreenModule",
 			"Type": "Runtime",
-			"LoadingPhase": "PreLoadingScreen"
+			"LoadingPhase": "PreLoadingScreen",
+			"AdditionalDependencies": [
+				"Slate",
+				"SlateCore"
+			]
 		}
 	],
 	"Plugins": [

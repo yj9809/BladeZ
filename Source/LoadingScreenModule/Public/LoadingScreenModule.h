@@ -14,4 +14,8 @@ public:
 
 	// Shows the loading screen during level transitions.
 	virtual void StartLoadingScreen();
+
+private:
+	// Store the background textrue to prevent it from being garbage collected.
+	UTexture2D* BackgroundTexture;
 };
