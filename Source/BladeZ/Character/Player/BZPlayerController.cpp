@@ -8,8 +8,8 @@
 #include "Game/BZEnemyEventSubsystem.h"
 #include "Interface/BZCharacterHUD.h"
 #include "UI/BZHUDWidget.h"
-#include "UI/BZUserWidget.h"
 #include "UI/BZGameOverWidget.h"
+#include "UI/BZGameClearWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Quest/BZQuestActor.h"
 #include "BZPlayerCharacter.h"
@@ -40,13 +40,23 @@ ABZPlayerController::ABZPlayerController()
 	}
 
 	// GameOver Overlay
-	static ConstructorHelpers::FClassFinder<UBZUserWidget> GameOverWidgetClassRef(
+	static ConstructorHelpers::FClassFinder<UBZGameOverWidget> GameOverWidgetClassRef(
 		TEXT("/Game/BZ/UI/WBP_GameOver.WBP_GameOver_C")
 	);
 
 	if (GameOverWidgetClassRef.Succeeded())
 	{
 		GameOverWidgetClass = GameOverWidgetClassRef.Class;
+	}
+
+	// GameClear Overlay
+	static ConstructorHelpers::FClassFinder<UBZGameClearWidget> GameClearWidgetClassRef(
+		TEXT("/Game/BZ/UI/WBP_GameClear.WBP_GameClear_C")
+	);
+
+	if (GameClearWidgetClassRef.Succeeded())
+	{
+		GameClearWidgetClass = GameClearWidgetClassRef.Class;
 	}
 }
 
@@ -56,6 +66,7 @@ void ABZPlayerController::BeginPlay()
 
 	CreatePlayerHUD();
 	CreateGameOverHUD();
+	CreateGameClearHUD();
 
 	BindGameplayEvents();
 
@@ -85,20 +96,46 @@ void ABZPlayerController::RegisterBoss(AActor* BossActor)
 	RegisterMinimapActor(BossActor);
 }
 
-void ABZPlayerController::ShowGameOverHUD()
+void ABZPlayerController::ShowGameEndHUD(bool bClear)
 {
-	if (GameOverWidget)
+	// InputMode 변경=> Mouse입력을 World가 아닌 UI에서 받도록.
+	FInputModeUIOnly InputMode;
+	if (bClear)
 	{
-		GameOverWidget->ShowGameOver();
-
-		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(GameClearWidget->TakeWidget());
+	}
+	else
+	{
 		InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
-		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	}
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 
-		SetInputMode(InputMode);
-		bShowMouseCursor = true;
+	SetInputMode(InputMode);
 
-		UGameplayStatics::SetGamePaused(this, true);
+	// Mouse 커서가 보이도록 설정.
+	bShowMouseCursor = true;
+
+	// 게임 시간을 멈춤.
+	UGameplayStatics::SetGamePaused(this, true);
+}
+
+void ABZPlayerController::ShowGameOver()
+{
+	// Game Over 화면 보이기.
+	GameOverWidget->SetVisibility(ESlateVisibility::Visible);
+
+	ShowGameEndHUD(false);
+}
+
+void ABZPlayerController::HandleGameClear(const ABZQuestActor* QuestActor)
+{
+	// 지금 완료된 Quest의 완료되었을 때 지정된 Action이 GameClear라면.
+	if (QuestActor->GetQuestData().CompletionAction == EQuestCompletionAction::GameClear)
+	{
+		// Game Clear 화면 보이기.
+		GameClearWidget->SetVisibility(ESlateVisibility::Visible);
+
+		ShowGameEndHUD(true);
 	}
 }
 
@@ -129,6 +166,20 @@ void ABZPlayerController::CreateGameOverHUD()
 	{
 		// 화면에 추가하고, BossHUD보다 높은 Order로 설정.
 		GameOverWidget->AddToViewport(15);
+	}
+}
+
+void ABZPlayerController::CreateGameClearHUD()
+{
+	if (GameClearWidget) return;
+
+	// Widget 생성.
+	GameClearWidget = CreateWidget<UBZGameClearWidget>(this, GameClearWidgetClass);
+
+	if (GameClearWidget)
+	{
+		// 화면에 추가하고, BossHUD보다 높은 Order로 설정.
+		GameClearWidget->AddToViewport(15);
 	}
 }
 
@@ -204,7 +255,14 @@ void ABZPlayerController::BindGameplayEvents()
 			UGameplayStatics::GetActorOfClass(this, ABZQuestActor::StaticClass())
 		))
 		{
+			// MainHUD의 QustInfo Widget에 전달해주기 위해 호출.
 			MainHUDWidget->BindQuestActor(QuestActor);
+
+			//// QuestActor의 QuestClear 함수에 직접 Bind.
+			QuestActor->OnQuestCompleted.AddUniqueDynamic(
+				this,
+				&ABZPlayerController::HandleGameClear
+			);
 		}
 	}
 
@@ -212,6 +270,6 @@ void ABZPlayerController::BindGameplayEvents()
 	// Player의 죽음 Delegate에 GameOverHUD를 보여주는 Event를 Bind.
 	if (ABZPlayerCharacter* player = Cast<ABZPlayerCharacter>(GetPawn()))
 	{
-		player->OnPlayerDead.BindUObject(this, &ABZPlayerController::ShowGameOverHUD);
+		player->OnPlayerDead.BindUObject(this, &ABZPlayerController::ShowGameOver);
 	}
 }

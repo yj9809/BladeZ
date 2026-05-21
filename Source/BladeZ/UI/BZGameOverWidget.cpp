@@ -35,12 +35,6 @@ void UBZGameOverWidget::NativeConstruct()
 	);
 }
 
-
-void UBZGameOverWidget::ShowGameOver()
-{
-	SetVisibility(ESlateVisibility::Visible);
-}
-
 void UBZGameOverWidget::RestartLevel()
 {
 	UGameplayStatics::OpenLevel(this, *UGameplayStatics::GetCurrentLevelName(this));

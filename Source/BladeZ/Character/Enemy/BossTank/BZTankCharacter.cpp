@@ -239,6 +239,7 @@ void ABZTankCharacter::SetDead()
 	* 작성일: 26.05.18
 	* 작성 사유: UI/Quest에서 보스 죽음 처리를 위해 추가.
 	* Dead Event BroadCast.
+	* 나중에 죽음 Animation과 컷신 추가되면 작동 변경해야 함.
 	*/
 	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
 	{

@@ -118,6 +118,6 @@ void ABZQuestActor::CheckQuestCompleted()
 		 * 완료 이벤트를 외부에 알린다.
 		 * Blueprint에서 문 열기, 다음 웨이브 시작, 클리어 UI 표시 등을 연결하면 된다.
 		 */
-		OnQuestCompleted.Broadcast();
+		OnQuestCompleted.Broadcast(this);
 	}
 }

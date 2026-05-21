@@ -10,14 +10,23 @@
  * 
  */
  
+
+// Quest의 목표.
 UENUM(BlueprintType)
 enum class EQuestType: uint8
 {
+	None UMETA(DisplayName = "None"),
 	KillEnemies UMETA(DisplayName = "KillEnemies"),
 	KillOneTarget UMETA(DisplayName = "KillBoss"),
-	None UMETA(DisplayName = "None")
 };
- 
+
+// Quest가 완료되면 진행할 Action.
+UENUM(BlueprintType)
+enum class EQuestCompletionAction : uint8
+{
+	None UMETA(DisplayName = "None"),
+	GameClear UMETA(DisplayName = "GameClear")
+};
  
 // 데이터 테이블을 임포트할 때 행(Row) 데이터를 정의하는 구조체.
 // Row-Data = Record(레코드).
@@ -37,6 +46,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	EQuestType QuestType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
+	EQuestCompletionAction CompletionAction = EQuestCompletionAction::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	FString TitleText;

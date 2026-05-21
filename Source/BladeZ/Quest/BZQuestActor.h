@@ -23,7 +23,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
  * 퀘스트가 완료됐을 때 알려주는 델리게이트.
  * => 문 열기, 보스 스폰, 클리어 UI 출력 등에 연결.
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnQuestCompleted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FOnQuestCompleted, 
+	const ABZQuestActor*, QuestActor
+);
 
 
 /*

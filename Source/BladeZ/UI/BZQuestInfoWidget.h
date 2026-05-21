@@ -30,6 +30,7 @@ protected:
 
 
 public:
+	// 처음에 Quest Info를 Init.
 	void SetQuestInfo(const struct FBZQuestData InData);
 
 	/*

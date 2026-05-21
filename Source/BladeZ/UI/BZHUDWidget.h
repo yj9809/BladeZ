@@ -68,7 +68,6 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBZHpBarWidget> HpBarWidget;
 
-	// TODO: 아래 Widget들은 Widget Class 따로 만들 때마다 Bind되는 Class를 바꿔야 함!
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBZMinimapWidget> MinimapWidget;
 
