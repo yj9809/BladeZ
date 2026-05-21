@@ -14,6 +14,7 @@ ABZWeaponPickup::ABZWeaponPickup()
 	RootComponent = PickupMesh;
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	PickupMesh->SetSimulatePhysics(true);
+	PickupMesh->SetCustomDepthStencilValue(1);
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->SetupAttachment(RootComponent);
@@ -36,6 +37,7 @@ void ABZWeaponPickup::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, 
 	if (Player)
 	{
 		Player->SetNearbyPickup(this);
+		PickupMesh->SetRenderCustomDepth(true);
 	}
 }
 
@@ -46,5 +48,6 @@ void ABZWeaponPickup::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AA
 	if (Player)
 	{
 		Player->SetNearbyPickup(nullptr);
+		PickupMesh->SetRenderCustomDepth(false);
 	}
 }
