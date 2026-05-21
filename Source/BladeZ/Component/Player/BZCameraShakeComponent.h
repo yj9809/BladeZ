@@ -32,4 +32,9 @@ private:
 	// 에디터에서 세팅할 카메라 셰이크 클래스.
 	UPROPERTY(EditAnywhere, Category = CameraShake)
 	TSubclassOf<UCameraShakeBase> CameraShakeClass;
+
+	UPROPERTY(EditAnywhere, Category = CameraShake)
+	float ShakeCooldown = 0.15f;
+
+	float LastShakeTime = -1.f;
 };

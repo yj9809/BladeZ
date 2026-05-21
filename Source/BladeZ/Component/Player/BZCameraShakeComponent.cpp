@@ -48,10 +48,17 @@ void UBZCameraShakeComponent::OnCameraShake(float Amplitude)
 	{
 		return;
 	}
-	
+
+	float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastShakeTime < ShakeCooldown)
+	{
+		return;
+	}
+	LastShakeTime = Now;
+
 	APlayerController* PlayerController =
 		Cast<APlayerController>(Cast<ACharacter>(GetOwner())->GetController());
-	
+
 	PlayerController->ClientStartCameraShake(CameraShakeClass, Amplitude);
 }
 

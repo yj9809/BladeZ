@@ -19,6 +19,7 @@
 #include "UI/BZHUDWidget.h"
 #include "UI/BZGameOverWidget.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "Engine/DamageEvents.h"
 
 // Sets default values
@@ -51,6 +52,15 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	// Camera Shake Component 생성.
 	CameraShakeComponent = CreateDefaultSubobject<UBZCameraShakeComponent>(TEXT("CameraShakeComponent"));
 
+	// SpotLight Component 생성.
+	LightComponent = CreateDefaultSubobject<USpotLightComponent>(TEXT("LightComponent"));
+	LightComponent->SetupAttachment(GetMesh(), TEXT("LightSocket"));
+	LightComponent->SetVisibility(bIsLighting);
+	LightComponent->SetInnerConeAngle(5.0f);
+	LightComponent->SetOuterConeAngle(25.0f);
+	LightComponent->SetIntensity(100.0f);
+	LightComponent->SetLightColor(FLinearColor(1.f, 0.9f, 0.7f));
+	
 	// 메시의 위치와 회전을 조정하여 캐릭터가 올바르게 보이도록 설정.
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
 	//endregion
@@ -162,6 +172,15 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		InteractAction = InteractActionRef.Object;
 	}
+	
+	// Light 액션 가져오기.
+	static ConstructorHelpers::FObjectFinder<UInputAction> LightActionRef(
+		TEXT("/Game/BZ/Input/IA_Light.IA_Light")
+	);
+	if (LightActionRef.Succeeded())
+	{
+		LightAction = LightActionRef.Object;
+	}
 	//endregion
 	
 	//region Montage
@@ -244,7 +263,6 @@ void ABZPlayerCharacter::BeginPlay()
 	{
 		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnLandMontageEnded);
 		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnDashMontageEnded);
-		AnimInstance->OnMontageEnded.AddDynamic(this, &ABZPlayerCharacter::OnDeadMontageEnded);
 	}
 }
 
@@ -344,6 +362,13 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			ETriggerEvent::Started,
 			this,
 			&ABZPlayerCharacter::PlayerInteract
+		);
+		
+		EnhancedInputComponent->BindAction(
+			LightAction,
+			ETriggerEvent::Started,
+			this,
+			&ABZPlayerCharacter::PlayerLight
 		);
 	}
 }
@@ -573,6 +598,7 @@ void ABZPlayerCharacter::OnDashMontageEnded(UAnimMontage* Montage, bool bInterru
 		DashHitActors.Empty();
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 		GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &ABZPlayerCharacter::OnCapsuleOverlap);
+		GetCharacterMovement()->FallingLateralFriction = 0.0f;
 	}
 }
 
@@ -613,19 +639,12 @@ void ABZPlayerCharacter::SetDead()
 	}
 }
 
-void ABZPlayerCharacter::OnDeadMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (Montage == DeadMontage && !bInterrupted)
-	{	
-		OnPlayerDead.ExecuteIfBound();
-	}
-}
-
 void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 	
-	if (GetCharacterMovement()->IsFalling())
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (GetCharacterMovement()->IsFalling() && !AnimInstance->Montage_IsPlaying(DeadMontage))
 	{
 		PlayAnimMontage(LandMontage);
 	}
@@ -685,5 +704,11 @@ void ABZPlayerCharacter::PlayerInteract(const FInputActionValue& Value)
 
 	NearbyPickup->Destroy();
 	NearbyPickup = nullptr;
+}
+
+void ABZPlayerCharacter::PlayerLight(const FInputActionValue& Value)
+{
+	bIsLighting = !bIsLighting;
+	LightComponent->SetVisibility(bIsLighting);
 }
 

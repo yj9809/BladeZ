@@ -97,6 +97,8 @@ private:
 
 	void PlayerInteract(const FInputActionValue& Value);
 	
+	void PlayerLight(const FInputActionValue& Value);
+	
 	// 착지 처리를 마무리 하기 위한 함수.
 	UFUNCTION()
 	void OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -118,10 +120,6 @@ private:
 	// 죽음 이벤트.
 	UFUNCTION()
 	void SetDead();
-	
-	// 죽음 처리를 마무리 하기 위한 함수.
-	UFUNCTION()
-	void OnDeadMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
@@ -146,6 +144,10 @@ private:
 	// 카메라 쉐이크 컴포넌트 세팅.
 	UPROPERTY(VisibleAnywhere, Category = CameraShake)
 	TObjectPtr<class UBZCameraShakeComponent> CameraShakeComponent;
+	
+	// 전등 효과를 위한 컴포넌트 세팅.
+	UPROPERTY(VisibleAnywhere, Category = Light)
+	TObjectPtr<class USpotLightComponent> LightComponent;
 	
 	// Input private.
 private:
@@ -183,6 +185,10 @@ private:
 	// 인터랙트 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> InteractAction;
+	
+	// Light 액션.
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<UInputAction> LightAction;
 	
 	// Weapon private.
 private:
@@ -244,6 +250,12 @@ private:
 	// 패리 시 데미지 감소율.
 	UPROPERTY(EditAnywhere, Category = Parry)
 	float BlockDamageReduction = 0.3f;
+	
+	// Light value private.
+private:
+	// Light On/Off
+	UPROPERTY(VisibleAnywhere, Category = Light)
+	bool bIsLighting = false;
 	
 private:
 	/*
