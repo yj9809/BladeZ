@@ -25,7 +25,8 @@ UENUM(BlueprintType)
 enum class EQuestCompletionAction : uint8
 {
 	None UMETA(DisplayName = "None"),
-	GameClear UMETA(DisplayName = "GameClear")
+	GameClear UMETA(DisplayName = "GameClear"),
+	GoNextLevel UMETA(DisplayName = "GoNextLevel")
 };
  
 // 데이터 테이블을 임포트할 때 행(Row) 데이터를 정의하는 구조체.

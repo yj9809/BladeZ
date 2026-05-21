@@ -10,6 +10,8 @@ class UParticleSystemComponent;
 class USceneComponent;
 class UBoxComponent;
 
+class ABZQuestActor;
+
 UCLASS()
 class BLADEZ_API ABZPortal : public AActor
 {
@@ -18,11 +20,22 @@ class BLADEZ_API ABZPortal : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABZPortal();
+	
+	// 이름을 갖는 생성자
+	ABZPortal(FText InName);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+public:
+	UFUNCTION()
+	void HandleQuestCompleted(const ABZQuestActor* QuestActor);
+
+	// Setter.
+	void SetTargetLevelName(FText InName);
+
+protected:
 	/*
 	* Player가 닿으면 지정한 Level로 이동.
 	* TODO: 로딩창 띄우기.
@@ -53,5 +66,9 @@ protected:
 	// 이동할 Level 이름.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal")
 	FName TargetLevelName;
+
+	// 참조할 Quest Actor.
+	UPROPERTY(EditInstanceOnly, Category = "Portal")
+	TObjectPtr<ABZQuestActor> RequiredQuestActor;
 
 };

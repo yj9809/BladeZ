@@ -9,6 +9,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/BoxComponent.h"
 #include "Character/Player/BZPlayerCharacter.h"
+#include "Quest/BZQuestActor.h"
 
 // Sets default values
 ABZPortal::ABZPortal()
@@ -48,10 +49,43 @@ ABZPortal::ABZPortal()
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ABZPortal::OnPortalOverlap);
 }
 
+ABZPortal::ABZPortal(FText InName)
+{
+	ABZPortal();
+	SetTargetLevelName(InName);
+}
+
 // Called when the game starts or when spawned
 void ABZPortal::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsValid(RequiredQuestActor))
+	{
+		RequiredQuestActor->OnQuestCompleted.AddDynamic(
+			this,
+			&ABZPortal::HandleQuestCompleted
+		);
+	}
+
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	BoxCollision->SetGenerateOverlapEvents(false);
+}
+
+void ABZPortal::HandleQuestCompleted(const ABZQuestActor* InQuestActor)
+{
+	if (InQuestActor->GetQuestData().CompletionAction == EQuestCompletionAction::GoNextLevel)
+	{
+		SetActorHiddenInGame(false);
+		SetActorEnableCollision(true);
+		BoxCollision->SetGenerateOverlapEvents(true);
+	}
+}
+
+void ABZPortal::SetTargetLevelName(FText InName)
+{
+	TargetLevelName = *InName.ToString();
 }
 
 
@@ -79,7 +113,6 @@ void ABZPortal::OnPortalOverlap(
 	{
 		return;
 	}
-
 
 	UGameplayStatics::OpenLevel(this, TargetLevelName);
 }
