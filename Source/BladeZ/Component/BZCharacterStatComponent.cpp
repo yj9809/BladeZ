@@ -56,6 +56,8 @@ void UBZCharacterStatComponent::InitializeStat()
 void UBZCharacterStatComponent::SetStat(const FBZCharacterStat& InStat)
 {
 	MaxHp = InStat.MaxHp;
+	if (MaxHp <= 0) MaxHp = 200.0f;
+
 	CurrentHp = MaxHp; // 2026.05.14 최지웅 / Max 체력 적용 수정사항
 	BaseAttackPower = InStat.BaseAttackPower;
 
