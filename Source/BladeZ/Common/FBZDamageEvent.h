@@ -17,6 +17,7 @@ public:
 	FORCEINLINE bool IsKnockback() const { return bIsKnockback; }
 	
 	// 데미지 타입 세팅 시 호출할 Getter/Setter.
+	// 0: 약한 공격, 1: 아픈 공격, 2: 넘어지기.
 	FORCEINLINE void SetDamageType(int32 InDamageType) { DamageType = InDamageType; }
 	FORCEINLINE int32 GetDamageType() const { return DamageType; }
 	

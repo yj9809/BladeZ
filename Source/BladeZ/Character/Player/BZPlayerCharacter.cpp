@@ -14,6 +14,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Weapon/BZWeaponActor.h"
 #include "Character/Player/Weapon/BZWeaponPickup.h"
+#include "Common/BZLog.h"
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
 #include "UI/BZGameOverWidget.h"
@@ -379,8 +380,9 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		// 중간 보스가 구현되면 중간 보스부터 아닐 경우 보스만 피격 허용.
 		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
 		{
-			if (GetMesh()->GetAnimInstance()->Montage_IsPlaying(HitMontage))
-			{			
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance->Montage_IsPlaying(DeadMontage) || AnimInstance->Montage_IsPlaying(HitMontage))
+			{
 				return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 			}	
 			FName SectionName;
@@ -596,6 +598,8 @@ void ABZPlayerCharacter::SetDead()
 {
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	PlayAnimMontage(DeadMontage);
+	
+	PLAYER_LOG(Log, "Set Dead");
 	
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());                                                                                                     
 	if (PlayerController)                                                                                                                                                               
