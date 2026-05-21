@@ -47,6 +47,10 @@ struct FBossPhaseData
 	// 해당 페이즈에서 사용 가능한 스킬(상태) 클래스들
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Phase")
 	TArray<TSubclassOf<class UBZTankStateBase>> AllowedSkillStates;
+
+	// 페이즈 진입 몽타주가 끝난 후 즉시 실행할 상태 (비어있으면 기본 SkillSelection)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Phase")
+	TSubclassOf<class UBZTankStateBase> NextStateAfterTransition = nullptr;
 };
 
 // 보스 페이즈 설정을 위한 데이터 에셋

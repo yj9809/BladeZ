@@ -152,6 +152,9 @@ public:
 	TSubclassOf<class UBZTankStateBase> ThrowBarrelStateClass;
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
+	TSubclassOf<class UBZTankStateBase> ThrowPlayerStateClass;
+
+	UPROPERTY(EditAnywhere, Category = "FSM")
 	TSubclassOf<class UBZTankStateBase> BackUpStateClass;
 
 	UPROPERTY(EditAnywhere, Category = "FSM")
@@ -202,6 +205,9 @@ public:
 	class UBZTankStateBase* ThrowBarrelStateInstance;
 
 	UPROPERTY()
+	class UBZTankStateBase* ThrowPlayerStateInstance;
+
+	UPROPERTY()
 	class UBZTankStateBase* BackUpStateInstance;
 
 	UPROPERTY()
@@ -232,6 +238,9 @@ public:
 	class UAnimMontage* ThrowObjectMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* ThrowPlayerMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* BackUpMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
@@ -239,6 +248,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* StunMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* ZombieSpawnMontage;
 
 public:
 	// Called every frame
@@ -269,7 +281,7 @@ private:
 	bool bCurrentEnableArea = false;
 	bool bCurrentEnableSpine = false;
 	bool bIsStun = false;
-	float StunRecoveryRate = 0.1f;
+	float StunRecoveryRate = 0.15f;
 	float DamageToStunRatio = 0.01f;
 	float CurrentAttackDamage = 0.0f;
 	float CurrentSpeed = 0.0f;

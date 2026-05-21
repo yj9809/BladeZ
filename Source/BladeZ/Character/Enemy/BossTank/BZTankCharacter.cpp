@@ -335,6 +335,11 @@ void ABZTankCharacter::InitializeBoss()
 	{
 		ThrowBarrelStateInstance = NewObject<UBZTankStateBase>(this, ThrowBarrelStateClass);
 	}
+
+	if (ThrowPlayerStateClass)
+	{
+		ThrowPlayerStateInstance = NewObject<UBZTankStateBase>(this, ThrowPlayerStateClass);
+	}
 	
 	if (BackUpStateClass)
 	{
@@ -398,8 +403,12 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 					StateMachine->ChangeState(nullptr);
 				}
 
-				// 2. 전이 몽타주 재생
-				float Duration = PlayAnimMontage(PhaseData->TransitionMontage);
+				// 2. 전이 몽타주 재생 (속도 1.0 고정)
+				float Duration = PlayAnimMontage(PhaseData->TransitionMontage, 1.0f);
+				
+				UE_LOG(LogTemp, Warning, TEXT("Phase Transition: Playing Montage %s, Duration: %.2f"), 
+					*PhaseData->TransitionMontage->GetName(), Duration);
+
 				if (Duration > 0.0f)
 				{
 					// 몽타주 종료 델리게이트 연결
@@ -410,14 +419,13 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 				else
 				{
 					// 재생 실패 시 즉시 다음 단계로
+					UE_LOG(LogTemp, Error, TEXT("Phase Transition: Montage Play Failed (Duration 0)"));
 					OnTransitionMontageEnded(PhaseData->TransitionMontage, false);
 				}
 			}
 		}
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Boss Phase Changed to: %d, PlayRate: %.2f"), (uint8)NewPhase, CurrentAnimPlayRate);
-
 	if (CurrentPhase == EBossPhase::Phase2)
 	{
 		FVector Offset = FVector(0, 0, 300);
@@ -481,19 +489,54 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 
 void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	// 몽타주가 끝난 후 다음 행동 으로 전환
-	if (CurrentPhase == EBossPhase::Phase2)
+	if (!StateMachine || bInterrupted)
 	{
-		StateMachine->ChangeState(MoveJumpToStateInstance);
+		UE_LOG(LogTemp, Warning, TEXT("Phase Transition: Montage Interrupted or StateMachine invalid. Skipping auto-transition."));
 		return;
 	}
-	
-	if (StateMachine && SkillSelectionStateInstance)
+
+	// 페이즈 데이터 에셋에서 다음 상태 설정 확인
+	if (PhaseComponent)
+	{
+		const FBossPhaseData* PhaseData = PhaseComponent->GetCurrentPhaseData();
+		if (PhaseData && PhaseData->NextStateAfterTransition)
+		{
+			TSubclassOf<UBZTankStateBase> NextClass = PhaseData->NextStateAfterTransition;
+			UBZTankStateBase* TargetInstance = nullptr;
+
+			// 설정된 클래스에 맞는 인스턴스 매칭
+			if (NextClass == IdleStateClass) TargetInstance = IdleStateInstance;
+			else if (NextClass == ChaseStateClass) TargetInstance = ChaseStateInstance;
+			else if (NextClass == AttackStateClass) TargetInstance = AttackStateInstance;
+			else if (NextClass == RoarStateClass) TargetInstance = RoarStateInstance;
+			else if (NextClass == SprintStateClass) TargetInstance = SprintStateInstance;
+			else if (NextClass == SprintAttackStateClass) TargetInstance = SprintAttackStateInstance;
+			else if (NextClass == KeepDistanceStateClass) TargetInstance = KeepDistanceStateInstance;
+			else if (NextClass == SkillSelectionStateClass) TargetInstance = SkillSelectionStateInstance;
+			else if (NextClass == JumpToStateClass) TargetInstance = JumpToStateInstance;
+			else if (NextClass == ThrowObjectStateClass) TargetInstance = ThrowObjectStateInstance;
+			else if (NextClass == ThrowCarStateClass) TargetInstance = ThrowCarStateInstance;
+			else if (NextClass == ThrowBarrelStateClass) TargetInstance = ThrowBarrelStateInstance;
+			else if (NextClass == ThrowPlayerStateClass) TargetInstance = ThrowPlayerStateInstance;
+			else if (NextClass == BackUpStateClass) TargetInstance = BackUpStateInstance;
+			else if (NextClass == PushThroughStateClass) TargetInstance = PushThroughStateInstance;
+			else if (NextClass == StunStateClass) TargetInstance = StunStateInstance;
+			else if (NextClass == MoveJumpToStateClass) TargetInstance = MoveJumpToStateInstance;
+
+			if (TargetInstance)
+			{
+				StateMachine->ChangeState(TargetInstance);
+				return;
+			}
+		}
+	}
+
+	// 설정이 없거나 실패하면 기본적으로 스킬 선택으로 전환
+	if (SkillSelectionStateInstance)
 	{
 		StateMachine->ChangeState(SkillSelectionStateInstance);
 	}
 }
-
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
 {
 	DefaultAttackCooldown.CurrentTime += DeltaTime;
@@ -521,6 +564,9 @@ void ABZTankCharacter::UpdateTimers(float DeltaTime)
 void ABZTankCharacter::UpdateStun(float DamageAmount)
 {
 	if (bIsStun) return;
+
+	// 상태 머신이 중지된 상태(페이즈 전환 중)에는 스턴을 걸지 않음
+	if (StateMachine && StateMachine->GetCurrentState() == nullptr) return;
 
 	CurrentStun += DamageAmount * DamageToStunRatio;
 	CurrentStun = FMath::Clamp(CurrentStun, 0.0f, 1.0f);

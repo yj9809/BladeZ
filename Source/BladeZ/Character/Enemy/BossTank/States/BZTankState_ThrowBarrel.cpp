@@ -129,17 +129,22 @@ FVector UBZTankState_ThrowBarrel::CalculateThrowVelocity() const
 	FVector StartPos = ThrowTarget->GetActorLocation();
 	float ProjectileSpeed = BaseThrowSpeed + AdditionalThrowSpeed;
 	
+	// 타겟 위치 예측
+	const float MaxTargetVelocity = 800.0f; 
+	FVector CappedVelocity = TankCharacter->TargetActor->GetVelocity().GetClampedToMaxSize(MaxTargetVelocity);
+
 	float Distance = FVector::Dist(StartPos, TankCharacter->TargetActor->GetActorLocation());
 	float LookAheadTime = Distance / ProjectileSpeed;
 
-	// 타겟 속도에 상한선(Cap)을 적용하여 과도한 리드샷 방지
-	const float MaxTargetVelocity = 800.0f; 
-	FVector CappedVelocity = TankCharacter->TargetActor->GetVelocity().GetClampedToMaxSize(MaxTargetVelocity);
 	FVector PredictedLocation = TankCharacter->TargetActor->GetActorLocation() + (CappedVelocity * LookAheadTime);
 	
-	// 타겟보다 가깝게 던지도록 오프셋 적용
+	// 타겟보다 가깝게 던지도록 오프셋 적용 (가까울 때의 보정 추가)
 	FVector DirectionToTarget = (PredictedLocation - StartPos).GetSafeNormal();
-	PredictedLocation -= DirectionToTarget * 1000.0f;
+	
+	// 플레이어가 너무 가까울 때 (1000 유닛 이하) 오프셋이 뒤로 가지 않도록 거리의 50%까지만 제한
+	float ActualOffset = FMath::Min(1200.0f, Distance * 0.5f);
+	PredictedLocation -= DirectionToTarget * ActualOffset;
+	
 	float ThrowDistance = FVector::Dist(StartPos, PredictedLocation);
 	
 	FVector OutLaunchVelocity;
@@ -150,6 +155,7 @@ FVector UBZTankState_ThrowBarrel::CalculateThrowVelocity() const
 
 	if (bFoundPath) return OutLaunchVelocity;
 
+	// 3. 물리적으로 도달 불가능할 때의 Fallback
 	FVector FallbackDir = (PredictedLocation - StartPos).GetSafeNormal();
 	return (FallbackDir * ProjectileSpeed) + FVector(0.0f, 0.0f, ThrowDistance * VerticalOffsetMultiplier);
 }

@@ -26,7 +26,7 @@ public:
 
 private:
 	UPROPERTY()
-	FVector TargetLocation = FVector(-3000.000000,3000.000000,650);
+	FVector TargetLocation = FVector(2220.0,-1500.0,1000.0);
 
 	FOnMontageEnded JumpMontageEndDelegate;
 

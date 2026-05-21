@@ -42,5 +42,4 @@ private:
 	FVector CalculateThrowVelocity() const;
 	void OnThrowObjectMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void FinishState();
-	float DetectGround(FVector Position) const;
 };

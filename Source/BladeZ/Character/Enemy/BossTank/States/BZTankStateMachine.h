@@ -19,6 +19,9 @@ public:
 	// 상태를 바꾸는 핵심 함수
 	void ChangeState(UBZTankStateBase* NewState);
 
+	// 현재 상태 가져오기
+	UBZTankStateBase* GetCurrentState() const { return CurrentState; }
+
 	// 틱 흘리기
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
