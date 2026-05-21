@@ -39,5 +39,5 @@ protected:
 
 private:
 	// Start에서 넘어갈 Level의 이름을 미리 지정
-	const FName IngameLevelName = FName(TEXT("BossTestLevel"));
+	const FName IngameLevelName = FName(TEXT("RemainsLevel_01"));
 };
