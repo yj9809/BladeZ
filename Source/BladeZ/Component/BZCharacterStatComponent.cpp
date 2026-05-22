@@ -59,11 +59,11 @@ void UBZCharacterStatComponent::SetStat(const FBZCharacterStat& InStat)
 	if (MaxHp <= 0) MaxHp = 200.0f;
 
 	CurrentHp = MaxHp; // 2026.05.14 최지웅 / Max 체력 적용 수정사항
+
+	// 직접 대입 대신 SetHp를 호출하여 OnHpChanged 이벤트가 발생하도록 함
+	SetHp(MaxHp); 
 	BaseAttackPower = InStat.BaseAttackPower;
-
-	// 이후 Stat 항목이 추가되면 여기에 추가.
 }
-
 
 float UBZCharacterStatComponent::ApplyDamage(float InAdditiveDamage)
 {

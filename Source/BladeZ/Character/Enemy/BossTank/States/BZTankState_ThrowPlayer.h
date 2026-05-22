@@ -31,7 +31,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FVector FixedTargetLocation = FVector(2600.0,-200.0,1000.0);
 
+	// 잡은 후 이동할 실행 지점 (월드 좌표)
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FVector FixedExecutionLocation = FVector(-270.0,-1160.0,100.0);
+
 	bool bIsHoldingPlayer = false;
+	bool bIsMovingToExecution = false;
 	
 public:
 	// 던질 목표 좌표를 직접 설정하는 함수 (필요 시 런타임 변경 가능)

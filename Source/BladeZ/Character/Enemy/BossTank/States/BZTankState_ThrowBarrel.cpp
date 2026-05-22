@@ -103,8 +103,9 @@ void UBZTankState_ThrowBarrel::ThrowObject()
 
 	if (TankCharacter->ThrowObjectMontage)
 	{
+		float PlayRate = TankCharacter->CurrentAnimPlayRate * FMath::RandRange(0.9f, 1.5f);
 		// 드럼통은 Default 섹션 사용
-		TankCharacter->PlayAnimMontage(TankCharacter->ThrowObjectMontage, TankCharacter->CurrentAnimPlayRate, "Default");
+		TankCharacter->PlayAnimMontage(TankCharacter->ThrowObjectMontage, PlayRate);
 
 		UAnimInstance* AnimInstance = TankCharacter->GetMesh()->GetAnimInstance();
 		if (AnimInstance)

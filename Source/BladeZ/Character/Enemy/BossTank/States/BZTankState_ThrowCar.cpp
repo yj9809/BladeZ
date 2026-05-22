@@ -134,23 +134,26 @@ FVector UBZTankState_ThrowCar::CalculateThrowVelocity() const
 	{
 		return TankCharacter->GetActorForwardVector() * BaseThrowSpeed;
 	}
-
+	
 	FVector StartPos = ThrowTarget->GetActorLocation();
 	float ProjectileSpeed = BaseThrowSpeed + AdditionalThrowSpeed;
-
-	float Distance = FVector::Dist(StartPos, TankCharacter->TargetActor->GetActorLocation());
-	float LookAheadTime = Distance / ProjectileSpeed;
+	FVector PredictedLocation = FVector(2800.0, 0, 1000);
 	
-	// 타겟 속도에 상한선(Cap)을 적용하여 과도한 리드샷 방지
-	const float MaxTargetVelocity = 800.0f; 
-	FVector CappedVelocity = TankCharacter->TargetActor->GetVelocity().GetClampedToMaxSize(MaxTargetVelocity);
-	FVector PredictedLocation = TankCharacter->TargetActor->GetActorLocation() + (CappedVelocity * LookAheadTime);
-	
-	// 타겟보다 가깝게 던지도록 오프셋 적용
-	FVector DirectionToTarget = (PredictedLocation - StartPos).GetSafeNormal();
-	PredictedLocation -= DirectionToTarget * -100.0f;
+	// 고정된 포지션으로 진행
+	// FVector StartPos = ThrowTarget->GetActorLocation();
+	// float Distance = FVector::Dist(StartPos, TankCharacter->TargetActor->GetActorLocation());
+	// float LookAheadTime = Distance / ProjectileSpeed;
+	//
+	// // 타겟 속도에 상한선(Cap)을 적용하여 과도한 리드샷 방지
+	// const float MaxTargetVelocity = 800.0f;
+	// FVector CappedVelocity = TankCharacter->TargetActor->GetVelocity().GetClampedToMaxSize(MaxTargetVelocity);
+	// FVector PredictedLocation = TankCharacter->TargetActor->GetActorLocation() + (CappedVelocity * LookAheadTime);
+	//
+	// // 타겟보다 가깝게 던지도록 오프셋 적용
+	// FVector DirectionToTarget = (PredictedLocation - StartPos).GetSafeNormal();
+	// PredictedLocation -= DirectionToTarget * -100.0f;
 	float ThrowDistance = FVector::Dist(StartPos, PredictedLocation);
-	
+
 	FVector OutLaunchVelocity;
 	bool bFoundPath = UGameplayStatics::SuggestProjectileVelocity(
 		this, OutLaunchVelocity, StartPos, PredictedLocation, ProjectileSpeed,
@@ -168,7 +171,8 @@ void UBZTankState_ThrowCar::OnThrowObjectMontageEnded(UAnimMontage* Montage, boo
 	// 몽타주가 끝나면 3초 대기 타이머 시작
 	if (GetWorld())
 	{
-		GetWorld()->GetTimerManager().SetTimer(PostThrowTimerHandle, this, &UBZTankState_ThrowCar::FinishState, 3.0f, false);
+		GetWorld()->GetTimerManager().SetTimer(PostThrowTimerHandle, this, &UBZTankState_ThrowCar::FinishState, 3.0f,
+		                                       false);
 	}
 }
 
@@ -179,4 +183,3 @@ void UBZTankState_ThrowCar::FinishState()
 		TankCharacter->StateMachine->ChangeState(TankCharacter->JumpToStateInstance);
 	}
 }
-

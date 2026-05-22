@@ -24,7 +24,7 @@ void UBZBossZombieSpawnNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 	{
 		// 보스 주변 랜덤 위치 계산
 		FVector RandomOffset = UKismetMathLibrary::RandomUnitVector() * UKismetMathLibrary::RandomFloatInRange(0.0f, SpawnRadius);
-		RandomOffset.Z = 0.0f; // 지면에 스폰되도록 Z축 고정
+		RandomOffset.Z = 100.0f; // 지면에 스폰되도록 Z축 고정
 		
 		FVector SpawnLocation = Boss->GetActorLocation() + RandomOffset;
 		FRotator SpawnRotation = UKismetMathLibrary::MakeRotator(0.0f, 0.0f, UKismetMathLibrary::RandomFloatInRange(0.0f, 360.0f));

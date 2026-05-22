@@ -12,6 +12,8 @@ void UBZTankState_ThrowPlayer::OnEnter(AActor* Owner)
 	if (!TankCharacter) return;
 
 	bIsHoldingPlayer = false;
+	bIsMovingToExecution = false;
+	bIsEnded = false;
 	TargetPlayer = Cast<ABZPlayerCharacter>(TankCharacter->TargetActor);
 
 	if (!TargetPlayer)
@@ -33,14 +35,36 @@ void UBZTankState_ThrowPlayer::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
-	// 거리 체크 후 잡기
-	float Dist = FVector::Dist(TankCharacter->GetActorLocation(), TargetPlayer->GetActorLocation());
-	if (!bIsHoldingPlayer && Dist <= GrabRange)
+	if (!TargetPlayer) return;
+
+	// 1. 플레이어를 잡지 않았을 때: 거리 체크 후 잡기
+	if (!bIsHoldingPlayer)
 	{
-		GrabPlayer();
+		float DistToPlayer = FVector::Dist(TankCharacter->GetActorLocation(), TargetPlayer->GetActorLocation());
+		if (DistToPlayer <= GrabRange)
+		{
+			GrabPlayer();
+		}
+	}
+	// 2. 플레이어를 잡고 실행 지점으로 이동 중일 때
+	else if (bIsMovingToExecution)
+	{
+		float DistToExecution = FVector::Dist(TankCharacter->GetActorLocation(), FixedExecutionLocation);
+		if (DistToExecution <= 400.0f) // 도착 판정 범위
+		{
+			bIsMovingToExecution = false;
+
+			// 이동 중지 및 몽타주 시작
+			if (TankCharacter->CustomMoveTo)
+			{
+				TankCharacter->CustomMoveTo->SetEnabled(false, false);
+			}
+			TankCharacter->PlayAnimMontage(TankCharacter->ThrowPlayerMontage, TankCharacter->CurrentAnimPlayRate);
+		}
 	}
 	
-	if (bIsHoldingPlayer && Dist <= GrabRange)
+	// 3. 실행 지점 도착 후 던지기 직전: 타겟 방향 회전 보정
+	if (bIsHoldingPlayer && !bIsMovingToExecution)
 	{
 		FVector DirectionToTarget = (FixedTargetLocation - TankCharacter->GetActorLocation()).GetSafeNormal2D();
 		FRotator TargetRot = DirectionToTarget.Rotation();
@@ -49,15 +73,15 @@ void UBZTankState_ThrowPlayer::OnUpdate(AActor* Owner, float DeltaTime)
 					FMath::RInterpTo(TankCharacter->GetActorRotation(), TargetRot, DeltaTime, 4.0f));
 	}
 
-	if (bIsHoldingPlayer && TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(
-			TankCharacter->ThrowPlayerMontage) ==
-		"Throw")
+	// 4. 투척 시점 체크 (몽타주 섹션 기반)
+	if (bIsHoldingPlayer && !bIsMovingToExecution && 
+		TankCharacter->GetMesh()->GetAnimInstance()->Montage_GetCurrentSection(TankCharacter->ThrowPlayerMontage) == "Throw")
 	{
 		ReleaseAndLaunchPlayer();
 	}
 
-	if (!bIsEnded && !bIsHoldingPlayer && FVector::Dist(TargetPlayer->GetActorLocation(), FixedTargetLocation) <=
-		2000.0f)
+	// 5. 투척 후 마무리 (목표 지점 도착 체크 또는 타이머)
+	if (!bIsEnded && !bIsHoldingPlayer && FVector::Dist(TargetPlayer->GetActorLocation(), FixedTargetLocation) <= 400.0f)
 	{
 		bIsEnded = true;
 		GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this,
@@ -69,29 +93,29 @@ void UBZTankState_ThrowPlayer::GrabPlayer()
 {
 	if (bIsHoldingPlayer) return;
 	bIsHoldingPlayer = true;
-
+	
 	TargetPlayer->SetActorEnableCollision(false);
-
-	// 보스 이동 중지
-	if (TankCharacter->CustomMoveTo)
-	{
-		TankCharacter->CustomMoveTo->SetEnabled(false, false);
-		TankCharacter->CustomMoveTo->SetRootMotionOverride(true);
-	}
-
+	
 	// 플레이어 무력화 및 부착
 	if (APlayerController* PC = Cast<APlayerController>(TargetPlayer->GetController()))
 	{
 		PC->SetIgnoreMoveInput(true);
 		PC->SetIgnoreLookInput(true);
 	}
-
+	
 	TargetPlayer->GetCharacterMovement()->SetMovementMode(MOVE_None);
 	TargetPlayer->AttachToComponent(TankCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 	                                FName("HandSocket"));
 
-	// 몽타주 재생
-	TankCharacter->PlayAnimMontage(TankCharacter->ThrowPlayerMontage, TankCharacter->CurrentAnimPlayRate);
+	// 실행 지점으로 이동 시작
+	if (TankCharacter->CustomMoveTo)
+	{
+		bIsMovingToExecution = true;
+		TankCharacter->CustomMoveTo->SetEnabled(true, false);
+		TankCharacter->CustomMoveTo->SetFixedRotation(false);
+		TankCharacter->CustomMoveTo->SetMoveToPosition(FixedExecutionLocation);
+		TankCharacter->CustomMoveTo->SetSprinting(true);
+	}
 }
 
 void UBZTankState_ThrowPlayer::ReleaseAndLaunchPlayer()
@@ -118,9 +142,8 @@ void UBZTankState_ThrowPlayer::ReleaseAndLaunchPlayer()
 
 	if (!bFoundPath)
 	{
-		// 경로를 못찾을 경우
-		LaunchVelocity = FVector(0.0f, 0.0f, 0.0f);
-		TargetPlayer->SetActorLocation(TargetPos);
+		// 경로를 못찾을 경우 최소한의 전방 발사
+		LaunchVelocity = (TankCharacter->GetActorForwardVector() + FVector(0,0, VerticalOffsetMultiplier)).GetSafeNormal() * ThrowSpeed;
 	}
 
 	// 날려버리기
@@ -131,7 +154,7 @@ void UBZTankState_ThrowPlayer::ReleaseAndLaunchPlayer()
 
 	// 일정 시간 후 입력 복구
 	GetWorld()->GetTimerManager().SetTimer(RecoveryTimerHandle, this, &UBZTankState_ThrowPlayer::RestorePlayerInput,
-	                                       0.15f, false);
+	                                       0.1f, false);
 
 	bIsHoldingPlayer = false;
 }
@@ -151,7 +174,10 @@ void UBZTankState_ThrowPlayer::RestorePlayerInput()
 
 void UBZTankState_ThrowPlayer::OnThrowMontageEnded()
 {
-	TankCharacter->StateMachine->ChangeState(TankCharacter->MoveJumpToStateInstance);
+	if (TankCharacter && TankCharacter->StateMachine)
+	{
+		TankCharacter->StateMachine->ChangeState(TankCharacter->MoveJumpToStateInstance);
+	}
 }
 
 void UBZTankState_ThrowPlayer::OnExit(AActor* Owner)
