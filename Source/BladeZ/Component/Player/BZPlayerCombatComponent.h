@@ -70,6 +70,9 @@ public:
 	// 일반 막기 피격 시 패리 몽타주 Hit 섹션으로 전환.
 	void OnBlockHit();
 	
+	// 히트 사운드 플래그 변경을 위한 함수.
+	FORCEINLINE void SetCanPlayHitSound() { bCanPlayHitSound = true; }
+	
 public:
 	// 카메라 셰이크 알림을 위한 델리게이트.
 	FOnCameraShake OnCameraShake;
@@ -79,8 +82,6 @@ public:
 	
 private:
 	bool CheckKnockbackCombo(const FName& SectionName) const;
-	
-	
 	
 private:
 	// 컴포넌트를 가지고 있는 캐릭터.
@@ -142,6 +143,10 @@ private:
 	// 퍼펙트 패리 확인용 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Parry)
 	bool bIsPerfectParry = false;
+	
+	// 히트 사운드 플래그.
+	UPROPERTY(VisibleAnywhere, Category = Sound)
+	bool bCanPlayHitSound = false;
 	
 	// Widget Test
 private:

@@ -10,6 +10,8 @@
 #include "Components/BoxComponent.h"
 #include "Character/Player/BZPlayerCharacter.h"
 #include "Quest/BZQuestActor.h"
+#include "Game/BZGameInstance.h"
+#include "Character/Player/Weapon/BZWeaponActor.h"
 
 // Sets default values
 ABZPortal::ABZPortal()
@@ -112,6 +114,11 @@ void ABZPortal::OnPortalOverlap(
 	if (TargetLevelName.IsNone())
 	{
 		return;
+	}
+
+	if (UBZGameInstance* GI = Cast<UBZGameInstance>(UGameplayStatics::GetGameInstance(this)))
+	{
+		GI->SavedWeaponClass = OverlappedPawn->GetWeapon() ? OverlappedPawn->GetWeapon()->GetClass() : nullptr;
 	}
 
 	UGameplayStatics::OpenLevel(this, TargetLevelName);

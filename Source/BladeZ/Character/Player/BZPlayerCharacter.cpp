@@ -18,6 +18,7 @@
 #include "Component/BZCharacterStatComponent.h"
 #include "UI/BZHUDWidget.h"
 #include "UI/BZGameOverWidget.h"
+#include "Game/BZGameInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Engine/DamageEvents.h"
@@ -244,6 +245,16 @@ void ABZPlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	
+	if (UBZGameInstance* GI = Cast<UBZGameInstance>(GetGameInstance()))
+	{
+		if (GI->SavedWeaponClass)
+		{
+			Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(GI->SavedWeaponClass);
+			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+			Weapon->OnAttackHit.BindUObject(CombatComponent, &UBZPlayerCombatComponent::OnAttackHit);
+		}
+	}
+
 	if (CombatComponent && CameraShakeComponent)
 	{
 		CombatComponent->OnCameraShake.BindUObject(
@@ -406,7 +417,7 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
 		{
 			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance->Montage_IsPlaying(DeadMontage) || AnimInstance->Montage_IsPlaying(HitMontage))
+			if (AnimInstance->Montage_IsPlaying(DeadMontage) || AnimInstance->Montage_IsPlaying(HitMontage) || AnimInstance->Montage_IsPlaying(LandMontage))
 			{
 				return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 			}	

@@ -57,6 +57,10 @@ public:
 	// 우클릭으로 이어진 공격은 끊기지 않게 처리.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = SuperArmor)
 	bool bSuperArmor = false;
+	
+	// 히트 사운드.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	TObjectPtr<class USoundBase> HitSound;
 };
 
 /**

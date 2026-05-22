@@ -22,4 +22,8 @@ public:
 
 	UFUNCTION()
 	virtual void EndLoadingScreen(UWorld* InLoadedWorld);
+
+public:
+	UPROPERTY()
+	TSubclassOf<class ABZWeaponActor> SavedWeaponClass;
 };
