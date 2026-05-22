@@ -242,13 +242,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* BackUpMontage;
+UPROPERTY(EditAnywhere, Category = "Animation")
+class UAnimMontage* PushThroughMontage;
 
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	class UAnimMontage* PushThroughMontage;
+UPROPERTY(EditAnywhere, Category = "Animation")
+class UAnimMontage* StunMontage;
 
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	class UAnimMontage* StunMontage;
+UPROPERTY(EditAnywhere, Category = "Animation")
+class UAnimMontage* DeathMontage;
 
+public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* ZombieSpawnMontage;
 

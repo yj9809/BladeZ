@@ -7,7 +7,11 @@
 ABZCar::ABZCar()
 {
 	Tags.Add(FName("Car"));
-	
+}
+
+void ABZCar::ReceiveDamage_Implementation(float DamageAmount, AActor* DamageCauser)
+{
+	Super::ReceiveDamage_Implementation(DamageAmount, DamageCauser);
 }
 
 void ABZCar::OnThrownHit(AActor* OtherActor, const FHitResult& Hit)
@@ -16,23 +20,8 @@ void ABZCar::OnThrownHit(AActor* OtherActor, const FHitResult& Hit)
 	{
 		// 부딪힌 대상에게 대미지 입히기
 		UGameplayStatics::ApplyDamage(OtherActor, HitDamage, GetInstigatorController(), this, UDamageType::StaticClass());
-		
-		// 주변 데미지 처리
-		TArray<AActor*> IgnoreActors;
-		IgnoreActors.Add(this);
-		UGameplayStatics::ApplyRadialDamage(
-			this,
-			100,
-			GetActorLocation(),
-			400,
-			UDamageType::StaticClass(),
-			IgnoreActors,
-			this,
-			GetInstigatorController(),
-			true
-		);
-
-		// 드럼통 제거
-		Destroy();
 	}
+	
+	// 공통 폭발 처리 호출
+	Explode();
 }

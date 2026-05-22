@@ -21,27 +21,7 @@ public:
 	// IBZDamageable Interface (부모꺼 확장)
 	virtual void ReceiveDamage_Implementation(float DamageAmount, AActor* DamageCauser) override;
 
-	// 폭발 처리
-	UFUNCTION(BlueprintCallable, Category = "Interaction")
-	void Explode();
-
 protected:
 	// 부모의 OnThrownHit 오버라이드
 	virtual void OnThrownHit(AActor* OtherActor, const FHitResult& Hit) override;
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	float ExplosionDamage = 50.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
-	float ExplosionRadius = 300.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TObjectPtr<class UParticleSystem> ExplosionEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
-	TObjectPtr<class USoundBase> ExplosionSound;
-
-private:
-	bool bHasExploded = false;
 };
