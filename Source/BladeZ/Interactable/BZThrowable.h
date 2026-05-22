@@ -35,6 +35,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	virtual void Throw(const FVector& ThrowVelocity);
 
+	// 공통 폭발 처리
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	virtual void Explode();
+
 protected:
 	// 충돌 시 호출되는 함수 (투척 상태일 때)
 	UFUNCTION()
@@ -53,6 +57,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	float CurrentHealth;
 
+	// 폭발 데미지
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	float ExplosionDamage = 50.0f;
+
+	// 폭발 반경
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	float ExplosionRadius = 300.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TObjectPtr<class UParticleSystem> ExplosionEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TObjectPtr<class USoundBase> ExplosionSound;
+
 	bool bIsGrabbed = false;
 	bool bIsThrown = false;
+	bool bHasExploded = false;
 };

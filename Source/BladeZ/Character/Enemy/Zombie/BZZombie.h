@@ -121,6 +121,10 @@ private:
 	                           const FHitResult& SweepResult);
 
 	virtual FName GetStatRowName() const override;
+	
+public:
+	UPROPERTY()
+	bool bCanMove = true;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zombie|FSM")
@@ -210,6 +214,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Knockback")
 	float KnockbackOverlapDuration = 0.5f;
+	
+	
 
 private:
 	//스탯 컴포넌트

@@ -18,7 +18,9 @@
 #include "BZBossPhaseComponent.h"
 #include "Common/BZLog.h"
 #include "Common/FBZDamageEvent.h"
+#include "Components/CapsuleComponent.h"
 #include "Distributions/DistributionFloatConstant.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Particles/ParticleEmitter.h"
 #include "Particles/ParticleLODLevel.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -234,12 +236,27 @@ void ABZTankCharacter::SetDead()
 {
 	BOSS_LOG(Warning, "BossDead");
 
+	// 1. 상태 머신 중단
+	if (StateMachine)
+	{
+		StateMachine->ChangeState(nullptr);
+	}
+
+	// 2. 콜리전 및 무브먼트 비활성화
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->DisableMovement();
+
+	// 3. 죽음 몽타주 재생
+	if (DeathMontage)
+	{
+		PlayAnimMontage(DeathMontage, 1.0f);
+	}
+
 	/*
 	* 작성자: 강수연
 	* 작성일: 26.05.18
 	* 작성 사유: UI/Quest에서 보스 죽음 처리를 위해 추가.
 	* Dead Event BroadCast.
-	* 나중에 죽음 Animation과 컷신 추가되면 작동 변경해야 함.
 	*/
 	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
 	{

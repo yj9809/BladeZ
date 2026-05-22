@@ -2,10 +2,6 @@
 
 
 #include "Interactable/BZExplosiveBarrel.h"
-#include "Components/StaticMeshComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "Particles/ParticleSystem.h"
-#include "Sound/SoundBase.h"
 
 ABZExplosiveBarrel::ABZExplosiveBarrel()
 {
@@ -15,48 +11,7 @@ ABZExplosiveBarrel::ABZExplosiveBarrel()
 
 void ABZExplosiveBarrel::ReceiveDamage_Implementation(float DamageAmount, AActor* DamageCauser)
 {
-	if (bHasExploded) return;
-
 	Super::ReceiveDamage_Implementation(DamageAmount, DamageCauser);
-	
-	if (CurrentHealth <= 0.0f)
-	{
-		Explode();
-	}
-}
-
-void ABZExplosiveBarrel::Explode()
-{
-	if (bHasExploded) return;
-	bHasExploded = true;
-
-	// 시각/청각 효과
-	if (ExplosionEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-	}
-	if (ExplosionSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
-	}
-
-	// 주변 데미지 처리
-	TArray<AActor*> IgnoreActors;
-	IgnoreActors.Add(this);
-	UGameplayStatics::ApplyRadialDamage(
-		this,
-		ExplosionDamage,
-		GetActorLocation(),
-		ExplosionRadius,
-		UDamageType::StaticClass(),
-		IgnoreActors,
-		this,
-		GetInstigatorController(),
-		true
-	);
-
-	// 드럼통 제거
-	Destroy();
 }
 
 void ABZExplosiveBarrel::OnThrownHit(AActor* OtherActor, const FHitResult& Hit)

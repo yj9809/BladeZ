@@ -1,8 +1,9 @@
-#include "Character/Enemy/Zombie/BZZombieNiagaraSwapManager.h"
+﻿#include "Character/Enemy/Zombie/BZZombieNiagaraSwapManager.h"
 
 #include "Character/Enemy/Zombie/BZZombie.h"
 #include "Character/Enemy/Zombie/BZZombieObjectPool.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ABZZombieNiagaraSwapManager::ABZZombieNiagaraSwapManager()
 {
@@ -48,21 +49,33 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 	UNiagaraSystem* NiagaraSystem,
 	const FVector& SimulationPositionOffset)
 {
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (!PlayerPawn) return;
+
+	FVector PlayerPosition = PlayerPawn->GetActorLocation();
+	
+	
 	for (const FBasicParticleData& Particle : Data)
 	{
 		const int32 ParticleId = FMath::RoundToInt(Particle.Size);
-		if (SpawnedParticleIds.Contains(ParticleId))
-		{
-			continue;
-		}
-
-		SpawnedParticleIds.Add(ParticleId);
+	
 
 		FZombieParticleSpawnData SpawnData;
 		SpawnData.Location = Particle.Position + SimulationPositionOffset;
 		SpawnData.Velocity = Particle.Velocity;
 		SpawnData.ParticleId = ParticleId;
+		
+		float Distance = FVector::Dist(PlayerPosition, SpawnData.Location);
+		
+		
+		if (Distance <= 150.0f && SpawnedParticleIds.Contains(ParticleId))
+		{
+			continue;
+		}
+		
+		SpawnedParticleIds.Add(ParticleId);
 		PendingSpawns.Add(SpawnData);
+		
 	}
 }
 
@@ -111,7 +124,7 @@ void ABZZombieNiagaraSwapManager::ProcessPendingSpawns()
 		PendingSpawns.RemoveAt(0, 1, EAllowShrinking::No);
 
 		ABZZombie* Zombie = ZombieObjectPool->GetNiagaraZombieFromPool(
-			SpawnData.Location,
+			SpawnData.Location + FVector(0.0f,0.0f,100.0f),
 			MakeRotationFromVelocity(SpawnData.Velocity)
 		);
 

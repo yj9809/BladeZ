@@ -137,9 +137,10 @@ void FLoadingScreenModule::StartLoadingScreen(const FString& MapName)
     {
         // 비디오가 지정되지 않았으면, Image가 비어있지 않은지 검사.
         // Image가 지정되었으면, Image를 Load해서 Slate Widget에 지정.
-        UTexture2D* SelectedTexture = nullptr;
+        // 새 로딩 화면 시작 시 새 텍스처를 다시 잡는다.
+        BackgroundTexture.Reset();
 
-        SelectedTexture = Cast<UTexture2D>(
+        UTexture2D* SelectedTexture = Cast<UTexture2D>(
             StaticLoadObject(
                 UTexture2D::StaticClass(),
                 nullptr,
@@ -147,8 +148,14 @@ void FLoadingScreenModule::StartLoadingScreen(const FString& MapName)
             )
         );
 
+        // MoviePlayer 로딩 화면은 별도 Slate thread에서 그려질 수 있으므로,
+        // 지역 변수 SelectedTexture만으로는 수명 보장이 안 됨.
+        // TStrongObjectPtr로 모듈이 텍스처를 강하게 참조해서 GC를 막는다.
+        BackgroundTexture = TStrongObjectPtr<UTexture2D>(SelectedTexture);
+
+        // 모듈이 보관 중인 강한 참조에서 포인터를 넘긴다.
         LoadingScreen.WidgetLoadingScreen =
-            SNew(SLoadingScreen).BackgroundTexture(SelectedTexture);
+            SNew(SLoadingScreen).BackgroundTexture(BackgroundTexture.Get());
     }
 
 
@@ -173,7 +180,7 @@ void FLoadingScreenModule::EndLoadingScreen(UWorld* InLoadedWorld)
     //GetMoviePlayer()->StopMovie();
     //UE_LOG(LogTemp, Warning, TEXT("After StopMovie"));
 
-
+    BackgroundTexture.Reset();
 }
 
 

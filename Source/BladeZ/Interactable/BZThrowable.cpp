@@ -3,6 +3,9 @@
 
 #include "Interactable/BZThrowable.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "Sound/SoundBase.h"
 
 ABZThrowable::ABZThrowable()
 {
@@ -37,7 +40,14 @@ void ABZThrowable::Tick(float DeltaTime)
 
 void ABZThrowable::ReceiveDamage_Implementation(float DamageAmount, AActor* DamageCauser)
 {
+	if (bHasExploded) return;
+
 	CurrentHealth -= DamageAmount;
+	
+	if (CurrentHealth <= 0.0f)
+	{
+		Explode();
+	}
 }
 
 void ABZThrowable::Grab(USceneComponent* GrabParentComponent, FName SocketName)
@@ -66,6 +76,40 @@ void ABZThrowable::Throw(const FVector& ThrowVelocity)
 	Mesh->SetSimulatePhysics(true);
 
 	Mesh->SetPhysicsLinearVelocity(ThrowVelocity);
+}
+
+void ABZThrowable::Explode()
+{
+	if (bHasExploded) return;
+	bHasExploded = true;
+
+	// 시각/청각 효과
+	if (ExplosionEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	}
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
+	}
+
+	// 주변 데미지 처리
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	UGameplayStatics::ApplyRadialDamage(
+		this,
+		ExplosionDamage,
+		GetActorLocation(),
+		ExplosionRadius,
+		UDamageType::StaticClass(),
+		IgnoreActors,
+		this,
+		GetInstigatorController(),
+		true
+	);
+
+	// 제거
+	Destroy();
 }
 
 void ABZThrowable::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)

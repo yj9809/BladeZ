@@ -74,6 +74,35 @@ void ABZPlayerController::BeginPlay()
 	SetInputMode(GameOnlyInputMode);
 }
 
+void ABZPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (HUDWidget)
+	{
+		HUDWidget->RemoveFromParent();
+		HUDWidget = nullptr;
+	}
+
+	if (BossHUDWidget)
+	{
+		BossHUDWidget->RemoveFromParent();
+		BossHUDWidget = nullptr;
+	}
+
+	if (GameOverWidget)
+	{
+		GameOverWidget->RemoveFromParent();
+		GameOverWidget = nullptr;
+	}
+
+	if (GameClearWidget)
+	{
+		GameClearWidget->RemoveFromParent();
+		GameClearWidget = nullptr;
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void ABZPlayerController::RegisterBoss(AActor* BossActor)
 {
 	if (!IsValid(BossActor)) return;

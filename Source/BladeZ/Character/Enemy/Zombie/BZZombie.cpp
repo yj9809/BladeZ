@@ -146,6 +146,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 	if (ZombieHitAnim)
 	{
 		PlayAnimMontage(ZombieHitAnim);
+		bCanMove = false;
 	}
 
 	return DamageAmount;

@@ -29,6 +29,8 @@ public:
 public:
 	virtual void BeginPlay() override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	/*
 	* Boss측에서 호출해 BossHUD를 만들면서
 	* 자기 자신에게 만들어진 HUD를 등록.
