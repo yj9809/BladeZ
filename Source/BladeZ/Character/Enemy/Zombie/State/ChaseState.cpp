@@ -46,11 +46,11 @@ void ChaseState::OnUpdate(float DeltaTime)
 	}
 
 	AAIController* AIController = Cast<AAIController>(Owner->GetController());
-	if (!AIController)
+	if (!AIController && !Owner->bCanMove)
 	{
 		return;
 	}
-
+	
 	Owner->GetCharacterMovement()->MaxWalkSpeed = Owner->ChaseSpeed;
 	AIController->MoveToActor(Owner->TargetActor, Owner->ChaseAcceptanceRadius);
 }
