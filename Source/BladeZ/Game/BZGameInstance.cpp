@@ -22,6 +22,7 @@ void UBZGameInstance::BeginLoadingScreen(const FString& InMapName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UBZGameInstance::BeginLoadingScreen: %s"), *InMapName);
 
+	// ================ Method for showing sample widget ==================== = //
 	//// Create a struct to hold all our loading screen settings.
 	//FLoadingScreenAttributes LoadingScreen;
 	//
@@ -30,7 +31,6 @@ void UBZGameInstance::BeginLoadingScreen(const FString& InMapName)
 	//LoadingScreen.bAutoCompleteWhenLoadingCompletes = false;
 	//LoadingScreen.bWaitForManualStop = true;
 	//
-	//// ================ Method for showing sample widget ===================== //
 	//// Set minimum time the loading screen will be displayed (in seconds).
 	//// This prevents "flash" loading screens for quick loads.
 	////LoadingScreen.MinimumLoadingScreenDisplayTime = 2.0f;
@@ -51,11 +51,12 @@ void UBZGameInstance::BeginLoadingScreen(const FString& InMapName)
 	//// Tell MoviePlayer to display out loading screen with these settings.
 	//GetMoviePlayer()->SetupLoadingScreen(LoadingScreen);
 	// Try to get the loading screen module.
+
 	FLoadingScreenModule* LoadingScreenModule = FModuleManager::LoadModulePtr<FLoadingScreenModule>("LoadingScreenModule");
 	if (LoadingScreenModule)
 	{
 		// Module found => start the loading screen
-		LoadingScreenModule->StartLoadingScreen();
+		LoadingScreenModule->StartLoadingScreen(InMapName);
 	}
 	else
 	{
@@ -69,5 +70,9 @@ void UBZGameInstance::EndLoadingScreen(UWorld* InLoadedWorld)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UBZGameInstance::EndLoadingScreen: %s"), *InLoadedWorld->GetName());
 
-	 
+	FLoadingScreenModule* LoadingScreenModule = FModuleManager::LoadModulePtr<FLoadingScreenModule>("LoadingScreenModule");
+	if (LoadingScreenModule)
+	{
+		LoadingScreenModule->EndLoadingScreen(InLoadedWorld);
+	}
 }

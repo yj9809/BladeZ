@@ -3,7 +3,7 @@
 
 // Loading screen module implementation.
 // Handles initialization and display of loading screens during gameplay.
-class FLoadingScreenModule: public IModuleInterface
+class LOADINGSCREENMODULE_API FLoadingScreenModule: public IModuleInterface
 {
 public:
 	// Called when module is first loaded.
@@ -13,7 +13,9 @@ public:
 	virtual bool IsGameModule() const override;
 
 	// Shows the loading screen during level transitions.
-	virtual void StartLoadingScreen();
+	virtual void StartLoadingScreen(const FString& MapName);
+
+	virtual void EndLoadingScreen(UWorld* InLoadedWorld);
 
 private:
 	// Store the background textrue to prevent it from being garbage collected.

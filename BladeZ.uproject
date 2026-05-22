@@ -21,7 +21,8 @@
 			"LoadingPhase": "PreLoadingScreen",
 			"AdditionalDependencies": [
 				"Slate",
-				"SlateCore"
+				"SlateCore",
+				"DeveloperSettings"
 			]
 		}
 	],
