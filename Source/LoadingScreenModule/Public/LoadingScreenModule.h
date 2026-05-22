@@ -1,6 +1,11 @@
 ﻿#pragma once
 #include "Modules/ModuleInterface.h"
 
+// Texture의 참조를 다음 Level에 넘어가도 유지
+#include "UObject/StrongObjectPtr.h"
+
+class UTexture2D;
+
 // Loading screen module implementation.
 // Handles initialization and display of loading screens during gameplay.
 class LOADINGSCREENMODULE_API FLoadingScreenModule: public IModuleInterface
@@ -19,5 +24,5 @@ public:
 
 private:
 	// Store the background textrue to prevent it from being garbage collected.
-	UTexture2D* BackgroundTexture;
+	TStrongObjectPtr<UTexture2D> BackgroundTexture;
 };

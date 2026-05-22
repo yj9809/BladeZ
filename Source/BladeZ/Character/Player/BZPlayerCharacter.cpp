@@ -49,7 +49,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	//region Component
 	// Combat Component 생성.
 	CombatComponent = CreateDefaultSubobject<UBZPlayerCombatComponent>(TEXT("CombatComponent"));
-	
+
 	// Camera Shake Component 생성.
 	CameraShakeComponent = CreateDefaultSubobject<UBZCameraShakeComponent>(TEXT("CameraShakeComponent"));
 
@@ -61,11 +61,11 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	LightComponent->SetOuterConeAngle(25.0f);
 	LightComponent->SetIntensity(100.0f);
 	LightComponent->SetLightColor(FLinearColor(1.f, 0.9f, 0.7f));
-	
+
 	// 메시의 위치와 회전을 조정하여 캐릭터가 올바르게 보이도록 설정.
 	GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -90.0f), FRotator(0.0f, -90.0f, 0.0f));
 	//endregion
-	
+
 	//region Default Setting
 	// 기본 스켈레탈 메시 가져오기.
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(
@@ -89,7 +89,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		GetMesh()->SetAnimInstanceClass(CharacterAnim.Class);
 	}
 	//endregion
-	
+
 	//region Input Mapping
 	// 맵핑 컨텍스트 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextRef(
@@ -146,7 +146,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		RightAttackAction = RightAttackActionRef.Object;
 	}
-	
+
 	// 대쉬 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> DashActionRef(
 		TEXT("/Game/BZ/Input/IA_Dash.IA_Dash")
@@ -155,7 +155,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		DashAction = DashActionRef.Object;
 	}
-	
+
 	// 패리 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> ParryActionRef(
 		TEXT("/Game/BZ/Input/IA_Parry.IA_Parry")
@@ -173,7 +173,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		InteractAction = InteractActionRef.Object;
 	}
-	
+
 	// Light 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> LightActionRef(
 		TEXT("/Game/BZ/Input/IA_Light.IA_Light")
@@ -183,7 +183,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		LightAction = LightActionRef.Object;
 	}
 	//endregion
-	
+
 	//region Montage
 	// 착지 몽타주 등록.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> LandMontageRef(
@@ -193,7 +193,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		LandMontage = LandMontageRef.Object;
 	}
-	
+
 	// 대쉬 몽타주 등록.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> DashMontageRef(
 		TEXT("/Game/BZ/Character/Player/Animation/AM_Dash.AM_Dash")
@@ -202,7 +202,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		DashMontage = DashMontageRef.Object;
 	}
-	
+
 	// 히트 몽타주 등록.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> HitMontageRef(
 		TEXT("/Game/BZ/Character/Player/Animation/AM_Hit.AM_Hit")
@@ -211,7 +211,7 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		HitMontage = HitMontageRef.Object;
 	}
-	
+
 	// Dead 몽타주 등록.
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadMontageRef(
 		TEXT("/Game/BZ/Character/Player/Animation/AM_Dead.AM_Dead")
@@ -220,9 +220,9 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	{
 		DeadMontage = DeadMontageRef.Object;
 	}
-	
+
 	//endregion
-	
+
 	/*
 	* 작성자: 강수연
 	* 작성일: 26.05.11
@@ -232,6 +232,32 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	* 초기화는 더 안해줘도 됨
 	*/
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
+	
+	
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.22
+	* 작성 사유: Option Key 등, PlayerCharacter가 죽었을 때도 사용 가능한 키.
+	* Dead Event 발생 시 기존 MappingContext를 Remove해버리기 때문에, MappingContext를 추가해야 함.
+	*/
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext> OptionMappingContextRef(
+		TEXT("/Game/BZ/Input/Input_Option/IMC_OptionKeyMap.IMC_OptionKeyMap")
+	);
+
+	if (OptionMappingContextRef.Succeeded())
+	{
+		OptionMappingContext = OptionMappingContextRef.Object;
+	}
+
+	// Toggle Option Action 가져오기.
+	static ConstructorHelpers::FObjectFinder<UInputAction> OptionActionRef(
+		TEXT("/Game/BZ/Input/Input_Option/IA_ToggleOption.IA_ToggleOption")
+	);
+
+	if (MoveActionRef.Succeeded())
+	{
+		OptionAction = MoveActionRef.Object;
+	}
 }
 
 void ABZPlayerCharacter::StartComboCheck() const
@@ -298,6 +324,7 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		if (InputSystem)
 		{
 			InputSystem->AddMappingContext(InputMappingContext, 0);
+			InputSystem->AddMappingContext(OptionMappingContext, 10); // 작성자: 강수연, OptionKey Mapping을 위해 추가.
 		}
 	}
 
@@ -381,6 +408,13 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerLight
 		);
+
+		//EnhancedInputComponent->BindAction(
+		//	LightAction,
+		//	ETriggerEvent::Started,
+		//	this,
+		//	&ABZPlayerCharacter::PlayerLight
+		//);
 	}
 }
 

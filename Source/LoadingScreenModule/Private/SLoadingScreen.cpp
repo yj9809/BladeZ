@@ -5,15 +5,19 @@
 #include "SlateOptMacros.h"
 #include "SlateExtras.h" // For SThrobber
 
+
+
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SLoadingScreen::Construct(const FArguments& InArgs)
 {
 	// Store texture from arguments
 	BackgroundTexture = InArgs._BackgroundTexture;
 
-	// Create brush for rendering background.
-	BackgroundBrush = MakeShareable(new FSlateBrush());
-	BackgroundBrush->SetResourceObject(BackgroundTexture);
+	if (BackgroundTexture)
+	{
+		BackgroundBrush = MakeShared<FSlateBrush>();
+		BackgroundBrush->SetResourceObject(BackgroundTexture);
+	}
 
 	// Begin constructing the widget hierarchy
 	// ChildSlot is the root slot of our compound widget.
