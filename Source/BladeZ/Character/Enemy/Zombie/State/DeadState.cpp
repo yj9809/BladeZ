@@ -29,6 +29,15 @@ void DeadState::OnEnter()
 		UE_LOG(LogTemp, Warning, TEXT("Death montage failed to play"));
 		return;
 	}
+	float MontageDuration = Owner->ZombieDeathAnim->GetPlayLength() * 0.5f;
+	// 몽타주 길이만큼 타이머 후 디졸브 시작
+	Owner->GetWorld()->GetTimerManager().SetTimer(
+		Owner->DissolveTimerHandle,
+		[this]() { StartDissolve(); },
+		MontageDuration,
+		false
+	);
+	
 
 	//Owner->ReturnZombieToPool();
 
@@ -43,6 +52,19 @@ void DeadState::OnEnter()
 
 void DeadState::OnUpdate(float DeltaTime)
 {
+	if (bIsDissolving)
+	{
+		DissolveValue += DeltaTime * DissolveSpeed;
+		for (auto* Mat : DynamicMaterials)
+		{
+			Mat->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+		}
+
+		if (DissolveValue >= 1.0f)
+		{
+			Owner->ReturnZombieToPool();			
+		}
+	}	
 }
 
 void DeadState::OnExit()
@@ -59,4 +81,23 @@ void DeadState::OnExit()
 	//);
 
 	//Owner->ReturnZombieToPool();
+	
+	Owner->GetWorld()->GetTimerManager().ClearTimer(Owner->DissolveTimerHandle);
+	for (auto* Mat : DynamicMaterials)
+	{
+		Mat->SetScalarParameterValue(TEXT("Dissolve"), 0.0f);
+	}
+	DynamicMaterials.Empty();
+	DissolveValue = 0.0f;
+	bIsDissolving = false;
+}
+
+void DeadState::StartDissolve()
+{
+	for (int32 i = 0; i < Owner->GetMesh()->GetNumMaterials(); i++)
+	{
+		UMaterialInstanceDynamic* DynMat = Owner->GetMesh()->CreateDynamicMaterialInstance(i);
+		DynamicMaterials.Add(DynMat);
+	}
+	bIsDissolving = true;
 }

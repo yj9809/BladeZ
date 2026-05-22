@@ -417,7 +417,10 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
 		{
 			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance->Montage_IsPlaying(DeadMontage) || AnimInstance->Montage_IsPlaying(HitMontage) || AnimInstance->Montage_IsPlaying(LandMontage))
+			if (
+				AnimInstance->Montage_IsPlaying(DeadMontage)
+				|| AnimInstance->Montage_IsPlaying(HitMontage)
+				|| AnimInstance->Montage_IsPlaying(LandMontage))
 			{
 				return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 			}	
@@ -500,6 +503,11 @@ void ABZPlayerCharacter::PlayerRunEnd(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 {
 	if (!Weapon) return;
+	
+	if (!GetCharacterMovement()->IsMovingOnGround() || bIsLanding)
+	{
+		return;
+	}
 
 	if (!CombatComponent->GetIsAttacking())
 	{
@@ -514,6 +522,11 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 {
 	if (!Weapon) return;
+	
+	if (!GetCharacterMovement()->IsMovingOnGround() || bIsLanding)
+	{
+		return;
+	}
 
 	CombatComponent->SetAttackInput(EBZAttackInputType::Right);
 }

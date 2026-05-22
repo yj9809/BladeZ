@@ -15,11 +15,13 @@ ABZWeaponPickup::ABZWeaponPickup()
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	PickupMesh->SetSimulatePhysics(true);
 	PickupMesh->SetCustomDepthStencilValue(1);
+	PickupMesh->SetCanEverAffectNavigation(false);
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->SetupAttachment(RootComponent);
 	SphereComponent->SetSphereRadius(150.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("Trigger"));
+	SphereComponent->SetCanEverAffectNavigation(false);
 }
 
 void ABZWeaponPickup::BeginPlay()
@@ -28,6 +30,7 @@ void ABZWeaponPickup::BeginPlay()
 
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABZWeaponPickup::OnSphereBeginOverlap);
 	SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABZWeaponPickup::OnSphereEndOverlap);
+	
 }
 
 void ABZWeaponPickup::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

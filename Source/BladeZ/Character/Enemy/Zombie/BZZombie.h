@@ -36,7 +36,7 @@ class BLADEZ_API ABZZombie : public ACharacter, public IBZStatRowNameProvider
 	friend class ChaseState;
 	friend class AttackState;
 	friend class DeadState;
-	
+
 	GENERATED_BODY()
 
 public:
@@ -44,8 +44,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
-	
 
 public:
 	virtual void PostInitializeComponents() override;
@@ -69,9 +67,9 @@ public:
 	//Setter
 	UFUNCTION(BlueprintCallable, Category = "Zombie|FSM")
 	void SetZombieState(EZombieState NewState = EZombieState::Dead);
-	
+
 	void SetChaseSpeed(float Speed) { ChaseSpeed = Speed; };
-	
+
 	//좀비 풀 Setter
 	void SetZombieObjectPool(UBZZombieObjectPool* InZombieObjectPool)
 	{
@@ -88,7 +86,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Zombie|Niagara")
 	int32 GetSourceParticleId() const { return SourceParticleId; }
-	
+
 	// State에서 호출할 래퍼(Wrapper) 함수.
 	void ReturnZombieToPool();
 
@@ -100,13 +98,13 @@ public:
 	void StartAttackTrace();
 
 	FORCEINLINE bool IsActive() const { return CurrentState == EZombieState::Inactive; }
-	
+
 	// AttackHitActors 배열 변수 클리어 함수.
 	void ClearAttackHitActors();
-	
+
 protected:
 	void ZombieMeshLoadCompleted();
-	
+
 private:
 	//거리 구하는 함수
 	float GetDistanceToTarget2D() const;
@@ -121,7 +119,7 @@ private:
 	                           int32 OtherBodyIndex,
 	                           bool bFromSweep,
 	                           const FHitResult& SweepResult);
-	
+
 	virtual FName GetStatRowName() const override;
 
 protected:
@@ -189,21 +187,21 @@ protected:
 
 	UPROPERTY()
 	FTimerHandle DeathReturnTimerHandle;
-	
+
 	//몽타주 변수
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> ZombieDeathAnim;
-	
+
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> ZombieHitAnim;
-	
+
 	//매시 변수
 	UPROPERTY(config)
 	TArray<FSoftObjectPath> ZombieMeshes;
-	
+
 	TSharedPtr<FStreamableHandle> ZombieMeshHandle;
- 	
-	
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Data")
 	FVector LaunchForce = FVector::One();
 
@@ -212,9 +210,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Knockback")
 	float KnockbackOverlapDuration = 0.5f;
-	
-	
-	
 
 private:
 	//스탯 컴포넌트
@@ -244,8 +239,18 @@ private:
 
 	bool bCanDamageOverlappedZombies = false;
 	ECollisionResponse PreviousPawnCollisionResponse = ECR_Block;
-	
+
 private:
 	// FSM 관련.
-	TSharedPtr<IState> ZombieStates[4] = { };
+	TSharedPtr<IState> ZombieStates[4] = {};
+
+
+	/*
+	 * 작성자: 윤제영.
+	 * 작성일: 26.05.22
+	 * 작성 사유: Dissolve 처리를 위해 작성.
+	 */
+	// 디졸브 처리를 위한 private영역.
+private:
+	FTimerHandle DissolveTimerHandle;
 };

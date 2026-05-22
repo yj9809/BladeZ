@@ -296,6 +296,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	DamageEvent.SetKnockback(CheckKnockbackCombo(CurrentComboName));
 	DamageEvent.SetKnockbackPower(CurrentData ? CurrentData->KnockbackPower : 1.0f);
 
+	
 	if (Enemy->GetActor())
 	{
 		const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
