@@ -70,6 +70,11 @@ void UBZTankState_MoveJumpTo::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
 
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TransitionTimerHandle);
+	}
+
 	if (TankCharacter && TankCharacter->GetCharacterMovement())
 	{
 		TankCharacter->GetCharacterMovement()->GravityScale = 2.0f;
@@ -84,6 +89,21 @@ void UBZTankState_MoveJumpTo::OnExit(AActor* Owner)
 }
 
 void UBZTankState_MoveJumpTo::OnJumpMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (TankCharacter)
+	{
+		// 조작 복구
+		TankCharacter->SetPlayerInputEnabled(true);
+
+		// 2초 뒤에 상태를 종료하도록 타이머 설정
+		if (GetWorld())
+		{
+			GetWorld()->GetTimerManager().SetTimer(TransitionTimerHandle, this, &UBZTankState_MoveJumpTo::FinishState, 2.0f, false);
+		}
+	}
+}
+
+void UBZTankState_MoveJumpTo::FinishState()
 {
 	if (TankCharacter && TankCharacter->StateMachine)
 	{

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "BZTankStateBase.h"
+#include "Animation/SkeletalMeshActor.h"
 #include "Interactable/BZThrowable.h"
 #include "BZTankState_ThrowCar.generated.h"
 
@@ -32,6 +33,9 @@ private:
 
 	UPROPERTY()
 	TArray<AActor*> FoundThrowable;
+	
+	UPROPERTY()
+	TArray<AActor*> CinematicActor;
 
 	FOnMontageEnded ThrowObjectMontageEndDelegate;
 

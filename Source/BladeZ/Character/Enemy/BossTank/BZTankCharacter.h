@@ -321,6 +321,23 @@ public:
 
 	UPROPERTY()
 	FSkillCooldown PushThroughCooldown{5.0f};
+
+	UPROPERTY(EditAnywhere, Category = "Cinematic")
+	TObjectPtr<class ULevelSequence> SpecialPatternSequence;
+
+	UPROPERTY(EditAnywhere, Category = "Cinematic")
+	TObjectPtr<class ULevelSequence> ThrowCarSequence;
+
+	UPROPERTY()
+	TObjectPtr<class ULevelSequencePlayer> SequencePlayer;
+
+public:
+	void PlaySpecialCinematic();
+	void PlayThrowCarCinematic();
+	void SetPlayerInputEnabled(bool bEnabled);
+
+	UFUNCTION()
+	void OnCinematicFinished();
 	
 private:
 	/*

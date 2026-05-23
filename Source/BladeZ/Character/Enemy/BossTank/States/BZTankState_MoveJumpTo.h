@@ -31,5 +31,8 @@ private:
 	FOnMontageEnded JumpMontageEndDelegate;
 
 	void OnJumpMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void FinishState();
 	bool DetectGround(FHitResult& OutHit, float Distance) const;
+
+	FTimerHandle TransitionTimerHandle;
 };

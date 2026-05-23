@@ -59,6 +59,10 @@ void UBZTankState_ThrowPlayer::OnUpdate(AActor* Owner, float DeltaTime)
 			{
 				TankCharacter->CustomMoveTo->SetEnabled(false, false);
 			}
+
+			// 시네마틱 재생
+			TankCharacter->PlaySpecialCinematic();
+
 			TankCharacter->PlayAnimMontage(TankCharacter->ThrowPlayerMontage, TankCharacter->CurrentAnimPlayRate);
 		}
 	}

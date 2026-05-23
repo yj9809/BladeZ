@@ -23,6 +23,8 @@ public class BladeZ : ModuleRules
 			"Niagara",
 			"GameplayCameras",
 			"RuntimeInspector",
+			"LevelSequence",
+			"MovieScene",
 			//"MoviePlayer", // Used for loading screens.
 			"LoadingScreenModule" // Used for loading screens.
 		});

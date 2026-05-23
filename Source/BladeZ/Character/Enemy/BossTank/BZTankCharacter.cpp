@@ -14,6 +14,8 @@
 #include "Game/BZEnemyEventSubsystem.h"
 #include "GameFramework/DamageType.h"
 #include "DrawDebugHelpers.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 
 #include "BZBossPhaseComponent.h"
 #include "Common/BZLog.h"
@@ -603,6 +605,57 @@ void ABZTankCharacter::UpdateStun(float DamageAmount)
 FName ABZTankCharacter::GetStatRowName() const
 {
 	return BossName;
+}
+
+void ABZTankCharacter::PlaySpecialCinematic()
+{
+	if (!SpecialPatternSequence) return;
+
+	// 플레이어 조작 중지
+	SetPlayerInputEnabled(false);
+
+	// 시퀀스 플레이어 생성 및 실행
+	ALevelSequenceActor* OutActor;
+	SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), SpecialPatternSequence, FMovieSceneSequencePlaybackSettings(), OutActor);
+    
+	if (SequencePlayer)
+	{
+		SequencePlayer->OnFinished.AddDynamic(this, &ABZTankCharacter::OnCinematicFinished);
+		SequencePlayer->Play();
+	}
+}
+
+void ABZTankCharacter::PlayThrowCarCinematic()
+{
+	if (!ThrowCarSequence) return;
+
+	// 플레이어 조작 중지
+	SetPlayerInputEnabled(false);
+
+	// 시퀀스 플레이어 생성 및 실행
+	ALevelSequenceActor* OutActor;
+	SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), ThrowCarSequence, FMovieSceneSequencePlaybackSettings(), OutActor);
+    
+	if (SequencePlayer)
+	{
+		SequencePlayer->OnFinished.AddDynamic(this, &ABZTankCharacter::OnCinematicFinished);
+		SequencePlayer->Play();
+	}
+}
+
+void ABZTankCharacter::SetPlayerInputEnabled(bool bEnabled)
+{
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (PC && PC->GetPawn())
+	{
+		if (bEnabled) PC->GetPawn()->EnableInput(PC);
+		else PC->GetPawn()->DisableInput(PC);
+	}
+}
+
+void ABZTankCharacter::OnCinematicFinished()
+{
+	// 필요 시 추가 로직
 }
 
 void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)

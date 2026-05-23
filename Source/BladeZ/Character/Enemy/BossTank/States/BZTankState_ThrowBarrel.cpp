@@ -12,7 +12,7 @@ void UBZTankState_ThrowBarrel::OnEnter(AActor* Owner)
 	FoundThrowable.Empty();
 
 	// 드럼통(Barrel)만 찾기
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Barrel"), FoundThrowable);
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ABZThrowable::StaticClass(), FName("Barrel"), FoundThrowable);
 
 	if (FoundThrowable.Num() == 0)
 	{

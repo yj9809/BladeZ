@@ -1,6 +1,7 @@
 #include "BZTankState_ThrowCar.h"
 #include "BZTankStateMachine.h"
 #include "BZTankState_MoveJumpTo.h"
+#include "Animation/SkeletalMeshActor.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 #include "Interactable/BZThrowable.h"
@@ -12,8 +13,18 @@ void UBZTankState_ThrowCar::OnEnter(AActor* Owner)
 	bIsHoldingObject = false;
 	FoundThrowable.Empty();
 
+	// 시네마틱 재생
+	if (TankCharacter)
+	{
+		TankCharacter->PlayThrowCarCinematic();
+		UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ASkeletalMeshActor::StaticClass(),
+		                                             FName("ThrowCarSeq"), CinematicActor);
+		CinematicActor[0]->SetActorHiddenInGame(false);
+		TankCharacter->TargetActor->SetActorHiddenInGame(true);
+	}
+
 	// 차(Car)만 찾기
-	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("Car"), FoundThrowable);
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ABZThrowable::StaticClass(), FName("Car"), FoundThrowable);
 
 	if (FoundThrowable.Num() == 0)
 	{
@@ -57,6 +68,7 @@ void UBZTankState_ThrowCar::OnUpdate(AActor* Owner, float DeltaTime)
 		if (ThrowTarget)
 		{
 			ThrowTarget->Throw(CalculateThrowVelocity());
+			TankCharacter->TargetActor->SetActorLocation(FVector(1000, 0, 100));
 		}
 	}
 }
@@ -64,6 +76,13 @@ void UBZTankState_ThrowCar::OnUpdate(AActor* Owner, float DeltaTime)
 void UBZTankState_ThrowCar::OnExit(AActor* Owner)
 {
 	Super::OnExit(Owner);
+
+	// 플레이어 조작 복구 (안전장치)
+	if (TankCharacter)
+	{
+		TankCharacter->SetPlayerInputEnabled(true);
+	}
+
 	if (TankCharacter->CustomMoveTo)
 	{
 		TankCharacter->CustomMoveTo->SetEnabled(true);
@@ -134,11 +153,11 @@ FVector UBZTankState_ThrowCar::CalculateThrowVelocity() const
 	{
 		return TankCharacter->GetActorForwardVector() * BaseThrowSpeed;
 	}
-	
+
 	FVector StartPos = ThrowTarget->GetActorLocation();
 	float ProjectileSpeed = BaseThrowSpeed + AdditionalThrowSpeed;
-	FVector PredictedLocation = FVector(2800.0, 0, 1000);
-	
+	FVector PredictedLocation = FVector(2800.0, 0, 1100);
+
 	// 고정된 포지션으로 진행
 	// FVector StartPos = ThrowTarget->GetActorLocation();
 	// float Distance = FVector::Dist(StartPos, TankCharacter->TargetActor->GetActorLocation());
@@ -181,5 +200,7 @@ void UBZTankState_ThrowCar::FinishState()
 	if (TankCharacter && TankCharacter->StateMachine)
 	{
 		TankCharacter->StateMachine->ChangeState(TankCharacter->JumpToStateInstance);
+		CinematicActor[0]->SetActorHiddenInGame(true);
+		TankCharacter->TargetActor->SetActorHiddenInGame(false);
 	}
 }
