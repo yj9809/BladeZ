@@ -9,7 +9,6 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Character/Player/BZPlayerController.h"
 
-
 UBZOptionWidget::UBZOptionWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
