@@ -15,7 +15,10 @@ class UBZHUDWidget;
 class UBZGameOverWidget;
 class UBZGameClearWidget;
 class ABZQuestActor;
+class UWidget;
 
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class BLADEZ_API ABZPlayerController : public APlayerController
@@ -31,6 +34,15 @@ public:
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+public:
+	// 여러 UI에서 게임 흐름을 건드리는 기능을 중복 구현 대신 Controller로 이동.
+	UFUNCTION()
+	void QuitGame();
+
+	UFUNCTION()
+	void RestartFromThisLevel();
+
+public:
 	/*
 	* Boss측에서 호출해 BossHUD를 만들면서
 	* 자기 자신에게 만들어진 HUD를 등록.
@@ -40,13 +52,34 @@ public:
 
 	// Player의 Delegate에 Binding되므로 public.
 	void ShowGameOver();
-	
+
 	/*
 	* 퀘스트 Delegate에 Binding되므로 public.
 	* MultiCastDelegate에 사용되려면 UFUNCTION을 사용.
 	*/
 	UFUNCTION()
 	void HandleGameClear(const ABZQuestActor* QuestActor);
+
+	// ==================== For Option UI =========================== //
+	// ESC 명령이 이 함수를 직접 호출하도록 함.
+	void ToggleOptionMenu();
+
+	// OptionMenu의 ExitButton도 이 함수를 호출하게 해, UI 닫기 경로를 통일.
+	UFUNCTION()
+	void HideOptionMenu();
+
+private:
+	// GameOver/GameClear/Option에서 공통으로 쓰는 UI 입력 모드 전환 헬퍼.
+	void SetUIInputMode(UWidget* FocusWidget, bool bPauseGame);
+
+	/*
+	* 옵션 메뉴처럼 UI와 게임 입력이 모두 필요한 경우 사용
+	* ESC로 열고 ESC로 닫으려면 UIOnly보다 GameAndUI가 안전함
+	*/
+	void SetGameAndUIInputMode(UWidget* FocusWidget, bool bPauseGame);
+
+	// BeginPlay, GameOver 등에서 쓰는 게임 입력 모드 복구 헬퍼.
+	void SetGameInputMode(bool bPauseGame = false);
 
 private:
 	/*
@@ -76,8 +109,20 @@ private:
 	void RegisterMinimapActor(AActor* Actor);
 	void RemoveMinimapActor(AActor* Actor);
 
+
+protected:
+	virtual void SetupInputComponent() override;
 	
 protected:
+	// ==================== Option Input =========================== //
+	// Option에 대한 Mapping Context.
+	UPROPERTY(EditAnywhere, Category = OptionInput)
+	TObjectPtr<UInputMappingContext> OptionMappingContext;
+
+	// Option Panel을 열어줄 context.
+	UPROPERTY(EditAnywhere, Category = OptionInput)
+	TObjectPtr<UInputAction> OptionAction;
+
 	// ==================== Player HUD. =========================== //
 	// Class 정보 => 실제 HUD 객체 생성
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerHUD)

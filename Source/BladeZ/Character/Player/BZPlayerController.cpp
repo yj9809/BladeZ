@@ -3,17 +3,28 @@
 
 #include "BZPlayerController.h"
 
+#include "BZPlayerCharacter.h"
+
 #include "Character/Enemy/Zombie/BZZombieObjectPool.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
+
 #include "Game/BZEnemyEventSubsystem.h"
+
 #include "Interface/BZCharacterHUD.h"
+
 #include "UI/BZHUDWidget.h"
 #include "UI/BZGameOverWidget.h"
 #include "UI/BZGameClearWidget.h"
-#include "Kismet/GameplayStatics.h"
-#include "Quest/BZQuestActor.h"
-#include "BZPlayerCharacter.h"
 
+#include "Quest/BZQuestActor.h"
+
+#include "Components/Widget.h"
+
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 
 ABZPlayerController::ABZPlayerController()
 {
@@ -58,6 +69,26 @@ ABZPlayerController::ABZPlayerController()
 	{
 		GameClearWidgetClass = GameClearWidgetClassRef.Class;
 	}
+
+	// OptionMappingContext 로드
+	static ConstructorHelpers::FObjectFinder<UInputMappingContext> OptionMappingContextRef(
+		TEXT("/Game/BZ/Input/Input_Option/IMC_OptionKeyMap.IMC_OptionKeyMap")
+	);
+
+	if (OptionMappingContextRef.Succeeded())
+	{
+		OptionMappingContext = OptionMappingContextRef.Object;
+	}
+
+	// OptionAction 로드
+	static ConstructorHelpers::FObjectFinder<UInputAction> OptionActionRef(
+		TEXT("/Game/BZ/Input/Input_Option/IA_ToggleOption.IA_ToggleOption")
+	);
+
+	if (OptionActionRef.Succeeded())
+	{
+		OptionAction = OptionActionRef.Object;
+	}
 }
 
 void ABZPlayerController::BeginPlay()
@@ -68,10 +99,26 @@ void ABZPlayerController::BeginPlay()
 	CreateGameOverHUD();
 	CreateGameClearHUD();
 
+	// HUD에 대한 Game Event Bind.
 	BindGameplayEvents();
 
-	FInputModeGameOnly GameOnlyInputMode;
-	SetInputMode(GameOnlyInputMode);
+	/*
+	* Player에 MappingContext 추가
+	* 관련 Event가 GamePlay 흐름에 대한 기능에 대한 것이므로, 
+	* 이 class에서 처리해줌.
+	*/
+	if (UEnhancedInputLocalPlayerSubsystem* InputSystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		if (OptionMappingContext)
+		{
+			InputSystem->AddMappingContext(OptionMappingContext, 10);
+		}
+	}
+
+
+	// 게임을 시작 (시간 흐르도록 함)
+	SetGameInputMode(false);
 }
 
 void ABZPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -127,25 +174,12 @@ void ABZPlayerController::RegisterBoss(AActor* BossActor)
 
 void ABZPlayerController::ShowGameEndHUD(bool bClear)
 {
+	// 직접 InputMode/Pause 설정하지 말고 공통 함수 사용.
+	UWidget* FocusWidget = bClear ? 
+		Cast<UWidget>(GameClearWidget) : Cast<UWidget>(GameOverWidget);
+
 	// InputMode 변경=> Mouse입력을 World가 아닌 UI에서 받도록.
-	FInputModeUIOnly InputMode;
-	if (bClear)
-	{
-		InputMode.SetWidgetToFocus(GameClearWidget->TakeWidget());
-	}
-	else
-	{
-		InputMode.SetWidgetToFocus(GameOverWidget->TakeWidget());
-	}
-	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-	SetInputMode(InputMode);
-
-	// Mouse 커서가 보이도록 설정.
-	bShowMouseCursor = true;
-
-	// 게임 시간을 멈춤.
-	UGameplayStatics::SetGamePaused(this, true);
+	SetUIInputMode(FocusWidget, true);
 }
 
 void ABZPlayerController::ShowGameOver()
@@ -166,6 +200,85 @@ void ABZPlayerController::HandleGameClear(const ABZQuestActor* QuestActor)
 
 		ShowGameEndHUD(true);
 	}
+}
+
+void ABZPlayerController::ToggleOptionMenu()
+{
+	UBZHUDWidget* MainHUDWidget = GetMainHUDWidget();
+	if (!MainHUDWidget) return;
+
+	// HUD는 OptionWidget의 Visibility만 알려주거나 설정하는 역할.
+	const bool bShouldShow = !MainHUDWidget->GetOptionVisibility();
+
+	MainHUDWidget->SetOptionVisible(bShouldShow);
+
+	if (bShouldShow)
+	{
+		SetGameAndUIInputMode(MainHUDWidget->GetOptionWidget(), true);
+	}
+	else
+	{
+		// 닫을 때 게임 입력으로 복구
+		SetGameInputMode(false);
+	}
+}
+
+void ABZPlayerController::HideOptionMenu()
+{
+	UBZHUDWidget* MainHUDWidget = GetMainHUDWidget();
+	if (!MainHUDWidget) return;
+
+	MainHUDWidget->SetOptionVisible(false);
+
+	// 닫을 때 게임 입력으로 복구
+	SetGameInputMode(false);
+}
+
+void ABZPlayerController::SetUIInputMode(UWidget* FocusWidget, bool bPauseGame)
+{
+	// ShowGameEndHUD와 OptionWidget::ToggleVisible에 흩어진 UIOnly 로직 통합.
+	FInputModeUIOnly InputMode;
+
+	if (FocusWidget)
+	{
+		InputMode.SetWidgetToFocus(FocusWidget->TakeWidget());
+	}
+
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
+
+	UGameplayStatics::SetGamePaused(this, bPauseGame);
+}
+
+
+void ABZPlayerController::SetGameAndUIInputMode(UWidget* FocusWidget, bool bPauseGame)
+{
+	// 옵션은 UI와 게임 입력을 동시에 받음
+	FInputModeGameAndUI InputMode;
+
+	if (FocusWidget)
+	{
+		InputMode.SetWidgetToFocus(FocusWidget->TakeWidget());
+	}
+
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
+
+	UGameplayStatics::SetGamePaused(this, bPauseGame);
+}
+
+void ABZPlayerController::SetGameInputMode(bool bPauseGame)
+{
+	FInputModeGameOnly GameOnlyInputMode;
+	SetInputMode(GameOnlyInputMode);
+
+	bShowMouseCursor = false;
+
+	UGameplayStatics::SetGamePaused(this, bPauseGame);
 }
 
 void ABZPlayerController::CreatePlayerHUD()
@@ -239,6 +352,26 @@ void ABZPlayerController::RemoveMinimapActor(AActor* Actor)
 	}
 }
 
+void ABZPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	// ESC 입력을 Controller에서 직접 처리
+	if (UEnhancedInputComponent* EnhancedInputComponent =
+		Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (OptionAction)
+		{
+			EnhancedInputComponent->BindAction(
+				OptionAction,
+				ETriggerEvent::Started,
+				this,
+				&ABZPlayerController::ToggleOptionMenu
+			);
+		}
+	}
+}
+
 UBZHUDWidget* ABZPlayerController::GetMainHUDWidget()
 {
 	if (!HUDWidget)
@@ -302,3 +435,21 @@ void ABZPlayerController::BindGameplayEvents()
 		player->OnPlayerDead.BindUObject(this, &ABZPlayerController::ShowGameOver);
 	}
 }
+
+void ABZPlayerController::QuitGame()
+{
+	UKismetSystemLibrary::QuitGame(
+		this,
+		this,
+		EQuitPreference::Quit,
+		false
+	);
+}
+
+
+void ABZPlayerController::RestartFromThisLevel()
+{
+	SetGameInputMode(false);
+	UGameplayStatics::OpenLevel(this, *UGameplayStatics::GetCurrentLevelName(this));
+}
+

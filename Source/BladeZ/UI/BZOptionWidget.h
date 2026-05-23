@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/BZUserWidget.h"
-#include "BZGameOverWidget.generated.h"
+#include "BZOptionWidget.generated.h"
 
 /**
  * 
@@ -13,22 +13,22 @@
 class UButton;
 
 UCLASS()
-class BLADEZ_API UBZGameOverWidget : public UBZUserWidget
+class BLADEZ_API UBZOptionWidget : public UBZUserWidget
 {
 	GENERATED_BODY()
-	
 
 public:
-	// UserWidget의 생성자를 Override.
-	UBZGameOverWidget(const FObjectInitializer& ObjectInitializer);
+	UBZOptionWidget(const FObjectInitializer& ObjectInitializer);
+
 
 protected:
 	// UMG가 초기화될 때 호출되는 함수.
 	virtual void NativeConstruct() override;
 
 protected:
+	// Option Toggle Button.
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> RetryButton;
+	TObjectPtr<UButton> ExitButton;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> QuitButton;

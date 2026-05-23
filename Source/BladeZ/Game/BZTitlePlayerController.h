@@ -17,6 +17,13 @@ class BLADEZ_API ABZTitlePlayerController : public APlayerController
 public:
 	ABZTitlePlayerController();
 
+public:
+	UFUNCTION()
+	void QuitGame();
+
+	UFUNCTION()
+	void OpenIngame();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -29,4 +36,8 @@ protected:
 	// 실제 생성된 UI 객체.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TitleUI)
 	TObjectPtr<class UUserWidget> TitleWidget;
+
+private:
+	// Start에서 넘어갈 Level의 이름을 미리 지정
+	const FName FirstLevelName = FName(TEXT("RemainsLevel_01"));
 };

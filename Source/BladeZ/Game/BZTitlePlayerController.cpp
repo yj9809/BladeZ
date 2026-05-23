@@ -1,7 +1,9 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BZTitlePlayerController.h"
+
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 ABZTitlePlayerController::ABZTitlePlayerController()
 {
@@ -41,3 +43,19 @@ void ABZTitlePlayerController::BeginPlay()
 
 	}
 }
+
+void ABZTitlePlayerController::QuitGame()
+{
+	UKismetSystemLibrary::QuitGame(
+		this,
+		this,
+		EQuitPreference::Quit,
+		false
+	);
+}
+
+void ABZTitlePlayerController::OpenIngame()
+{
+	UGameplayStatics::OpenLevel(this, FirstLevelName);
+}
+

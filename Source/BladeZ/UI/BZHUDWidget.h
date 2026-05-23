@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+class UWidget;
+
 UCLASS()
 class BLADEZ_API UBZHUDWidget : public UBZUserWidget
 {
@@ -59,6 +62,17 @@ public:
 
 	void UpdateHpBar(float NewCurrentHp);
 
+	// For Option Panel.
+	// PlayerController가 Option Menu 상태 확인할 수 있도록 추가.
+	const bool GetOptionVisibility();
+
+	// Controller가 OptionMenu 표시만 바꾸도록 제공.
+	UFUNCTION()
+	void SetOptionVisible(bool InVisibility);
+
+	// PlayerController가 UIOnly FocusWidget으로 사용할 수 있도록.
+	UWidget* GetOptionWidget() const;
+
 	// HUD에 포함된 하위 Widgets.
 	// meta 정보를 BindWidget으로 설정하면, 
 	// 컴파일/생성 과정에서 변수 이름과 같은 Object를 찾아 Binding한다.
@@ -77,5 +91,7 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBZQuestInfoWidget> QuestInfoWidget;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UBZOptionWidget> OptionWidget;
 };
  

@@ -120,7 +120,7 @@ private:
 	// 죽음 이벤트.
 	UFUNCTION()
 	void SetDead();
-	
+
 public:
 	// 보스가 사용할 카메라 쉐이크 델리게이트.
 	FOnBossAttack OnBossAttack;
@@ -189,24 +189,6 @@ private:
 	// Light 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> LightAction;
-
-
-	/* Option Input Private. */
-private:
-	/*
-	* 작성자: 강수연
-	* 작성일: 26.05.22
-	* 작성 사유: Dead Event 발생 시 기존 MappingContext를 Remove해버리기 때문에, 
-	* MappingContext를 추가해야 함.
-	*/
-	UPROPERTY(EditAnywhere, Category = OptionInput)
-	TObjectPtr<UInputMappingContext> OptionMappingContext;
-
-	// 게임 중 Option 창 Toggle.
-	UPROPERTY(EditAnywhere, Category = OptionInput)
-	TObjectPtr<UInputAction> OptionAction;
-
-
 	
 	// Weapon private.
 private:

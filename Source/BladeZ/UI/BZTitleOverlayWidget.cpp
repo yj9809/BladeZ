@@ -4,6 +4,7 @@
 #include "BZTitleOverlayWidget.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
+#include "Game/BZTitlePlayerController.h"
 
 UBZTitleOverlayWidget::UBZTitleOverlayWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -19,40 +20,16 @@ void UBZTitleOverlayWidget::NativeConstruct()
 	ensureAlways(QuitButton);
 	
 	// Event Binding
+	ABZTitlePlayerController* TPC = GetOwningPlayer<ABZTitlePlayerController>();
 	StartButton->OnClicked.AddUniqueDynamic(
-		this,
-		&UBZTitleOverlayWidget::OpenIngame
+		TPC,
+		&ABZTitlePlayerController::OpenIngame
 	);
 
 	QuitButton->OnClicked.AddUniqueDynamic(
-		this,
-		&UBZTitleOverlayWidget::Quitgame
+		TPC,
+		&ABZTitlePlayerController::QuitGame
 	);
 }
 
-void UBZTitleOverlayWidget::OpenIngame()
-{
-	/*
-	* UObject* WorldContextObject parameter는,
-	* 월드를 가져올 수 있는 (->GetWorld())가 있는 Object면 뭐든지 가능.
-	* 그래서 this를 전달 가능하다.
-	*/
-	UGameplayStatics::OpenLevel(
-		this,
-		IngameLevelName
-	);
-}
- 
-void UBZTitleOverlayWidget::Quitgame()
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-
-	UKismetSystemLibrary::QuitGame(
-		this,
-		PC,
-		EQuitPreference::Quit,
-		false
-	);
-}
- 
  

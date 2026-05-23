@@ -232,32 +232,6 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	* 초기화는 더 안해줘도 됨
 	*/
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
-	
-	
-	/*
-	* 작성자: 강수연
-	* 작성일: 26.05.22
-	* 작성 사유: Option Key 등, PlayerCharacter가 죽었을 때도 사용 가능한 키.
-	* Dead Event 발생 시 기존 MappingContext를 Remove해버리기 때문에, MappingContext를 추가해야 함.
-	*/
-	static ConstructorHelpers::FObjectFinder<UInputMappingContext> OptionMappingContextRef(
-		TEXT("/Game/BZ/Input/Input_Option/IMC_OptionKeyMap.IMC_OptionKeyMap")
-	);
-
-	if (OptionMappingContextRef.Succeeded())
-	{
-		OptionMappingContext = OptionMappingContextRef.Object;
-	}
-
-	// Toggle Option Action 가져오기.
-	static ConstructorHelpers::FObjectFinder<UInputAction> OptionActionRef(
-		TEXT("/Game/BZ/Input/Input_Option/IA_ToggleOption.IA_ToggleOption")
-	);
-
-	if (MoveActionRef.Succeeded())
-	{
-		OptionAction = MoveActionRef.Object;
-	}
 }
 
 void ABZPlayerCharacter::StartComboCheck() const
@@ -324,7 +298,6 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		if (InputSystem)
 		{
 			InputSystem->AddMappingContext(InputMappingContext, 0);
-			InputSystem->AddMappingContext(OptionMappingContext, 10); // 작성자: 강수연, OptionKey Mapping을 위해 추가.
 		}
 	}
 
@@ -408,13 +381,6 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerLight
 		);
-
-		//EnhancedInputComponent->BindAction(
-		//	LightAction,
-		//	ETriggerEvent::Started,
-		//	this,
-		//	&ABZPlayerCharacter::PlayerLight
-		//);
 	}
 }
 
@@ -743,6 +709,7 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 
 		// Minimap.
 		PlayerHUD->SetupPlayer(this);
+
 		return;
 	}
 }

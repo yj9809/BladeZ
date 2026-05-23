@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/Button.h"
+#include "Character/Player/BZPlayerController.h"
 
 UBZGameOverWidget::UBZGameOverWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -24,30 +25,16 @@ void UBZGameOverWidget::NativeConstruct()
 
 
 	// Button Event Bind.
+	ABZPlayerController* PC = GetOwningPlayer<ABZPlayerController>();
+
 	RetryButton->OnClicked.AddUniqueDynamic(
-		this,
-		&UBZGameOverWidget::RestartLevel
-	);
-
-	QuitButton->OnClicked.AddUniqueDynamic(
-		this,
-		&UBZGameOverWidget::QuitGame
-	);
-}
-
-void UBZGameOverWidget::RestartLevel()
-{
-	UGameplayStatics::OpenLevel(this, *UGameplayStatics::GetCurrentLevelName(this));
-}
-
-void UBZGameOverWidget::QuitGame()
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-
-	UKismetSystemLibrary::QuitGame(
-		this,
 		PC,
-		EQuitPreference::Quit,
-		false
+		&ABZPlayerController::RestartFromThisLevel
+	);
+	
+	QuitButton->OnClicked.AddUniqueDynamic(
+		PC,
+		&ABZPlayerController::QuitGame
 	);
 }
+

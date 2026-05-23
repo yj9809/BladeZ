@@ -3,10 +3,14 @@
 #include "BZHUDWidget.h"
 
 #include "Interface/BZCharacterHUD.h"
+
 #include "BZHpBarWidget.h"
 #include "BZBossHUDWidget.h"
 #include "BZMinimapWidget.h"
 #include "BZQuestInfoWidget.h"
+#include "BZGameOverWidget.h"
+#include "BZOptionWidget.h"
+
 #include "Quest/BZQuestActor.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
@@ -23,6 +27,7 @@ void UBZHUDWidget::NativeConstruct()
 	ensureAlways(QuestInfoWidget);
 	ensureAlways(KillCountWidget);
 	ensureAlways(MinimapWidget);
+	ensureAlways(OptionWidget);
 
 	// Event Binding.
 	IBZCharacterHUD* HUDPawn
@@ -80,7 +85,29 @@ void UBZHUDWidget::UpdateQuestProgress(int32 NewValue, int32 MaxValue)
 void UBZHUDWidget::UpdateHpBar(float NewCurrentHp)
 {
 	// HpBar Widget에 Message 전달.
-	HpBarWidget->UpdateHpBar(NewCurrentHp);
-	
+	HpBarWidget->UpdateHpBar(NewCurrentHp);	
 }
 
+void UBZHUDWidget::SetOptionVisible(bool InVisibility)
+{
+	if (!OptionWidget) return;
+
+	if (InVisibility)
+	{
+		OptionWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		OptionWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+UWidget* UBZHUDWidget::GetOptionWidget() const
+{
+	return OptionWidget;
+}
+
+const bool UBZHUDWidget::GetOptionVisibility()
+{
+	return (OptionWidget && OptionWidget->GetVisibility() == ESlateVisibility::Visible);
+}

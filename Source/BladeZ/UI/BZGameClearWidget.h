@@ -33,8 +33,8 @@ private:
 	* 일단 게임이 끝나도록 구현.
 	* TODO: 컷신이 나온 뒤 게임 종료.
 	*/
-	UFUNCTION()
-	void ClearGame();
+	//UFUNCTION()
+	//void ClearGame();
 
 protected:
 	UPROPERTY(meta = (BindWidget))

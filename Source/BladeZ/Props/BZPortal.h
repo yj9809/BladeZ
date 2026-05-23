@@ -36,10 +36,7 @@ public:
 	void SetTargetLevelName(FText InName);
 
 protected:
-	/*
-	* Player가 닿으면 지정한 Level로 이동.
-	* TODO: 로딩창 띄우기.
-	*/
+	//  Player가 닿으면 지정한 Level로 이동.
 	UFUNCTION()
 	void OnPortalOverlap(
 		UPrimitiveComponent* OverlappedComponent,

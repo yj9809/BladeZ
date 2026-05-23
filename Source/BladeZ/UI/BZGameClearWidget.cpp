@@ -5,7 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "Components/Button.h"
-
+#include "Character/Player/BZPlayerController.h"
 
 UBZGameClearWidget::UBZGameClearWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -20,20 +20,11 @@ void UBZGameClearWidget::NativeConstruct()
 	ensureAlways(ClearButton);
 
 	// Button Event Bind.
+	ABZPlayerController* PC = GetOwningPlayer<ABZPlayerController>();
 	ClearButton->OnClicked.AddUniqueDynamic(
-		this,
-		&UBZGameClearWidget::ClearGame
-	);
-}
-
-void UBZGameClearWidget::ClearGame()
-{
-	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-
-	UKismetSystemLibrary::QuitGame(
-		this,
 		PC,
-		EQuitPreference::Quit,
-		false
+		&ABZPlayerController::QuitGame
 	);
 }
+
+
