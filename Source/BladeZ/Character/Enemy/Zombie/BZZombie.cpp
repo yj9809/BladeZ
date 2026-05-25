@@ -252,6 +252,8 @@ void ABZZombie::ReturnZombieToPool()
 
 	if (!ZombieObjectPool)
 	{
+		// 26.05.24 최지웅 추가: 풀이 없으면 바로 파괴
+		Destroy();
 		return;
 	}
 

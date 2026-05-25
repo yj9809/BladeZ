@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZTankCharacter.h"
@@ -236,6 +236,9 @@ float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const
 
 void ABZTankCharacter::SetDead()
 {
+	if (bIsDead) return;
+	bIsDead = true;
+
 	BOSS_LOG(Warning, "BossDead");
 
 	// 1. 상태 머신 중단
@@ -246,6 +249,8 @@ void ABZTankCharacter::SetDead()
 
 	// 2. 콜리전 및 무브먼트 비활성화
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CustomMoveTo->SetEnabled(false, false);
+	CustomMoveTo->SetFixedRotation(false);
 	GetCharacterMovement()->DisableMovement();
 
 	// 3. 죽음 몽타주 재생
@@ -294,6 +299,7 @@ void ABZTankCharacter::BeginPlay()
 
 void ABZTankCharacter::InitializeBoss()
 {
+	bIsDead = false;
 	// 상태 인스턴스 실제 생성 (메모리 할당)
 	if (IdleStateClass)
 	{
@@ -402,6 +408,7 @@ void ABZTankCharacter::InitializeBoss()
 
 void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 {
+	if (bIsDead) return;
 	CurrentPhase = NewPhase;
 
 	if (PhaseComponent)
@@ -425,7 +432,7 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 				// 2. 전이 몽타주 재생 (속도 1.0 고정)
 				float Duration = PlayAnimMontage(PhaseData->TransitionMontage, 1.0f);
 				
-				UE_LOG(LogTemp, Warning, TEXT("Phase Transition: Playing Montage %s, Duration: %.2f"), 
+				BOSS_LOG(Warning, "Phase Transition: Playing Montage %s, Duration: %.2f", 
 					*PhaseData->TransitionMontage->GetName(), Duration);
 
 				if (Duration > 0.0f)
@@ -438,7 +445,7 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 				else
 				{
 					// 재생 실패 시 즉시 다음 단계로
-					UE_LOG(LogTemp, Error, TEXT("Phase Transition: Montage Play Failed (Duration 0)"));
+					BOSS_LOG(Error,"Phase Transition: Montage Play Failed (Duration 0)");
 					OnTransitionMontageEnded(PhaseData->TransitionMontage, false);
 				}
 			}
@@ -508,9 +515,10 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 
 void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (bIsDead) return;
 	if (!StateMachine || bInterrupted)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Phase Transition: Montage Interrupted or StateMachine invalid. Skipping auto-transition."));
+		BOSS_LOG(Warning, "Phase Transition: Montage Interrupted or StateMachine invalid. Skipping auto-transition.");
 		return;
 	}
 
@@ -556,6 +564,7 @@ void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInt
 		StateMachine->ChangeState(SkillSelectionStateInstance);
 	}
 }
+
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
 {
 	DefaultAttackCooldown.CurrentTime += DeltaTime;
@@ -650,6 +659,25 @@ void ABZTankCharacter::SetPlayerInputEnabled(bool bEnabled)
 	{
 		if (bEnabled) PC->GetPawn()->EnableInput(PC);
 		else PC->GetPawn()->DisableInput(PC);
+	}
+}
+
+void ABZTankCharacter::PlayEffectByIndex(int32 Index, FName SocketName, FVector Offset, FRotator Rotation, FVector Scale)
+{
+	if (!EffectMasterList.IsValidIndex(Index) || !EffectMasterList[Index]) return;
+
+	UParticleSystem* SelectedEffect = EffectMasterList[Index];
+    
+	if (SocketName != NAME_None)
+	{
+		// 소켓이 있으면 소켓에 부착하거나 소켓 위치에 소환
+		UGameplayStatics::SpawnEmitterAttached(SelectedEffect, GetMesh(), SocketName, Offset, Rotation, Scale);
+	}
+	else
+	{
+		// 소켓이 없으면 월드 좌표 기반 (액터 위치 + 오프셋)
+		FVector SpawnLocation = GetActorLocation() + GetActorRotation().RotateVector(Offset);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, SpawnLocation, Rotation, Scale);
 	}
 }
 

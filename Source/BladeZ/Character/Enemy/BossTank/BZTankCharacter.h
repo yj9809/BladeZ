@@ -41,6 +41,7 @@ public:
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
 	FORCEINLINE bool IsSprinting() const { return bIsSprinting; }
+	FORCEINLINE bool IsDead() const { return bIsDead; }
 
 	// State에서 공격 콜리전 및 대미지 설정하는 함수
 	UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -284,6 +285,7 @@ private:
 	bool bCurrentEnableArea = false;
 	bool bCurrentEnableSpine = false;
 	bool bIsStun = false;
+	bool bIsDead = false;
 	float StunRecoveryRate = 0.15f;
 	float DamageToStunRatio = 0.01f;
 	float CurrentAttackDamage = 0.0f;
@@ -336,6 +338,8 @@ public:
 	void PlayThrowCarCinematic();
 	void SetPlayerInputEnabled(bool bEnabled);
 
+	void PlayEffectByIndex(int32 Index, FName SocketName, FVector Offset, FRotator Rotation, FVector Scale);
+
 	UFUNCTION()
 	void OnCinematicFinished();
 	
@@ -348,6 +352,9 @@ private:
 	*/
 	UPROPERTY(VisibleAnywhere, Category = Stat)
 	TObjectPtr<class UBZCharacterStatComponent> Stat;
+
+	UPROPERTY(EditAnywhere, Category = "Effect")
+	TArray<TObjectPtr<class UParticleSystem>> EffectMasterList;
 
 	/*
 	* 이 항목은 Content/BZ/GameData/DT_CharacterStat의 RowName에서 찾을 수 없을 시,
