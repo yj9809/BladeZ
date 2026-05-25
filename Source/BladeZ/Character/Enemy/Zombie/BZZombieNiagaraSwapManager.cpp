@@ -3,6 +3,7 @@
 #include "Character/Enemy/Zombie/BZZombie.h"
 #include "Character/Enemy/Zombie/BZZombieObjectPool.h"
 #include "NiagaraComponent.h"
+#include "NiagaraDataInterfaceArrayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
 ABZZombieNiagaraSwapManager::ABZZombieNiagaraSwapManager()
@@ -58,7 +59,28 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 	for (const FBasicParticleData& Particle : Data)
 	{
 		const int32 ParticleId = FMath::RoundToInt(Particle.Size);
-	
+
+		if (ParticleId == INDEX_NONE
+			|| SpawnedParticleIds.Contains(ParticleId)
+			|| ActiveZombieByParticleId.Contains(ParticleId))
+		{
+			continue;
+		}
+
+		bool bAlreadyPending = false;
+		for (const FZombieParticleSpawnData& PendingSpawn : PendingSpawns)
+		{
+			if (PendingSpawn.ParticleId == ParticleId)
+			{
+				bAlreadyPending = true;
+				break;
+			}
+		}
+
+		if (bAlreadyPending)
+		{
+			continue;
+		}
 
 		FZombieParticleSpawnData SpawnData;
 		SpawnData.Location = Particle.Position + SimulationPositionOffset;
@@ -68,12 +90,11 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 		float Distance = FVector::Dist(PlayerPosition, SpawnData.Location);
 		
 		
-		if (Distance <= 150.0f && SpawnedParticleIds.Contains(ParticleId))
+		if (Distance > 150.0f)
 		{
 			continue;
 		}
 		
-		SpawnedParticleIds.Add(ParticleId);
 		PendingSpawns.Add(SpawnData);
 		
 	}
@@ -93,8 +114,18 @@ void ABZZombieNiagaraSwapManager::ResetConvertedParticleIds()
 {
 	PendingSpawns.Reset();
 	SpawnedParticleIds.Reset();
+	KilledParticleIds.Reset();
 	ActiveZombieByParticleId.Reset();
 	ParticleIdByZombie.Reset();
+
+	if (NiagaraComponent)
+	{
+		UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayInt32(
+			NiagaraComponent,
+			KilledParticleIdsParameterName,
+			KilledParticleIds
+		);
+	}
 }
 
 void ABZZombieNiagaraSwapManager::RegisterNiagaraCallbackHandler()
@@ -134,8 +165,19 @@ void ABZZombieNiagaraSwapManager::ProcessPendingSpawns()
 		}
 
 		Zombie->SetSourceParticleId(SpawnData.ParticleId);
+		SpawnedParticleIds.Add(SpawnData.ParticleId);
+		KilledParticleIds.Add(SpawnData.ParticleId);
 		ActiveZombieByParticleId.Add(SpawnData.ParticleId, Zombie);
 		ParticleIdByZombie.Add(Zombie, SpawnData.ParticleId);
+
+		if (NiagaraComponent)
+		{
+			UNiagaraDataInterfaceArrayFunctionLibrary::SetNiagaraArrayInt32(
+				NiagaraComponent,
+				KilledParticleIdsParameterName,
+				KilledParticleIds
+			);
+		}
 	}
 }
 

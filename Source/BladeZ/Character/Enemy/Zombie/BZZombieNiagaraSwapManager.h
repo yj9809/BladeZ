@@ -73,6 +73,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Zombie|Niagara Swap")
 	FName CallbackHandlerParameterName = TEXT("user.UserCallBack");
 
+	UPROPERTY(EditAnywhere, Category = "Zombie|Niagara Swap")
+	FName KilledParticleIdsParameterName = TEXT("user.KilledParticleIds");
+
 	UPROPERTY()
 	TObjectPtr<UBZZombieObjectPool> ZombieObjectPool;
 
@@ -81,6 +84,9 @@ private:
 
 	UPROPERTY()
 	TSet<int32> SpawnedParticleIds;
+
+	UPROPERTY()
+	TArray<int32> KilledParticleIds;
 
 	UPROPERTY()
 	TMap<int32, TObjectPtr<ABZZombie>> ActiveZombieByParticleId;
