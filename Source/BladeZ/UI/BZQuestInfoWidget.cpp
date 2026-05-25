@@ -51,7 +51,7 @@ void UBZQuestInfoWidget::SetQuestInfo(const FBZQuestData InData)
 	{
 		// ProgressBar Text 변경
 		PbTextBlock->SetText(FText::FromString(
-			FString::Printf(TEXT("0 / %d"), InData.TargetKillCount)
+			FString::Printf(TEXT("0 / %d"), InData.TargetProgress)
 		));
 	}
 }

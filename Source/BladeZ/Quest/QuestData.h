@@ -10,14 +10,16 @@
  * 
  */
  
-
 // Quest의 목표.
 UENUM(BlueprintType)
 enum class EQuestType: uint8
 {
 	None UMETA(DisplayName = "None"),
+	GetWeapon UMETA(DisplayName = "GetWeapon"),
+	HandleGimick UMETA(DisplayName = "HandleGimick"),
+	CollectItems UMETA(DisplayName = "CollectItems"),
 	KillEnemies UMETA(DisplayName = "KillEnemies"),
-	KillOneTarget UMETA(DisplayName = "KillBoss"),
+	KillOneTarget UMETA(DisplayName = "KillBoss")
 };
 
 // Quest가 완료되면 진행할 Action.
@@ -25,8 +27,9 @@ UENUM(BlueprintType)
 enum class EQuestCompletionAction : uint8
 {
 	None UMETA(DisplayName = "None"),
-	GameClear UMETA(DisplayName = "GameClear"),
-	GoNextLevel UMETA(DisplayName = "GoNextLevel")
+	GoNextPlace UMETA(DisplayName = "GoNextPlace"),
+	GoNextLevel UMETA(DisplayName = "GoNextLevel"),
+	GameClear UMETA(DisplayName = "GameClear")
 };
  
 // 데이터 테이블을 임포트할 때 행(Row) 데이터를 정의하는 구조체.
@@ -41,12 +44,15 @@ public:
 		:QuestType(EQuestType::None),
 		TitleText(TEXT("퀘스트 이름")),
 		ContentText(TEXT("퀘스트 내용")),
-		TargetKillCount(0)
+		TargetProgress(0)
 	{
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	EQuestType QuestType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
+	FName NextRowID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	EQuestCompletionAction CompletionAction = EQuestCompletionAction::None;
@@ -58,9 +64,9 @@ public:
 	FString ContentText;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
-	TSubclassOf<AActor> Enemy;
+	TSubclassOf<AActor> TargetActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
-	int32 TargetKillCount;
+	int32 TargetProgress;
 
 };

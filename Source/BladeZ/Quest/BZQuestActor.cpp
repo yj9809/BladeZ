@@ -10,18 +10,20 @@ ABZQuestActor::ABZQuestActor()
 {
 	// 적 사망 Event 시에만 반응.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
 void ABZQuestActor::RefreshQuestProgress()
 {
-	OnQuestProgressChanged.Broadcast(CurrentKillCount, Data.TargetKillCount);
+	if (!bIsActive) return;
+	OnQuestProgressChanged.Broadcast(CurrentKillCount, Data.TargetProgress);
 }
 
 // Called when the game starts or when spawned
 void ABZQuestActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!bIsActive) return;
 	
 	/*
 	* 현재 World의 EnemyEventSubsystem을 가져옴.
@@ -53,6 +55,7 @@ void ABZQuestActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ABZQuestActor::HandleEnemyDied(AActor* DeadEnemy)
 {
+	if (!bIsActive) return;
 	/*
 	* 이미 완료된 Quest라면 더 이상 진행도를 올리지 않는다.
 	*/
@@ -71,7 +74,7 @@ void ABZQuestActor::HandleEnemyDied(AActor* DeadEnemy)
 		return;
 	}
 
-	if (Data.Enemy && !DeadEnemy->IsA(Data.Enemy.Get()))
+	if (Data.TargetActor && !DeadEnemy->IsA(Data.TargetActor.Get()))
 	{
 		return;
 	}
@@ -82,6 +85,7 @@ void ABZQuestActor::HandleEnemyDied(AActor* DeadEnemy)
 
 void ABZQuestActor::AddProgress(int32 Amount)
 {
+	if (!bIsActive) return;
 	//  0 이하 값은 진행도 증가로 의미가 없으므로 무시. 
 	if (Amount <= 0)
 	{
@@ -92,10 +96,10 @@ void ABZQuestActor::AddProgress(int32 Amount)
 	 * 목표값을 넘지 않도록 Clamp.
 	 * UI ProgressBar 계산이 깔끔해지고, 완료 후 이상한 값이 들어가는 것도 막는다.
 	 */
-	CurrentKillCount = FMath::Clamp(CurrentKillCount + Amount, 0, Data.TargetKillCount);
+	CurrentKillCount = FMath::Clamp(CurrentKillCount + Amount, 0, Data.TargetProgress);
 
 	// UI나 Blueprint에 진행도 변경을 알리기.
-	OnQuestProgressChanged.Broadcast(CurrentKillCount, Data.TargetKillCount);
+	OnQuestProgressChanged.Broadcast(CurrentKillCount, Data.TargetProgress);
 
 	// 진행도 변경 후 완료 여부를 확인.
 	CheckQuestCompleted();
@@ -103,6 +107,7 @@ void ABZQuestActor::AddProgress(int32 Amount)
 
 void ABZQuestActor::CheckQuestCompleted()
 {
+	if (!bIsActive) return;
 	// 이미 완료 처리된 경우 중복 호출을 막는다.
 	if (bIsCompleted)
 	{
@@ -110,7 +115,7 @@ void ABZQuestActor::CheckQuestCompleted()
 	}
 
 	// 현재 진행도가 목표값에 도달하면 Quest 완료.
-	if (CurrentKillCount >= Data.TargetKillCount)
+	if (CurrentKillCount >= Data.TargetProgress)
 	{
 		bIsCompleted = true;
 

@@ -43,13 +43,16 @@ public:
 	ABZQuestActor();
 
 public:
+	// QuestManager가 현재 Level의 QuestActor들에 Data를 뿌림.
+	void InitializeQuest(const FBZQuestData& InData);
+
+	// Quest가 진행되면 Broadcast.
+	void RefreshQuestProgress();
+
 	// Getter.
 	const FBZQuestData& GetQuestData() const { return Data; }
 	int32 GetCurrentKillCount() const { return CurrentKillCount; }
 	bool IsCompleted() const { return bIsCompleted; }
-
-	void RefreshQuestProgress();
-	
 
 protected:
 	// EnemyEventSubsystem을 BeginPlay에서 Cahching하고, EndPlay에서 Binding 해제.
@@ -93,6 +96,13 @@ public:
 	FOnQuestCompleted OnQuestCompleted;
 
 protected:
+	/*
+	 * 활성화 여부.
+	 * 일시적으로 Edit Anywhere 처리.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest")
+	bool bIsActive = false;
+
 	/*
 	 * 완료 여부.
 	 * 완료 이벤트가 여러 번 호출되는 것을 막는다.
