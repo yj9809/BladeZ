@@ -259,4 +259,29 @@ private:
 	// 디졸브 처리를 위한 private영역.
 private:
 	FTimerHandle DissolveTimerHandle;
+	
+	/*
+	 * 작성자: 강준형.
+	 * 작성일: 26.05.26
+	 * 작성 사유: 광폭화 기믹 
+	 */
+public:
+	// 광폭화 모드를 켜고 끄는 함수
+	void SetFrenzyMode(bool bEnable);
+	
+	// 광폭화 상태인지 확인하는 Getter
+	FORCEINLINE bool IsFrenzied() const{ return bIsFrenzied;}
+	
+private:
+	// 광폭화 관련 변수들 
+	bool bIsFrenzied = false;
+	
+	// 광폭화 시 적용할 배율
+	float FrenzySpeedMultiplier= 1.5f;
+	float FrenzyDamageMultiplier= 2.5f;
+	float FrenzyScaleMultiplier= 1.4f;
+	
+	// 머터리얼 색상 변경을 위한 동적 머터리얼 인스턴스 포인터
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> DynamicMaterial;
 };

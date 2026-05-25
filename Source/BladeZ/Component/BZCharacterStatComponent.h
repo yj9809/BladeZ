@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interface/BZItemTargetInterface.h"
 #include "BZCharacterStatComponent.generated.h"
 
 
@@ -15,7 +16,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnHpChangedDelegate, float /*CurrentHp*/ );
 struct FBZCharacterStat;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class BLADEZ_API UBZCharacterStatComponent : public UActorComponent
+class BLADEZ_API UBZCharacterStatComponent : public UActorComponent, public IBZItemTargetInterface
 {
 	GENERATED_BODY()
 
@@ -50,6 +51,17 @@ public:
 
 	// 대미지 적용 함수.
 	float ApplyDamage(float InAdditiveDamage = 0);
+	
+	// 준형_추가 회복 함수
+	void Heal(float InHealAmount);
+	
+public:
+	/*
+	* 작성자: 강준형
+	* 작성일: 26.05.22
+	* 작성 사유: 회복 아이템 처리를 위한 인터페이스 함수 오버라이드.
+	*/
+	virtual void ApplyHealEffect_Implementation(float HealAmount) override;
 
 public:
 	// 체력을 모두 소진했을 때 발행할 델리게이트.

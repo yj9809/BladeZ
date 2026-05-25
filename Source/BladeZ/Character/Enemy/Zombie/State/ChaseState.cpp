@@ -51,8 +51,24 @@ void ChaseState::OnUpdate(float DeltaTime)
 		return;
 	}
 	
-	Owner->GetCharacterMovement()->MaxWalkSpeed = Owner->ChaseSpeed;
+	/*
+	 * 작성자: 강준형.
+	 * 작성일: 26.05.26
+	 * 작성 사유: 광폭화 기믹(속도 증가) 
+	 */
+	
+	// 광폭화 상태가 아닐 때만 원래 속도(ChaseSpeed)로 고정.
+	// 광폭화 상태일 때는 SetFrenzyMode에서 올린 빠른 속도를 그대로 유지.
+	
+	if (!Owner->IsFrenzied())
+	{
+		Owner->GetCharacterMovement()->MaxWalkSpeed = Owner->ChaseSpeed;		
+	}	
+	
 	AIController->MoveToActor(Owner->TargetActor, Owner->ChaseAcceptanceRadius);
+	
+	
+	
 }
 
 void ChaseState::OnExit()

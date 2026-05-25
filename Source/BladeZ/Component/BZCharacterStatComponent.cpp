@@ -6,6 +6,7 @@
 #include "GameData/StatDataTableManager.h"
 #include "Interface/BZStatRowNameProvider.h"
 
+
 // Sets default values for this component's properties
 UBZCharacterStatComponent::UBZCharacterStatComponent()
 {
@@ -93,4 +94,34 @@ float UBZCharacterStatComponent::ApplyDamage(float InAdditiveDamage)
 	}
 
 	return ActualDamage;
+}
+
+void UBZCharacterStatComponent::Heal(float InHealAmount)
+{
+	// 이미 체력을 모두 소진해 죽은 상태라면 회복 무시
+	if (CurrentHp <= UE_KINDA_SMALL_NUMBER)
+	{
+		return;
+	}
+	
+	// 디버빙용 체력 
+	float PrevHp = CurrentHp;
+	
+	// 체력 회복
+	SetHp(CurrentHp + InHealAmount);
+	
+	// 디비깅 
+	FString DebugMsg = FString::Printf(TEXT("[Potion] Healed: +%.1f | HP: %.1f -> %.1f"), InHealAmount, PrevHp, CurrentHp);
+	
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, DebugMsg);
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *DebugMsg);
+}
+
+void UBZCharacterStatComponent::ApplyHealEffect_Implementation(float HealAmount)
+{
+	Heal(HealAmount);
 }

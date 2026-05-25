@@ -6,8 +6,10 @@
 #include "GameFramework/Character.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+
 #include "Interface/BZStatRowNameProvider.h"
 #include "Interface/BZCharacterHUD.h"
+
 #include "BZPlayerCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
@@ -17,6 +19,7 @@ DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 /// 작성일: 2026.05.20
 /// 작성 사유: Player의 죽음 Event에 대한 처리를 다른 Class에서 해주기 위해 추가.
 /// </summary>  
+
 DECLARE_DELEGATE(FOnPlayerDead)
 
 class UBZPlayerCombatComponent;
@@ -73,7 +76,7 @@ public:
 	* 작성 사유: PlayerDead Event Binding 처리를 위해 추가.
 	*/
 	FOnPlayerDead OnPlayerDead;
-
+	
 private:
 	void PlayerMove(const FInputActionValue& Value);
 	

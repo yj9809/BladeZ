@@ -161,6 +161,17 @@ void ABZZombie::Tick(float DeltaTime)
 
 void ABZZombie::InitializeFSM(AActor* InTargetActor)
 {
+	/*
+	 * 작성자: 강준형.
+	 * 작성일: 26.05.26
+	 * 작성 사유: 광폭화 기믹(광폭화 모드 끄기) 
+	 */
+	SetFrenzyMode(false);
+	if (CurrentState == EZombieState::Dead)
+	{
+		return;
+	}
+	
 	if (CurrentState == EZombieState::Dead)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Enter InitializeFSM"));
@@ -187,8 +198,35 @@ void ABZZombie::InitializeFSM(AActor* InTargetActor)
 
 void ABZZombie::TickFSM(float DeltaTime)
 {
+	/*
 	// 상태 머신 업데이트.
-	ZombieStates[static_cast<int>(CurrentState)]->OnUpdate(DeltaTime);
+	ZombieStates[static_cast<int>(CurrentState)]->OnUpdate(DeltaTime);*/
+	
+	// 강준형 작성
+	// 26.05.25
+	// 작성사유: 보스 패턴 중 일반 좀비 소환시 크래시 발생 때문에
+	
+	// 현재 상태의 배열 인텍스 번호를 가져온다.
+	int32 StateIndex = static_cast<int32>(CurrentState);
+	
+	// 인덱스가 0~3 사이인지 수동으로 검사
+	// (CurrentState가 Inactive(4)일 때 배열을 초과해서 크래시가 나는 것을 방지)
+	if (StateIndex >= 0 && StateIndex < 4)
+	{
+		// 인덱스가 안전하다면, 그 칸에 있는 스마트 포인터가 비어있지 않은지 검사
+		if (ZombieStates[StateIndex].IsValid())
+		{
+			ZombieStates[StateIndex]->OnUpdate(DeltaTime);
+		}
+	
+	}
+	else
+	{		
+		{
+			UE_LOG(LogTemp, Error, TEXT("위험: 좀비의 %d 번째 상태 객체가 비어있습니다! (BeginPlay에서 초기화 누락 의심)"), StateIndex);
+		}
+	}
+		
 }
 
 void ABZZombie::ClearAttackHitActors()
@@ -247,6 +285,14 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 //오브젝트 풀에 좀비 넣는 함수
 void ABZZombie::ReturnZombieToPool()
 {
+	/*
+	 * 작성자: 강준형.
+	 * 작성일: 26.05.26
+	 * 작성 사유: 광폭화 기믹(대미지 처리) 
+	 */
+	SetFrenzyMode(false);
+	SetZombieState(EZombieState::Inactive);
+	
 	SetZombieState(EZombieState::Inactive);
 	SourceParticleId = INDEX_NONE;
 
@@ -437,32 +483,109 @@ void ABZZombie::PerformAttackTrace()
 			nullptr
 		);
 	}
+	
+	/*
+	 * 작성자: 강준형.
+	 * 작성일: 26.05.26
+	 * 작성 사유: 광폭화 기믹(대미지 처리) 
+	 */
+	
+	for (const FHitResult& Hit : HitResults)
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (!IsValid(HitActor) || AttackHitActors.Contains(HitActor))
+		{
+			continue;
+		}
+		
+		if (IsValid(TargetActor) && HitActor != TargetActor.Get())
+		{
+			continue;
+		}
+		
+		AttackHitActors.Add(HitActor);
+		
+		// 광폭화 상태라면 공격역에 배율을 곱해준다. 
+		float FinalDamage = Stat->GetBaseAttackPower();
+		if (bIsFrenzied)
+		{
+			FinalDamage *= FrenzyDamageMultiplier;
+		}
+		
+		UGameplayStatics::ApplyDamage(HitActor, FinalDamage, nullptr, this, nullptr);
+	}
 }
 
 //Todo : 넉백 함수 리팩토링 필요 
 void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
-{
-	if (!DamageEvent.IsOfType(FBZDamageEvent::ClassID))
+{	
+	// 작성자: 강준형
+	// 작성일: 26.05.25
+	// 작성사유: 현재 플레이어 캐릭터만 함수가 작동함으로 폭발 오브젝트에서도 해당 함수가 작동하도록 일부 수정(넉백 포함)
+		
+	// 플레이어의 직접 타격인 경우	
+	if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
 	{
+		const FBZDamageEvent* PointDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
+		
+		// 플레이어의 공격이 넉백 허용인지 검사
+		if (!PointDamageEvent->IsKnockback())
+		{
+			return;
+		}
+		
+		if (AAIController* AiCon = Cast<AAIController>(GetController()))
+		{
+			AiCon->StopMovement();
+		}
+		
+		FVector KnockbackDirection = GetActorForwardVector() * -1.0f; 
+		
+		float HorizontalPower = FMath::Abs(LaunchForce.X) * PointDamageEvent->GetKnockbackPower();
+		
+		FVector PlayerLaunchVelocity = KnockbackDirection * HorizontalPower;
+		PlayerLaunchVelocity.Z = LaunchForce.Z; // 위로 뜨는 힘 유지
+       
+		// 실제 발사 명령
+		LaunchCharacter(PlayerLaunchVelocity, true, true);
+	}
+	
+	// 폭발물(방사형 등) 대미지인 경우
+	else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		const FRadialDamageEvent* RadialEvent = static_cast<const FRadialDamageEvent*>(&DamageEvent);
+		
+		if (AAIController* AiCon = Cast<AAIController>(GetController()))
+		{
+			AiCon->StopMovement();
+		}
+		
+		// 폭발 오브젝트 넉백 강도		
+		float AppliedKnockBckPower = 7.0f;
+		
+		// 폭발 중심점 기반 정방향 넉백 벡터 계산		
+		FVector KnockbackDirection = GetActorLocation() - RadialEvent->Origin;
+		KnockbackDirection.Z = 0.0f;
+		KnockbackDirection = KnockbackDirection.GetSafeNormal();
+		
+		// 폭발물 음수 세팅에 뒤집히지 않도록 절대값 처리
+		float HorizontalPower = FMath::Abs(LaunchForce.X) * AppliedKnockBckPower;
+		
+		FVector ExplosionLaunchVelocity = KnockbackDirection * HorizontalPower;
+		ExplosionLaunchVelocity.Z = LaunchForce.Z;
+		
+		LaunchCharacter(ExplosionLaunchVelocity, true, true);
+		UE_LOG(LogTemp, Log, TEXT("폭발 넉백 적용 속도: %f,%f,%f"), ExplosionLaunchVelocity.X, ExplosionLaunchVelocity.Y, ExplosionLaunchVelocity.Z);
+	}
+	else
+	{
+		// 그 외의 알 수 없는 대미지는 넉백시키지 않음
 		return;
 	}
-
-	const FBZDamageEvent* PointDamageEvent = static_cast<const FBZDamageEvent*>(&DamageEvent);
-	UE_LOG(LogTemp, Log, TEXT("Damage Event"));
-
-	if (AAIController* AiCon = Cast<AAIController>(GetController()))
-	{
-		AiCon->StopMovement();
-	}
-
-	FVector ExtraVector = GetCharacterMovement()->GetForwardVector();
-	LaunchForce.X *= PointDamageEvent->GetKnockbackPower();
-	LaunchForce.Y *= PointDamageEvent->GetKnockbackPower();
-	LaunchCharacter(ExtraVector * LaunchForce, true, true);
-	UE_LOG(LogTemp, Log, TEXT("%f,%f,%f"), ExtraVector.X, ExtraVector.Y, ExtraVector.Z);
-
-
+	
 	// PreviousPawnCollisionResponse = GetCapsuleComponent()->GetCollisionResponseToChannel(ECC_Pawn);
+	
+	// 연쇄 충돌 세팅 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
 	bCanDamageOverlappedZombies = true;
@@ -482,6 +605,41 @@ void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 void ABZZombie::EndKnockbackOverlapDamage()
 {
 	bCanDamageOverlappedZombies = false;
+	
+	// 현재 캡슐과 겹쳐있는 액터가 있는지 검사
+	TArray<AActor*> OverlappedActors;
+	GetCapsuleComponent()->GetOverlappingActors(OverlappedActors, APawn::StaticClass());
+	
+	bool bIsStillOverlapping  = false;
+	
+	for (AActor* Actor : OverlappedActors)
+	{
+		// 자기 자신이 아니고, 다른 캐릭터의 몸 안에 아직 있다면
+		if (Actor && Actor != this)
+		{
+			bIsStillOverlapping = true;
+			break;
+		}
+	}
+	
+	// 아직 몸을 빠져나오지 못했다면 충돌을 켜지 않고 타이머를 살짝 연장.
+	if (bIsStillOverlapping)
+	{
+		GetWorldTimerManager().SetTimer(KnockbackOverlapTimerHandle, this, &ABZZombie::EndKnockbackOverlapDamage,0.1f, false);		
+	}
+	else
+	{
+		// 완전히 허공으로 빠져나왔을 때만 안전하게 충돌을 Block으로 돌린다.
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		
+		// 플레이어를 명시적으로 무시하게 했다면 해제 한다. 
+		if (APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn())
+		{
+			GetCapsuleComponent()->IgnoreActorWhenMoving( PlayerPawn, false);
+		}
+	}
+	
+	
 	KnockbackDamagedActors.Empty();
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, PreviousPawnCollisionResponse);
 }
@@ -531,4 +689,51 @@ void ABZZombie::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 FName ABZZombie::GetStatRowName() const
 {
 	return StatRowName;
+}
+
+void ABZZombie::SetFrenzyMode(bool bEnable)
+{
+	if (bIsFrenzied == bEnable)
+	{
+		return;
+	}
+	
+	bIsFrenzied = bEnable;
+	
+	if (bIsFrenzied)
+	{
+		// 달리기 속도폭발적 증가
+		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed * FrenzySpeedMultiplier;
+		
+		// 메시 사이즈 키우기 
+		SetActorScale3D(FVector(FrenzyScaleMultiplier));
+		
+		// 머터러일 변화
+		// 좀비의 스켈레탈 메시에서 0번 머터리얼을 가져와 동적 머터리얼로 만듬.
+		if (GetMesh())
+		{
+			if (!DynamicMaterial)
+			{
+				DynamicMaterial = GetMesh()->CreateDynamicMaterialInstance(0);
+			}
+			if (DynamicMaterial)
+			{
+				// 머터리얼 셰이더에 "BodyColor" 또는 "Tint" 등의 Vector 파라미터가 있다면 빨간색으로 물들입니다.
+				// (파라미터 이름은 실제 좀비 머터리얼의 이름을 적어주셔야 합니다. 없다면 생략 가능)
+				DynamicMaterial->SetVectorParameterValue(TEXT("BodyColor"), FLinearColor(2.0f, 0.0f, 0.0f, 1.0f));
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("%s 좀비가 광폭화 상태에 진입했습니다! (속도, 크기, 데미지 업)"), *GetName());
+	}
+	else
+	{
+		// 4. 광폭화 해제 시 원래 상태로 완벽 복구 (오브젝트 풀 리셋용)
+		GetCharacterMovement()->MaxWalkSpeed = ChaseSpeed;
+		SetActorScale3D(FVector(1.0f));
+		if (DynamicMaterial)
+		{
+			// 원래 색상(흰색/기본값)으로 복구
+			DynamicMaterial->SetVectorParameterValue(TEXT("BodyColor"), FLinearColor::White);
+		}
+	}
 }
