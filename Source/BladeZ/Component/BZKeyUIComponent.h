@@ -29,25 +29,29 @@ public:
 		FActorComponentTickFunction* ThisTickFunction
 	) override;
 
+	// 26.05.26 최지웅 작성 블루프린트에서 사용 가능하게 UFUNCTION 추가.
+	UFUNCTION(BlueprintCallable, Category = "UI")
 	void ShowUI();
+
+	UFUNCTION(BlueprintCallable, Category = "UI")
 	void HideUI();
 
 private:
-	UPROPERTY(EditAnywhere, Category = UI)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> WidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = UI)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI, meta = (AllowPrivateAccess = "true"))
 	FVector RelativeLocation = FVector(0.0f, 0.0f, 120.0f);
 
-	UPROPERTY(EditAnywhere, Category = UI)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI, meta = (AllowPrivateAccess = "true"))
 	FVector2D DrawSize = FVector2D(80.0f, 80.0f);
 
-	UPROPERTY(EditAnywhere, Category = UI)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI, meta = (AllowPrivateAccess = "true"))
 	bool bYawOnly = true;
 
-	UPROPERTY(EditAnywhere, Category = UI)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI, meta = (AllowPrivateAccess = "true"))
 	float HeightOffset = 120.0f;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = UI, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> KeyUI;
 };
