@@ -8,7 +8,7 @@
 #include "Character/Enemy/Zombie/BZZombieObjectPool.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
 
-#include "Game/BZEnemyEventSubsystem.h"
+#include "Game/BZQuestEventSubsystem.h"
 
 #include "Interface/BZCharacterHUD.h"
 
@@ -17,6 +17,8 @@
 #include "UI/BZGameClearWidget.h"
 
 #include "Quest/BZQuestActor.h"
+#include "Component/Player/BZPlayerQuestComponent.h"
+
 
 #include "Components/Widget.h"
 
@@ -198,6 +200,43 @@ void ABZPlayerController::HandleGameClear(const ABZQuestActor* QuestActor)
 		GameClearWidget->SetVisibility(ESlateVisibility::Visible);
 
 		ShowGameEndHUD(true);
+	}
+}
+
+void ABZPlayerController::HandleQuestCompleted(FName QuestID)
+{
+	APawn* PlayerPawn = GetPawn();
+	if (!PlayerPawn)
+	{
+		return;
+	}
+
+	UBZPlayerQuestComponent* QuestComponent =
+		PlayerPawn->FindComponentByClass<UBZPlayerQuestComponent>();
+
+	if (!QuestComponent)
+	{
+		return;
+	}
+
+	const FBZQuestData* QuestData = QuestComponent->GetQuestData(QuestID);
+	if (!QuestData)
+	{
+		return;
+	}
+
+	if (QuestData->CompletionAction == EQuestCompletionAction::GameClear)
+	{
+		GameClearWidget->SetVisibility(ESlateVisibility::Visible);
+		ShowGameEndHUD(true);
+	}
+}
+
+void ABZPlayerController::SetDisplayedQuestToHUD(FName QuestID)
+{
+	if (UBZHUDWidget* MainHUDWidget = GetMainHUDWidget())
+	{
+		MainHUDWidget->SetDisplayedQuest(QuestID);
 	}
 }
 
@@ -384,7 +423,7 @@ UBZHUDWidget* ABZPlayerController::GetMainHUDWidget()
 void ABZPlayerController::BindGameplayEvents()
 {
 	// Enemy가 HP 0이 되면 즉시 Minimap에서 사라지도록 하는 부분.
-	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
+	if (UBZQuestEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
 	{
 		EnemyEvents->OnEnemyDied.AddUObject(
 			this,
@@ -407,24 +446,29 @@ void ABZPlayerController::BindGameplayEvents()
 		);
 	}
 
-
-	// QuestActor를 지금 Level에서 찾아, MainHUD의 BindQuestActor를 호출
-	// => QuestInfoWidget에 정보 전달됨
+	// QuestComponent를 찾아서 연결.
 	if (UBZHUDWidget* MainHUDWidget = GetMainHUDWidget())
 	{
-		if (ABZQuestActor* QuestActor = Cast<ABZQuestActor>(
-			UGameplayStatics::GetActorOfClass(this, ABZQuestActor::StaticClass())
-		))
+		APawn* PlayerPawn = GetPawn();
+		if (!PlayerPawn)
 		{
-			// MainHUD의 QustInfo Widget에 전달해주기 위해 호출.
-			MainHUDWidget->BindQuestActor(QuestActor);
-
-			//// QuestActor의 QuestClear 함수에 직접 Bind.
-			QuestActor->OnQuestCompleted.AddUniqueDynamic(
-				this,
-				&ABZPlayerController::HandleGameClear
-			);
+			return;
 		}
+
+		UBZPlayerQuestComponent* QuestComponent =
+			PlayerPawn->FindComponentByClass<UBZPlayerQuestComponent>();
+
+		if (!QuestComponent)
+		{
+			return;
+		}
+
+		MainHUDWidget->BindQuestComponent(QuestComponent);
+
+		QuestComponent->OnQuestCompleted.AddUniqueDynamic(
+			this,
+			&ABZPlayerController::HandleQuestCompleted
+		);
 	}
 
 

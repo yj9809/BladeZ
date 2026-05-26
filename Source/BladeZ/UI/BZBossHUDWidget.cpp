@@ -38,3 +38,8 @@ void UBZBossHUDWidget::UpdateStunBar(float InProgress, bool InLight)
 {
 	BossStunBarWidget->UpdateStunBar(InProgress, InLight);
 }
+
+void UBZBossHUDWidget::SetHidden()
+{
+	SetVisibility(ESlateVisibility::Hidden);
+}

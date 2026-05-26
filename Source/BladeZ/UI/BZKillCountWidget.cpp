@@ -4,7 +4,7 @@
 #include "UI/BZKillCountWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Overlay.h"
-#include "Game/BZEnemyEventSubsystem.h"
+#include "Game/BZQuestEventSubsystem.h"
 
 
 UBZKillCountWidget::UBZKillCountWidget(const FObjectInitializer& ObjectInitializer)
@@ -22,7 +22,7 @@ void UBZKillCountWidget::NativeConstruct()
 
 	RootOverlay->SetVisibility(ESlateVisibility::Hidden);
 
-	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
+	if (UBZQuestEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
 	{
 		EnemyEvents->OnEnemyDied.AddUObject(this, &UBZKillCountWidget::AddKillCount);
 	}

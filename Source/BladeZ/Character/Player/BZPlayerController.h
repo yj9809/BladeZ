@@ -60,6 +60,14 @@ public:
 	UFUNCTION()
 	void HandleGameClear(const ABZQuestActor* QuestActor);
 
+	// ==================== For Quest =========================== //
+	// Quest 하나가 끝났을 때 Bind할 Event.
+	UFUNCTION()
+	void HandleQuestCompleted(FName QuestID);
+
+	// HUD를 Set.
+	void SetDisplayedQuestToHUD(FName QuestID);
+
 	// ==================== For Option UI =========================== //
 	// ESC 명령이 이 함수를 직접 호출하도록 함.
 	void ToggleOptionMenu();

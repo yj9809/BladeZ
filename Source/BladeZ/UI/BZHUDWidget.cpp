@@ -12,6 +12,7 @@
 #include "BZOptionWidget.h"
 
 #include "Quest/BZQuestActor.h"
+#include "Component/Player/BZPlayerQuestComponent.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -58,6 +59,7 @@ void UBZHUDWidget::RemoveMinimapActor(AActor* Actor)
 	MinimapWidget->RemoveTrackedActor(Actor);
 }
 
+// 아직 삭제하지 말고 병행.
 void UBZHUDWidget::BindQuestActor(ABZQuestActor* QuestActor)
 {
 	if (!IsValid(QuestActor) || !QuestInfoWidget)
@@ -75,6 +77,74 @@ void UBZHUDWidget::BindQuestActor(ABZQuestActor* QuestActor)
 	QuestInfoWidget->SetQuestInfo(QuestData);
 
 	QuestActor->RefreshQuestProgress();
+}
+
+// 새 방식 추가
+void UBZHUDWidget::BindQuestComponent(UBZPlayerQuestComponent* InQuestComponent)
+{
+	if (!InQuestComponent || !QuestInfoWidget)
+	{
+		return;
+	}
+
+	if (BoundQuestComponent)
+	{
+		BoundQuestComponent->OnQuestActivated.RemoveDynamic(
+			this,
+			&UBZHUDWidget::HandleQuestActivated
+		);
+
+		BoundQuestComponent->OnQuestProgressChanged.RemoveDynamic(
+			this,
+			&UBZHUDWidget::HandleQuestProgressChanged
+		);
+	}
+
+	BoundQuestComponent = InQuestComponent;
+
+	BoundQuestComponent->OnQuestActivated.AddUniqueDynamic(
+		this,
+		&UBZHUDWidget::HandleQuestActivated
+	);
+
+	BoundQuestComponent->OnQuestProgressChanged.AddUniqueDynamic(
+		this,
+		&UBZHUDWidget::HandleQuestProgressChanged
+	);
+
+	const FName ActiveQuestID = BoundQuestComponent->GetActiveQuestID();
+	if (!ActiveQuestID.IsNone())
+	{
+		SetDisplayedQuest(ActiveQuestID);
+	}
+}
+
+void UBZHUDWidget::SetDisplayedQuest(FName InQuestID)
+{
+	if (InQuestID.IsNone() || !BoundQuestComponent || !QuestInfoWidget)
+	{
+		return;
+	}
+
+	DisplayedQuestID = InQuestID;
+
+	const FBZQuestData* QuestData =
+		BoundQuestComponent->GetQuestData(DisplayedQuestID);
+
+	if (!QuestData)
+	{
+		return;
+	}
+
+	QuestInfoWidget->SetQuestInfo(*QuestData);
+
+	const int32 CurrentProgress =
+		BoundQuestComponent->GetQuestProgress(DisplayedQuestID);
+
+	QuestInfoWidget->UpdateQuestProgress(
+		CurrentProgress,
+		QuestData->TargetProgress
+	);
 }
 
 void UBZHUDWidget::UpdateQuestProgress(int32 NewValue, int32 MaxValue)
@@ -105,6 +175,39 @@ void UBZHUDWidget::SetOptionVisible(bool InVisibility)
 UWidget* UBZHUDWidget::GetOptionWidget() const
 {
 	return OptionWidget;
+}
+
+void UBZHUDWidget::HandleQuestActivated(FName QuestID, const FBZQuestData& QuestData)
+{
+	if (!QuestInfoWidget)
+	{
+		return;
+	}
+
+	// 가장 단순한 정책:
+	// 새로 활성화된 퀘스트를 바로 HUD에 표시한다.
+	DisplayedQuestID = QuestID;
+
+	QuestInfoWidget->SetQuestInfo(QuestData);
+
+	const int32 CurrentProgress = BoundQuestComponent
+		? BoundQuestComponent->GetQuestProgress(QuestID)
+		: 0;
+
+	QuestInfoWidget->UpdateQuestProgress(
+		CurrentProgress,
+		QuestData.TargetProgress
+	);
+}
+
+void UBZHUDWidget::HandleQuestProgressChanged(FName QuestID, int32 CurrentValue, int32 TargetValue)
+{
+	if (QuestID != DisplayedQuestID)
+	{
+		return;
+	}
+
+	UpdateQuestProgress(CurrentValue, TargetValue);
 }
 
 const bool UBZHUDWidget::GetOptionVisibility()

@@ -48,6 +48,9 @@ public:
 	// For Stun ProgressBar.
 	void UpdateStunBar(float InProgress, bool InLight);
 
+	// BossTank가 죽으면 안 보이도록 설정.
+	void SetHidden();
+
 	// HUD에 포함된 하위 Widgets.
 	// meta 정보를 BindWidget으로 설정하면, 
 	// 컴파일/생성 과정에서 변수 이름과 같은 Object를 찾아 Binding한다.

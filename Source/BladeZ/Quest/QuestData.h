@@ -10,13 +10,19 @@
  * 
  */
  
+ // DataTable RowName에만 의존하지 말고 QuestID를 명시적으로 둘지 결정한다.
+ // N:N 관계에서는 QuestActor/Level/UI/Portal이 모두 같은 Quest를 식별해야 하므로
+ // 안정적인 FName QuestID가 필요하다.
+ // 이미 DataTable RowName을 QuestID로 쓸 계획이면 이 필드는 생략 가능하지만,
+ // 코드 전반에서는 "QuestID"라는 개념으로만 접근하도록 통일한다.
+ 
 // Quest의 목표.
 UENUM(BlueprintType)
 enum class EQuestType: uint8
 {
 	None UMETA(DisplayName = "None"),
 	GetWeapon UMETA(DisplayName = "GetWeapon"),
-	HandleGimick UMETA(DisplayName = "HandleGimick"),
+	GoNextPlace UMETA(DisplayName = "GoNextPlace"),
 	CollectItems UMETA(DisplayName = "CollectItems"),
 	KillEnemies UMETA(DisplayName = "KillEnemies"),
 	KillOneTarget UMETA(DisplayName = "KillBoss")
@@ -27,7 +33,6 @@ UENUM(BlueprintType)
 enum class EQuestCompletionAction : uint8
 {
 	None UMETA(DisplayName = "None"),
-	GoNextPlace UMETA(DisplayName = "GoNextPlace"),
 	GoNextLevel UMETA(DisplayName = "GoNextLevel"),
 	GameClear UMETA(DisplayName = "GameClear")
 };
@@ -46,7 +51,11 @@ public:
 		ContentText(TEXT("퀘스트 내용")),
 		TargetProgress(0)
 	{
+		
 	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
+	FName QuestID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	EQuestType QuestType;

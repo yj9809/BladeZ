@@ -287,7 +287,7 @@ private:
 	bool bIsStun = false;
 	bool bIsDead = false;
 	float StunRecoveryRate = 0.15f;
-	float DamageToStunRatio = 0.01f;
+	float DamageToStunRatio = 0.002f;
 	float CurrentAttackDamage = 0.0f;
 	float CurrentSpeed = 0.0f;
 	float WalkSpeed = 300.0f;
