@@ -405,6 +405,15 @@ void ABZTankCharacter::InitializeBoss()
 void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 {
 	if (bIsDead) return;
+
+	// 페이즈 전환 시 스턴 강제 종료 및 초기화
+	if (bIsStun || CurrentStun > 0.0f)
+	{
+		bIsStun = false;
+		CurrentStun = 0.0f;
+		OnStunChanged.Broadcast(CurrentStun, bIsStun);
+	}
+
 	CurrentPhase = NewPhase;
 
 	if (PhaseComponent)

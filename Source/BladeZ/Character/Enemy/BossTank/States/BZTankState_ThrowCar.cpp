@@ -50,7 +50,7 @@ void UBZTankState_ThrowCar::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
-	float NearDist = 450.0f; // 차용 근접 거리
+	float NearDist = 500.0f; // 차용 근접 거리
 
 	if (ThrowTarget && FVector::Dist(TankCharacter->GetActorLocation(), ThrowTarget->GetActorLocation()) < NearDist
 		&& bIsHoldingObject == false)
