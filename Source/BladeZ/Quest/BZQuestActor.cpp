@@ -13,20 +13,6 @@ ABZQuestActor::ABZQuestActor()
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-void ABZQuestActor::RefreshQuestProgress()
-{
-	// 실제 진행도가 PlayerQuestComponent에 저장되므로, 
-	// UI 갱신도 Component의 현재 값을 기준으로 Broadcast한다.
-	if (!PlayerQuestComponent)
-	{
-		return;
-	}
-
-	const int32 CurrentProgress =
-		PlayerQuestComponent->GetQuestProgress(Data.QuestID);
-
-	OnQuestProgressChanged.Broadcast(CurrentProgress, Data.TargetProgress);
-}
 
 void ABZQuestActor::SetPlayerQuestComponent(UBZPlayerQuestComponent* InQuestComponent)
 {
@@ -76,11 +62,20 @@ void ABZQuestActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ABZQuestActor::HandleProgressChange(AActor* TargetActor)
 {
+	const FBZQuestData* Data = PlayerQuestComponent
+		? PlayerQuestComponent->GetQuestData(QuestID)
+		: nullptr;
+
+	if (!Data)
+	{
+		return;
+	}
+
 	const bool bCanProgressByAcquire =
-		Data.QuestType == EQuestType::CollectItems ||
-		Data.QuestType == EQuestType::GetWeapon ||
-		Data.QuestType == EQuestType::KillEnemies ||
-		Data.QuestType == EQuestType::KillOneTarget;
+		Data->QuestType == EQuestType::CollectItems ||
+		Data->QuestType == EQuestType::GetWeapon ||
+		Data->QuestType == EQuestType::KillEnemies ||
+		Data->QuestType == EQuestType::KillOneTarget;
 
 	if (!bCanProgressByAcquire)
 	{
@@ -90,8 +85,8 @@ void ABZQuestActor::HandleProgressChange(AActor* TargetActor)
 	// QuestManagerActor가 SetPlayerQuestComponent를 호출하지 않았거나,
 	// 이 QuestID가 활성 상태가 아니면 진행도를 올리지 않는다.
 	if (!PlayerQuestComponent ||
-		!PlayerQuestComponent->IsQuestActive(Data.QuestID) ||
-		PlayerQuestComponent->IsQuestCompleted(Data.QuestID))
+		!PlayerQuestComponent->IsQuestActive(QuestID) ||
+		PlayerQuestComponent->IsQuestCompleted(QuestID))
 	{
 		return;
 	}
@@ -106,7 +101,7 @@ void ABZQuestActor::HandleProgressChange(AActor* TargetActor)
 		return;
 	}
 
-	if (Data.TargetActor && !TargetActor->IsA(Data.TargetActor.Get()))
+	if (Data->TargetActor && !TargetActor->IsA(Data->TargetActor.Get()))
 	{
 		return;
 	}
@@ -130,11 +125,5 @@ void ABZQuestActor::AddProgress(int32 Amount)
 		return;
 	}
 
-	PlayerQuestComponent->AddQuestProgress(Data.QuestID, Amount);
-}
-
-void ABZQuestActor::CheckQuestCompleted()
-{
-	// 	새 구조에서는 완료 처리를 PlayerQuestComponent::AddQuestProgress 내부에서 수행한다.
-	// 기존 Blueprint 호환을 위해 함수는 남겨두지만, 여기서는 아무 처리도 하지 않는다.
+	PlayerQuestComponent->AddQuestProgress(QuestID, Amount);
 }

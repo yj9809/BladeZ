@@ -14,7 +14,6 @@ class ABZZombie;
 class UBZHUDWidget;
 class UBZGameOverWidget;
 class UBZGameClearWidget;
-class ABZQuestActor;
 class UWidget;
 
 class UInputMappingContext;
@@ -52,13 +51,6 @@ public:
 
 	// Player의 Delegate에 Binding되므로 public.
 	void ShowGameOver();
-
-	/*
-	* 퀘스트 Delegate에 Binding되므로 public.
-	* MultiCastDelegate에 사용되려면 UFUNCTION을 사용.
-	*/
-	UFUNCTION()
-	void HandleGameClear(const ABZQuestActor* QuestActor);
 
 	// ==================== For Quest =========================== //
 	// Quest 하나가 끝났을 때 Bind할 Event.

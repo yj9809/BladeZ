@@ -65,7 +65,6 @@ void ABZQuestManagerActor::BeginPlay()
 		DisplayQuestID = DefaultQuestID;
 	}
 
-
 	// HUD의 QuestInfoWidget에 현재 표시할 Quest를 설정.
 	// 이후 진행도 변경은 QuestComponent의 Delegate를 통해 갱신됨.
 	PlayerController->SetDisplayedQuestToHUD(DisplayQuestID);
@@ -110,8 +109,7 @@ void ABZQuestManagerActor::CollectQuestActors(TArray<ABZQuestActor*>& OutQuestAc
 
 FName ABZQuestManagerActor::FindDisplayQuestID(const TArray<ABZQuestActor*>& InQuestActors, const UBZPlayerQuestComponent* InQuestComponent) const
 {
-	UBZPlayerQuestComponent* QuestComponent = GetPlayerQuestComponent();
-	if (!QuestComponent)
+	if (!InQuestComponent)
 	{
 		return NAME_None;
 	}
@@ -129,8 +127,8 @@ FName ABZQuestManagerActor::FindDisplayQuestID(const TArray<ABZQuestActor*>& InQ
 			continue;
 		}
 
-		if (QuestComponent->IsQuestActive(QuestID) &&
-			!QuestComponent->IsQuestCompleted(QuestID))
+		if (InQuestComponent->IsQuestActive(QuestID) &&
+			!InQuestComponent->IsQuestCompleted(QuestID))
 		{
 			return QuestID;
 		}

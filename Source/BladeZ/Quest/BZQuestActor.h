@@ -10,25 +10,6 @@
 class UBZQuestEventSubsystem;
 class UBZPlayerQuestComponent;
 
-/*
- * 퀘스트 진행도가 바뀔 때 UI나 다른 시스템에 알려주는 델리게이트.
- * => QuestInfoWidget이 이벤트를 받아 ProgressBar/Text를 갱신
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
-	FOnQuestProgressChanged,
-	int32, CurrentValue,
-	int32, TargetValue
-);
-
-/*
- * 퀘스트가 완료됐을 때 알려주는 델리게이트.
- * => 문 열기, 보스 스폰, 클리어 UI 출력 등에 연결.
- */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
-	FOnQuestCompleted, 
-	const ABZQuestActor*, QuestActor
-);
-
 
 /*
  * 레벨당 하나만 존재하는 퀘스트 Actor.
@@ -44,17 +25,10 @@ public:
 	ABZQuestActor();
 
 public:
-	// QuestManager가 현재 Level의 QuestActor들에 Data를 뿌림.
-	void InitializeQuest(const FBZQuestData& InData);
-
-	// Quest가 진행되면 Broadcast.
-	void RefreshQuestProgress();
-
 	void SetPlayerQuestComponent(UBZPlayerQuestComponent* InQuestComponent);
 
 	// Getter.
-	FORCEINLINE const FBZQuestData& GetQuestData() const { return Data; }
-	FORCEINLINE FName GetQuestID() const { return Data.QuestID; }
+	FORCEINLINE FName GetQuestID() const { return QuestID; }
 
 
 protected:
@@ -77,27 +51,6 @@ private:
 	void AddProgress(int32 Amount = 1);
 
 
-	/*
-	 * Quest가 완료 조건을 만족했는지 확인한다.
-	 * 완료되면 중복 완료 처리를 막기 위해 bIsCompleted를 true로 바꾼다.
-	 */
-	void CheckQuestCompleted();
-
-public:
-	/*
-	 * UI가 바인딩할 수 있는 진행도 변경 이벤트.
-	 * Blueprint에서도 연결 가능하게 Dynamic Multicast로 둔다.
-	 */
-	UPROPERTY(BlueprintAssignable, Category = "Quest")
-	FOnQuestProgressChanged OnQuestProgressChanged;
-
-	/*
-	 * 퀘스트 완료 이벤트.
-	 * Blueprint에서 레벨 연출이나 다음 액션을 붙이기 좋다.
-	 */
-	UPROPERTY(BlueprintAssignable, Category = "Quest")
-	FOnQuestCompleted OnQuestCompleted;
-
 private:
 	/*
 	* BeginPlay에서 얻어온 QuestEventSubsystem 캐시.
@@ -105,15 +58,19 @@ private:
 	*/
 	UPROPERTY()
 	TObjectPtr<UBZQuestEventSubsystem> QuestEventSubsystem;
-
-	UPROPERTY(EditAnywhere, Category = "Quest")
-	FBZQuestData Data;
-
-
+	
 	/*
 	* Player의 QuestComponent에 대한 Pointer.
 	* TODO: 가능하다면 구조 바꿔보기.
 	*/
 	UPROPERTY()
 	TObjectPtr<UBZPlayerQuestComponent> PlayerQuestComponent;
+
+private:
+
+
+	UPROPERTY(EditAnywhere, Category = "Quest")
+	FName QuestID;
+
+
 };

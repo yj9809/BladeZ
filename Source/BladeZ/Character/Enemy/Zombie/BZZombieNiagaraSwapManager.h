@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -42,6 +42,9 @@ public:
 		const TArray<FBasicParticleData>& Data,
 		UNiagaraSystem* NiagaraSystem,
 		const FVector& SimulationPositionOffset) override;
+
+public:
+
 
 	UFUNCTION(BlueprintCallable, Category = "Zombie|Niagara Swap")
 	void ReturnToPool(ABZZombie* Zombie);

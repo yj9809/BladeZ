@@ -10,8 +10,6 @@
 #include "BZQuestInfoWidget.h"
 #include "BZGameOverWidget.h"
 #include "BZOptionWidget.h"
-
-#include "Quest/BZQuestActor.h"
 #include "Component/Player/BZPlayerQuestComponent.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
@@ -57,26 +55,6 @@ void UBZHUDWidget::RegisterMinimapActor(AActor* Actor)
 void UBZHUDWidget::RemoveMinimapActor(AActor* Actor)
 {
 	MinimapWidget->RemoveTrackedActor(Actor);
-}
-
-// 아직 삭제하지 말고 병행.
-void UBZHUDWidget::BindQuestActor(ABZQuestActor* QuestActor)
-{
-	if (!IsValid(QuestActor) || !QuestInfoWidget)
-	{
-		return;
-	}
-
-	QuestActor->OnQuestProgressChanged.AddDynamic(
-		this,
-		&UBZHUDWidget::UpdateQuestProgress
-	);
-
-	const FBZQuestData& QuestData = QuestActor->GetQuestData();
-
-	QuestInfoWidget->SetQuestInfo(QuestData);
-
-	QuestActor->RefreshQuestProgress();
 }
 
 // 새 방식 추가

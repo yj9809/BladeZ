@@ -16,7 +16,6 @@
 #include "UI/BZGameOverWidget.h"
 #include "UI/BZGameClearWidget.h"
 
-#include "Quest/BZQuestActor.h"
 #include "Component/Player/BZPlayerQuestComponent.h"
 
 
@@ -189,18 +188,6 @@ void ABZPlayerController::ShowGameOver()
 	GameOverWidget->SetVisibility(ESlateVisibility::Visible);
 
 	ShowGameEndHUD(false);
-}
-
-void ABZPlayerController::HandleGameClear(const ABZQuestActor* QuestActor)
-{
-	// 지금 완료된 Quest의 완료되었을 때 지정된 Action이 GameClear라면.
-	if (QuestActor->GetQuestData().CompletionAction == EQuestCompletionAction::GameClear)
-	{
-		// Game Clear 화면 보이기.
-		GameClearWidget->SetVisibility(ESlateVisibility::Visible);
-
-		ShowGameEndHUD(true);
-	}
 }
 
 void ABZPlayerController::HandleQuestCompleted(FName QuestID)

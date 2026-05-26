@@ -52,12 +52,7 @@ public:
 
 
 	// For QuestInfo.
-	// 기존 함수
-	void BindQuestActor(class ABZQuestActor* QuestActor);
-
-
-	// TODO(QuestRefactor):
-	// New path. HUD should observe Player-owned quest state,
+	// HUD should observe Player-owned quest state,
 	// not a Level-owned QuestActor.
 	void BindQuestComponent(class UBZPlayerQuestComponent* InQuestComponent);
 	void SetDisplayedQuest(FName InQuestID);
