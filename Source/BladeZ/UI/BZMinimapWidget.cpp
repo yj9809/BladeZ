@@ -8,7 +8,7 @@
 #include "Components/Overlay.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/OverlaySlot.h"
-
+#include "Materials/MaterialInstanceDynamic.h"
 
 
 UBZMinimapWidget::UBZMinimapWidget(const FObjectInitializer& ObjectInitializer)
@@ -24,6 +24,13 @@ void UBZMinimapWidget::SetUpPlayer(AActor* InPlayer)
 void UBZMinimapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	// Background에 넣어준 Material instance로부터 DynamicMaterial 얻기.
+	if (MinimapBackgroundImage)
+	{
+		
+		MinimapMaterialInstance = MinimapBackgroundImage->GetDynamicMaterial();
+	}
 
 	if (UWorld* World = GetWorld())
 	{
@@ -106,8 +113,26 @@ void UBZMinimapWidget::UpdateMinimap()
 
 	const FVector PlayerLocation = PlayerActor->GetActorLocation();
 
-	const float WorldToMinimapScale = 0.05f;
-	const float MaxIconDistance = 120.0f;
+	const float VisibleWorldDiameter =
+		MaxIconDistance * 2.0f / WorldToMinimapScale;
+
+	const float VisibleRatio =
+		VisibleWorldDiameter / BakedMapWorldWidth;
+
+	const FVector2D PlayerUV(
+		0.5f + (PlayerLocation.Y - BakedMapCenter.Y) / BakedMapWorldWidth,
+		0.5f - (PlayerLocation.X - BakedMapCenter.X) / BakedMapWorldWidth
+	);
+
+	MinimapMaterialInstance->SetVectorParameterValue(
+		TEXT("PlayerUV"),
+		FLinearColor(PlayerUV.X, PlayerUV.Y, 0.0f, 1.0f)
+	);
+
+	MinimapMaterialInstance->SetScalarParameterValue(
+		TEXT("VisibleRatio"),
+		VisibleRatio
+	);
 
 	for (int32 Index = TrackedActors.Num() - 1; Index >= 0; --Index)
 	{

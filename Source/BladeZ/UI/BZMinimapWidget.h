@@ -11,6 +11,7 @@
  */
 class UOverlay;
 class UImage;
+class UMaterialInstanceDynamic;
 
 UCLASS()
 class BLADEZ_API UBZMinimapWidget : public UBZUserWidget
@@ -113,4 +114,26 @@ private:
 
 	// TrackedActor 각각에 대한 아이콘 Widget을 관리.
 	TMap<TWeakObjectPtr<AActor>, TObjectPtr<UUserWidget>> ActorIconMap;
+
+protected:
+	// Background 관련.
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> MinimapBackgroundImage;
+
+	// MaterialInstance의 값을 실시간으로 바꿈. 
+	// => Player의 위치에 따라 Minimap 이미지의 UV를 밀어준다.
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> MinimapMaterialInstance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	FVector2D BakedMapCenter = FVector2D::ZeroVector;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	float BakedMapWorldWidth = 24755.2910f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	float WorldToMinimapScale = 0.05f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	float MaxIconDistance = 120.0f;
 };
