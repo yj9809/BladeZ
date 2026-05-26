@@ -12,7 +12,6 @@
 
 #include "BZPlayerCharacter.generated.h"
 
-class ABZItemPickup;
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 
 /// <summary>
@@ -24,6 +23,8 @@ DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 DECLARE_DELEGATE(FOnPlayerDead)
 
 class UBZPlayerCombatComponent;
+class UBZCharacterStatComponent;
+class ABZItemPickup;
 class ABZWeaponActor;
 class ABZWeaponPickup;
 
@@ -45,6 +46,8 @@ public:
 	FORCEINLINE ABZWeaponActor* GetWeapon() const { return Weapon; }
 	
 	FORCEINLINE UBZPlayerCombatComponent* GetCombatComponent() const { return CombatComponent; }
+	
+	FORCEINLINE UBZCharacterStatComponent* GetStatComponent() const { return Stat; }
 
 public:
 	// Called when the game starts or when spawned

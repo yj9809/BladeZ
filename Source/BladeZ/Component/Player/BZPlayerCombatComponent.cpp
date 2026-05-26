@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "RuntimeInspectorWidget.h"
+#include "Component/BZCharacterStatComponent.h"
 
 // Sets default values for this component's properties
 UBZPlayerCombatComponent::UBZPlayerCombatComponent()
@@ -299,8 +300,9 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	
 	if (Enemy->GetActor())
 	{
+		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(Owner);
 		const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
-			CurrentData ? CurrentData->Damage : 0.0f,
+			CurrentData ? CurrentData->Damage + Player->GetStatComponent()->GetBaseAttackPower() : 0.0f,
 			DamageEvent,
 			Owner->GetController(),
 			Owner
