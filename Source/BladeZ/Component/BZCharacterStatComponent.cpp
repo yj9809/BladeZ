@@ -75,7 +75,7 @@ float UBZCharacterStatComponent::ApplyDamage(float InAdditiveDamage)
 	// 대미지 값 가져오기.
 	const float ActualDamage
 		= FMath::Clamp<float>(
-			BaseAttackPower + InAdditiveDamage,
+			InAdditiveDamage,
 			0.0f,
 			MaxHp
 		);

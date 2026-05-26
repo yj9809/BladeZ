@@ -126,7 +126,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	//좀비 대미지 적용
 	Stat->ApplyDamage(DamageAmount);
-
+	UE_LOG(LogTemp,Log,TEXT("%f"),DamageAmount);
 	//이번 공격에서 죽었는지 체크 
 	if (CurrentState == EZombieState::Dead)
 	{

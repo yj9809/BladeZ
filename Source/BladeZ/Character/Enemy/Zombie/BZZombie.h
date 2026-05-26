@@ -148,7 +148,7 @@ protected:
 
 	//좀비 공격이 끝나는 거리
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|FSM")
-	float AttackExitRange = 220.0f;
+	float AttackExitRange = 300.0f;
 
 	//추적 속도
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Movement")

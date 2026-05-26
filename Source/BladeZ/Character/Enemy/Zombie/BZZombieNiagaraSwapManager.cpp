@@ -34,13 +34,13 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 	UNiagaraSystem* NiagaraSystem,
 	const FVector& SimulationPositionOffset)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[Swap] ReceiveParticleData called, Data.Num=%d, SimOffset=%s"),
-		Data.Num(), *SimulationPositionOffset.ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("[Swap] ReceiveParticleData called, Data.Num=%d, SimOffset=%s"),
+	// 	Data.Num(), *SimulationPositionOffset.ToString());
 
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
 	if (!PlayerPawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Swap] No PlayerPawn"));
+		//UE_LOG(LogTemp, Warning, TEXT("[Swap] No PlayerPawn"));
 		return;
 	}
 
@@ -54,8 +54,8 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 		// Niagara 측 kill 모듈이 XY 평면 기준으로 죽이는 경향이 있어 C++도 2D 거리로 매칭한다.
 		float Dist = FVector::Dist2D(PlayerPosition, WorldPos);
 
-		UE_LOG(LogTemp, Warning, TEXT("[Swap] Particle ID=%d WorldPos=%s PlayerPos=%s Dist=%.1f"),
-			ParticleId, *WorldPos.ToString(), *PlayerPosition.ToString(), Dist);
+		// UE_LOG(LogTemp, Warning, TEXT("[Swap] Particle ID=%d WorldPos=%s PlayerPos=%s Dist=%.1f"),
+		// 	ParticleId, *WorldPos.ToString(), *PlayerPosition.ToString(), Dist);
 
 		if (ParticleId == INDEX_NONE || SpawnedParticleIds.Contains(ParticleId))
 		{
@@ -80,12 +80,12 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 
 		if (Dist > ConversionRadius)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Swap]   - Skipped: distance too far"));
+			//UE_LOG(LogTemp, Warning, TEXT("[Swap]   - Skipped: distance too far"));
 			continue;
 		}
 
 		PendingSpawns.Add(SpawnData);
-		UE_LOG(LogTemp, Warning, TEXT("[Swap]   + Added to PendingSpawns"));
+		//UE_LOG(LogTemp, Warning, TEXT("[Swap]   + Added to PendingSpawns"));
 	}
 }
 
@@ -120,13 +120,13 @@ void ABZZombieNiagaraSwapManager::ProcessPendingSpawns()
 {
 	if (!ZombieObjectPool)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Swap] ProcessPendingSpawns: no ZombieObjectPool"));
+		//UE_LOG(LogTemp, Warning, TEXT("[Swap] ProcessPendingSpawns: no ZombieObjectPool"));
 		return;
 	}
 
 	if (PendingSpawns.Num() > 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Swap] ProcessPendingSpawns: %d pending"), PendingSpawns.Num());
+		//UE_LOG(LogTemp, Warning, TEXT("[Swap] ProcessPendingSpawns: %d pending"), PendingSpawns.Num());
 	}
 
 	const int32 SpawnCount = FMath::Min(MaxSpawnPerFrame, PendingSpawns.Num());
@@ -142,15 +142,15 @@ void ABZZombieNiagaraSwapManager::ProcessPendingSpawns()
 
 		if (!Zombie)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("[Swap]   ! Pool returned null for ID=%d"), SpawnData.ParticleId);
+			//UE_LOG(LogTemp, Warning, TEXT("[Swap]   ! Pool returned null for ID=%d"), SpawnData.ParticleId);
 			continue;
 		}
 
 		Zombie->SetSourceParticleId(SpawnData.ParticleId);
 		SpawnedParticleIds.Add(SpawnData.ParticleId);
 
-		UE_LOG(LogTemp, Warning, TEXT("[Swap]   * Spawned zombie at %s (ID=%d)"),
-			*SpawnData.Location.ToString(), SpawnData.ParticleId);
+		// UE_LOG(LogTemp, Warning, TEXT("[Swap]   * Spawned zombie at %s (ID=%d)"),
+		// 	*SpawnData.Location.ToString(), SpawnData.ParticleId);
 	}
 }
 

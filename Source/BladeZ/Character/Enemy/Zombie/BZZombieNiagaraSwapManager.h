@@ -74,7 +74,7 @@ private:
 
 	// 플레이어와 이 거리 이내에 들어온 파티클을 좀비로 교체한다.
 	UPROPERTY(EditAnywhere, Category = "Zombie|Niagara Swap", meta = (ClampMin = "0"))
-	float ConversionRadius = 150.0f;
+	float ConversionRadius = 500.0f;
 
 	UPROPERTY()
 	TObjectPtr<UBZZombieObjectPool> ZombieObjectPool;
