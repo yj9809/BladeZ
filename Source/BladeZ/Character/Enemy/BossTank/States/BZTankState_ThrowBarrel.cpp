@@ -9,6 +9,7 @@ void UBZTankState_ThrowBarrel::OnEnter(AActor* Owner)
 {
 	Super::OnEnter(Owner);
 	bIsHoldingObject = false;
+	StuckTimer = 0.0f;
 	FoundThrowable.Empty();
 
 	// 드럼통(Barrel)만 찾기
@@ -40,10 +41,26 @@ void UBZTankState_ThrowBarrel::OnUpdate(AActor* Owner, float DeltaTime)
 
 	float NearDist = 300.0f; // 드럼통용 근접 거리
 
-	if (ThrowTarget && FVector::Dist(TankCharacter->GetActorLocation(), ThrowTarget->GetActorLocation()) < NearDist
-		&& bIsHoldingObject == false)
+	if (!bIsHoldingObject)
 	{
-		ThrowObject();
+		// 2초 이상 못 잡으면 텔레포트
+		StuckTimer += DeltaTime;
+		if (StuckTimer >= 2.0f && ThrowTarget)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Boss stuck during ThrowBarrel. Teleporting to target."));
+			
+			FVector Direction = (ThrowTarget->GetActorLocation() - TankCharacter->GetActorLocation()).GetSafeNormal2D();
+			FVector TeleportPos = ThrowTarget->GetActorLocation() - Direction * (NearDist - 50.0f);
+			
+			TankCharacter->SetActorLocation(TeleportPos, false, nullptr, ETeleportType::TeleportPhysics);
+			ThrowObject();
+			return;
+		}
+
+		if (ThrowTarget && FVector::Dist(TankCharacter->GetActorLocation(), ThrowTarget->GetActorLocation()) < NearDist)
+		{
+			ThrowObject();
+		}
 	}
 
 	if (!TankCharacter->GetMesh()->GetAnimInstance()) return;

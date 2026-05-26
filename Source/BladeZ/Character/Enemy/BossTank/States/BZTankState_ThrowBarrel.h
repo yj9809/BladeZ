@@ -33,6 +33,8 @@ private:
 	UPROPERTY()
 	TArray<AActor*> FoundThrowable;
 
+	float StuckTimer = 0.0f;
+
 	FOnMontageEnded ThrowObjectMontageEndDelegate;
 
 	AActor* GetAvailableObject();

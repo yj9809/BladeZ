@@ -223,6 +223,12 @@ void ABZTankCharacter::Tick(float DeltaTime)
 float ABZTankCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& InDamageEvent,
                                    class AController* EventInstigator, AActor* DamageCauser)
 {
+	// 죽었거나 페이즈 전환 중(상태 머신 중지)에는 무적 처리
+	if (bIsDead || (StateMachine && StateMachine->GetCurrentState() == nullptr))
+	{
+		return 0.0f;
+	}
+
 	const float Damage = Super::TakeDamage(DamageAmount, InDamageEvent, EventInstigator, DamageCauser);
 	if (Stat)
 	{
@@ -567,6 +573,8 @@ void ABZTankCharacter::OnTransitionMontageEnded(UAnimMontage* Montage, bool bInt
 
 void ABZTankCharacter::UpdateTimers(float DeltaTime)
 {
+	if (bIsDead) return;
+
 	DefaultAttackCooldown.CurrentTime += DeltaTime;
 	JumpToCooldown.CurrentTime += DeltaTime;
 	ThrowObjectCooldown.CurrentTime += DeltaTime;
