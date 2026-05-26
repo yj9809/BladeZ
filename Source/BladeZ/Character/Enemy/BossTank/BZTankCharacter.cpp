@@ -247,6 +247,9 @@ void ABZTankCharacter::SetDead()
 
 	BOSS_LOG(Warning, "BossDead");
 
+	// 레벨 BP 등에서 수신할 수 있도록 죽음 이벤트 방송
+	OnBossDead.Broadcast();
+
 	// 1. 상태 머신 중단
 	if (StateMachine)
 	{

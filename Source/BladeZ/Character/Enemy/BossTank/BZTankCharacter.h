@@ -13,6 +13,7 @@
 
 // 스턴 게이지 델리게이트 선언
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStunChangedDelegate, float /*CurrentStun*/, bool /*bIsLightOn*/);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossDeadDelegate);
 
 UCLASS()
 class BLADEZ_API ABZTankCharacter
@@ -23,6 +24,9 @@ class BLADEZ_API ABZTankCharacter
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnBossDeadDelegate OnBossDead;
+
 	// 보스 초기화 (상태 및 컴포넌트)
 	void InitializeBoss();
 
