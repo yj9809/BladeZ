@@ -27,4 +27,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Zombie Spawn")
 	float SpawnRadius = 1000.0f;
+	
+	/*
+ 	* 작성자: 윤제영.
+ 	* 좀비가 스폰될 때 지면에서 튀어오르게끔 스폰을 하도록 변경을 위한 작업.
+ 	*/
+	UPROPERTY(EditAnywhere, Category = "Zombie Spawn")
+	float MinSpawnRadius = 300.0f;
 };

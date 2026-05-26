@@ -503,7 +503,17 @@ void ABZPlayerCharacter::PlayerRunEnd(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 {
-	if (!Weapon) return;
+	if (!Weapon)
+	{
+		return;
+	}
+	
+	// 히트 모션일 경우 공격 불가.
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance->Montage_IsPlaying(HitMontage))
+	{
+		return;
+	}
 	
 	if (!GetCharacterMovement()->IsMovingOnGround() || bIsLanding)
 	{
@@ -522,7 +532,10 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 {
-	if (!Weapon) return;
+	if (!Weapon)
+	{
+		return;
+	}
 	
 	if (!GetCharacterMovement()->IsMovingOnGround() || bIsLanding)
 	{
@@ -540,13 +553,19 @@ void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 		return;
 	}
 	
+	// 히트 모션일 경우 대쉬 불가.
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance->Montage_IsPlaying(HitMontage))
+	{
+		return;
+	}
+	
 	// 타이머가 도는 중이면 대쉬 로직 실행하지 않음.
 	if (GetWorldTimerManager().IsTimerActive(DashCoolDownTimerHandle))
 	{
 		return;
 	}
 	
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
 	{
 		FVector InputVector = GetLastMovementInputVector();

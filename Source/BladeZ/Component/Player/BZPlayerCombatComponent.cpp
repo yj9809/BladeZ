@@ -313,7 +313,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 			GetWorld(),
 			CurrentData->HitSound,
 			1.5f,
-			1.0f,
+			1.2f,
 			0.15f
 		);
 	}
