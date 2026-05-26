@@ -10,7 +10,8 @@ class UParticleSystemComponent;
 class USceneComponent;
 class UBoxComponent;
 
-class ABZQuestActor;
+class UBZPlayerQuestComponent;
+
 
 UCLASS()
 class BLADEZ_API ABZPortal : public AActor
@@ -30,7 +31,7 @@ protected:
 
 public:
 	UFUNCTION()
-	void HandleQuestCompleted(const ABZQuestActor* QuestActor);
+	void HandleQuestCompleted(FName InQuestID);
 
 	// Setter.
 	void SetTargetLevelName(FText InName);
@@ -64,8 +65,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Portal")
 	FName TargetLevelName;
 
-	// 참조할 Quest Actor.
+	// 참조할 Quest ID.
 	UPROPERTY(EditInstanceOnly, Category = "Portal")
-	TObjectPtr<ABZQuestActor> RequiredQuestActor;
+	FName RequiredQuestID;
+
+	// Caching할 QuestComponent.
+	UPROPERTY()
+	TObjectPtr<UBZPlayerQuestComponent> BoundQuestComponent;
 
 };

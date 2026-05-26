@@ -16,7 +16,7 @@
 #include "State/AttackState.h"
 #include "State/DeadState.h"
 
-#include "Game/BZEnemyEventSubsystem.h"
+#include "Game/BZQuestEventSubsystem.h"
 
 
 ABZZombie::ABZZombie()
@@ -104,7 +104,7 @@ void ABZZombie::OnHpZero()
 	* 작성일: 26.05.17
 	* 작성 사유: UI/Quest에서 적 죽음 처리를 위해 추가.
 	*/
-	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
+	if (UBZQuestEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
 	{
 		EnemyEvents->BroadcastEnemyDied(this);
 	}

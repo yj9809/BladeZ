@@ -67,6 +67,7 @@ void UBZCharacterStatComponent::SetStat(const FBZCharacterStat& InStat)
 	// 이후 Stat 항목이 추가되면 여기에 추가.
 }
 
+// 나에게 데미지를 적용하는 함수.
 float UBZCharacterStatComponent::ApplyDamage(float InAdditiveDamage)
 {
 	// 변경 여부를 확인하기 위해 대미지 처리 전 값 저장.

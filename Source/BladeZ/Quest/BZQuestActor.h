@@ -7,7 +7,8 @@
 #include "QuestData.h"
 #include "BZQuestActor.generated.h"
 
-class UBZEnemyEventSubsystem;
+class UBZQuestEventSubsystem;
+class UBZPlayerQuestComponent;
 
 /*
  * 퀘스트 진행도가 바뀔 때 UI나 다른 시스템에 알려주는 델리게이트.
@@ -49,10 +50,12 @@ public:
 	// Quest가 진행되면 Broadcast.
 	void RefreshQuestProgress();
 
+	void SetPlayerQuestComponent(UBZPlayerQuestComponent* InQuestComponent);
+
 	// Getter.
-	const FBZQuestData& GetQuestData() const { return Data; }
-	int32 GetCurrentKillCount() const { return CurrentKillCount; }
-	bool IsCompleted() const { return bIsCompleted; }
+	FORCEINLINE const FBZQuestData& GetQuestData() const { return Data; }
+	FORCEINLINE FName GetQuestID() const { return Data.QuestID; }
+
 
 protected:
 	// EnemyEventSubsystem을 BeginPlay에서 Cahching하고, EndPlay에서 Binding 해제.
@@ -64,7 +67,7 @@ private:
 	* EnemyEventSubsystem의 OnEnemyDied에 바인딩될 함수.
 	* 적이 죽을 때마다 호출 => 현재 Quest 조건에 맞으면 진행도를 올린다.
 	*/
-	void HandleEnemyDied(AActor* DeadEnemy);
+	void HandleProgressChange(AActor* TargetActor);
 
 	/*
 	* Quest 진행도를 1 증가시키는 함수.
@@ -95,36 +98,22 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Quest")
 	FOnQuestCompleted OnQuestCompleted;
 
-protected:
-	/*
-	 * 활성화 여부.
-	 * 일시적으로 Edit Anywhere 처리.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Quest")
-	bool bIsActive = false;
-
-	/*
-	 * 완료 여부.
-	 * 완료 이벤트가 여러 번 호출되는 것을 막는다.
-	 */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Quest")
-	bool bIsCompleted = false;
-
-	/*
-	* 현재 진행도.
-	* 런타임에서 증가하며 UI 갱신에 사용된다.
-	*/
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Quest")
-	int32 CurrentKillCount = 0;
-
 private:
 	/*
-	* BeginPlay에서 얻어온 EnemyEventSubsystem 캐시.
+	* BeginPlay에서 얻어온 QuestEventSubsystem 캐시.
 	* EndPlay에서 안전하게 바인딩 해제하기 위해 보관한다.
 	*/
 	UPROPERTY()
-	TObjectPtr<UBZEnemyEventSubsystem> EnemyEventSubsystem;
+	TObjectPtr<UBZQuestEventSubsystem> QuestEventSubsystem;
 
 	UPROPERTY(EditAnywhere, Category = "Quest")
 	FBZQuestData Data;
+
+
+	/*
+	* Player의 QuestComponent에 대한 Pointer.
+	* TODO: 가능하다면 구조 바꿔보기.
+	*/
+	UPROPERTY()
+	TObjectPtr<UBZPlayerQuestComponent> PlayerQuestComponent;
 };

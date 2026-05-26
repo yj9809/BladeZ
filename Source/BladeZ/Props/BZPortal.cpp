@@ -9,9 +9,10 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/BoxComponent.h"
 #include "Character/Player/BZPlayerCharacter.h"
-#include "Quest/BZQuestActor.h"
 #include "Game/BZGameInstance.h"
 #include "Character/Player/Weapon/BZWeaponActor.h"
+#include "Component/Player/BZPlayerQuestComponent.h"
+#include "Quest/QuestData.h"
 
 // Sets default values
 ABZPortal::ABZPortal()
@@ -62,12 +63,31 @@ void ABZPortal::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (IsValid(RequiredQuestActor))
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	BoxCollision->SetGenerateOverlapEvents(false);
+
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	if (!PlayerPawn)
 	{
-		RequiredQuestActor->OnQuestCompleted.AddDynamic(
-			this,
-			&ABZPortal::HandleQuestCompleted
-		);
+		return;
+	}
+
+	BoundQuestComponent = PlayerPawn->FindComponentByClass<UBZPlayerQuestComponent>();
+	if (!BoundQuestComponent)
+	{
+		return;
+	}
+
+	BoundQuestComponent->OnQuestCompleted.AddUniqueDynamic(
+		this,
+		&ABZPortal::HandleQuestCompleted
+	);
+
+	if (!RequiredQuestID.IsNone() &&
+		BoundQuestComponent->IsQuestCompleted(RequiredQuestID))
+	{
+		HandleQuestCompleted(RequiredQuestID);
 	}
 
 	SetActorHiddenInGame(true);
@@ -75,14 +95,26 @@ void ABZPortal::BeginPlay()
 	BoxCollision->SetGenerateOverlapEvents(false);
 }
 
-void ABZPortal::HandleQuestCompleted(const ABZQuestActor* InQuestActor)
+void ABZPortal::HandleQuestCompleted(FName InQuestID)
 {
-	if (InQuestActor->GetQuestData().CompletionAction == EQuestCompletionAction::GoNextLevel)
+	if (InQuestID != RequiredQuestID)
 	{
-		SetActorHiddenInGame(false);
-		SetActorEnableCollision(true);
-		BoxCollision->SetGenerateOverlapEvents(true);
+		return;
 	}
+
+	const FBZQuestData* QuestData = BoundQuestComponent
+		? BoundQuestComponent->GetQuestData(InQuestID)
+		: nullptr;
+
+	if (!QuestData ||
+		QuestData->CompletionAction != EQuestCompletionAction::GoNextLevel)
+	{
+		return;
+	}
+
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	BoxCollision->SetGenerateOverlapEvents(true);
 }
 
 void ABZPortal::SetTargetLevelName(FText InName)

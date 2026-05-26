@@ -18,6 +18,11 @@
  * - 최종 완료 시 Portal, GameClear 등 상위 시스템에 알림
  */
 
+class ABZPlayerController;
+class ABZQuestActor;
+class UBZPlayerQuestComponent;
+
+
 UCLASS()
 class BLADEZ_API ABZQuestManagerActor : public AActor
 {
@@ -31,4 +36,20 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+
+private:
+	UBZPlayerQuestComponent* GetPlayerQuestComponent() const;
+	ABZPlayerController* GetBZPlayerController() const;
+
+	void CollectQuestActors(TArray<ABZQuestActor*>& OutQuestActors) const;
+	FName FindDisplayQuestID(
+		const TArray<ABZQuestActor*>& InQuestActors,
+		const UBZPlayerQuestComponent* InQuestComponent
+	) const;
+
+
+protected:
+
+	UPROPERTY(EditAnywhere, Category = "Quest")
+	FName DefaultQuestID = TEXT("1011");
 };

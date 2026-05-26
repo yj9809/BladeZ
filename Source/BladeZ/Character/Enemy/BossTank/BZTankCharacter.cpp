@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZTankCharacter.h"
@@ -11,7 +11,7 @@
 #include "Character/Player/BZPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/BZBossHUDWidget.h"
-#include "Game/BZEnemyEventSubsystem.h"
+#include "Game/BZQuestEventSubsystem.h"
 #include "GameFramework/DamageType.h"
 #include "DrawDebugHelpers.h"
 #include "LevelSequenceActor.h"
@@ -265,16 +265,6 @@ void ABZTankCharacter::SetDead()
 		PlayAnimMontage(DeathMontage, 1.0f);
 	}
 
-	/*
-	* 작성자: 강수연
-	* 작성일: 26.05.18
-	* 작성 사유: UI/Quest에서 보스 죽음 처리를 위해 추가.
-	* Dead Event BroadCast.
-	*/
-	if (UBZEnemyEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZEnemyEventSubsystem>())
-	{
-		EnemyEvents->BroadcastEnemyDied(this);
-	}
 }
 
 void ABZTankCharacter::PostInitializeComponents()
@@ -714,5 +704,8 @@ void ABZTankCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 		
 		// 스턴 게이지 바인딩. 주석 해제 후 사용.
 		OnStunChanged.AddUObject(InHUDWidget, &UBZBossHUDWidget::UpdateStunBar);
+
+		// 죽으면 안 보이도록 설정.
+		Stat->OnHpZero.AddUObject(InHUDWidget, &UBZBossHUDWidget::SetHidden);
 	}
 }

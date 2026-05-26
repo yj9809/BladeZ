@@ -9,7 +9,6 @@
 
 #include "Interface/BZStatRowNameProvider.h"
 #include "Interface/BZCharacterHUD.h"
-
 #include "BZPlayerCharacter.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
@@ -275,21 +274,6 @@ private:
 	* 작성 사유: Stat Component 처리를 위해 추가.
 	* 스탯 컴포넌트.
 	*/
-	UPROPERTY(VisibleAnywhere, Category = Stat)
-	TObjectPtr<class UBZCharacterStatComponent> Stat;
-
-	/*
-	* 이 항목은 Content/BZ/GameData/DT_CharacterStat의 RowName에서 찾을 수 없을 시,
-	* Engine이 강제 종료되니 유의하여 바꿔주세요.
-	*/
-	UPROPERTY(VisibleAnywhere, Category = Player)
-	FName StatRowName = TEXT("햄토리");
-
-	/*
-	* IBZCharacterStatProvider을(를) 통해 상속됨
-	* StatComponent에 StatRowName을 넘겨, 스스로 초기화할 수 있도록 함.
-	*/
-	FName GetStatRowName() const override;
 
 	/*
 	* IBZCharacterHUD을(를) 통해 상속됨
@@ -298,4 +282,24 @@ private:
 	*/
 	void SetupHUDWidget(UBZUserWidget* InWidget) override;
 
+	UPROPERTY(VisibleAnywhere, Category = Stat)
+	TObjectPtr<class UBZCharacterStatComponent> Stat;
+
+	// 실제 Quest 진행 상태는 QuestActor가 아니라 이 Component에 저장됨.
+	UPROPERTY(VisibleAnywhere, Category = Quest)
+	TObjectPtr<class UBZPlayerQuestComponent> Quest;
+
+	/*
+	* IBZCharacterStatProvider을(를) 통해 상속됨
+	* StatComponent에 StatRowName을 넘겨, 스스로 초기화할 수 있도록 함.
+	*/
+	FName GetStatRowName() const override;
+	
+	
+	/*
+	* 이 항목은 Content/BZ/GameData/DT_CharacterStat의 RowName에서 찾을 수 없을 시,
+	* Engine이 강제 종료되니 유의하여 바꿔주세요.
+	*/
+	UPROPERTY(VisibleAnywhere, Category = Player)
+	FName StatRowName = TEXT("햄토리");
 };

@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Interactable/Item/ABZPickupBase.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/Player/BZPlayerCharacter.h"
+#include "Game/BZQuestEventSubsystem.h"
 #include "TimerManager.h"
 
 // Sets default values
@@ -54,6 +55,16 @@ void AABZPickupBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
 	ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(OtherActor);
 	if (Player)
 	{
+		/*
+		* 작성자: 강수연
+		* 작성일: 26.05.26
+		* 작성 사유: CollectItems Quest 처리를 위해 추가
+		*/
+		if (UBZQuestEventSubsystem* QuestEventSubsystem = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
+		{
+			QuestEventSubsystem->BroadcastQuestTargetAcquired(this);
+		}
+
 		// 아이템 효과 발동
 		ApplyItemEffect(Player);
 		

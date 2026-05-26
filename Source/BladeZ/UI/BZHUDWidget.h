@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BZUserWidget.h"
+#include "Quest/QuestData.h"
 #include "BZHUDWidget.generated.h"
 
 /**
@@ -11,6 +12,7 @@
  */
 
 class UWidget;
+class UBZPlayerQuestComponent;
 
 UCLASS()
 class BLADEZ_API UBZHUDWidget : public UBZUserWidget
@@ -50,7 +52,15 @@ public:
 
 
 	// For QuestInfo.
+	// 기존 함수
 	void BindQuestActor(class ABZQuestActor* QuestActor);
+
+
+	// TODO(QuestRefactor):
+	// New path. HUD should observe Player-owned quest state,
+	// not a Level-owned QuestActor.
+	void BindQuestComponent(class UBZPlayerQuestComponent* InQuestComponent);
+	void SetDisplayedQuest(FName InQuestID);
 
 	/*
 	* OnQuestProgressChanged가 DECLARE_DYNAMIC_MULTICAST_DELEGATE라서
@@ -73,12 +83,24 @@ public:
 	// PlayerController가 UIOnly FocusWidget으로 사용할 수 있도록.
 	UWidget* GetOptionWidget() const;
 
+	UFUNCTION()
+	void HandleQuestActivated(FName QuestID, const FBZQuestData& QuestData);
+
+	UFUNCTION()
+	void HandleQuestProgressChanged(
+		FName QuestID,
+		int32 CurrentValue,
+		int32 TargetValue
+	);
+
+
 	// HUD에 포함된 하위 Widgets.
 	// meta 정보를 BindWidget으로 설정하면, 
 	// 컴파일/생성 과정에서 변수 이름과 같은 Object를 찾아 Binding한다.
 	// 변수 이름과 다른 Widget이름을 갖게 하고자 하려면,
 	// NativeConstruct에서 따로 FName을 통해 GetWidgetFromName으로 찾아서 Bind 해야 함.
 protected:
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBZHpBarWidget> HpBarWidget;
 
@@ -93,5 +115,11 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UBZOptionWidget> OptionWidget;
+
+	UPROPERTY()
+	TObjectPtr<UBZPlayerQuestComponent> BoundQuestComponent;
+
+	UPROPERTY()
+	FName DisplayedQuestID;
 };
  

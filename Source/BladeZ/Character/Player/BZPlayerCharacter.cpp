@@ -22,7 +22,10 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Game/BZQuestEventSubsystem.h"
 #include "Item/BZItemPickup.h"
+#include "Component/Player/BZPlayerQuestComponent.h"
+
 
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
@@ -233,6 +236,14 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 	* 초기화는 더 안해줘도 됨
 	*/
 	Stat = CreateDefaultSubobject<UBZCharacterStatComponent>(TEXT("Stat"));
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.26
+	* 작성 사유: Quest를 Component로 처리하기 위해 추가.
+	*/
+	Quest = CreateDefaultSubobject<UBZPlayerQuestComponent>(TEXT("Quest"));
+
 }
 
 void ABZPlayerCharacter::StartComboCheck() const
@@ -740,6 +751,11 @@ void ABZPlayerCharacter::PlayerInteract(const FInputActionValue& Value)
 	{
 		if (NearbyItemPickup)
 		{
+			if (UBZQuestEventSubsystem* QuestEventSubsystem = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
+			{
+				QuestEventSubsystem->BroadcastQuestTargetAcquired(Weapon);
+			}
+
 			NearbyItemPickup->ItemPickup();
 			NearbyItemPickup = nullptr;
 		}
@@ -754,6 +770,16 @@ void ABZPlayerCharacter::PlayerInteract(const FInputActionValue& Value)
 	Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(NearbyPickup->GetWeaponClass());
 	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 	Weapon->OnAttackHit.BindUObject(CombatComponent, &UBZPlayerCombatComponent::OnAttackHit);
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.26
+	* 작성 사유: GetWeapon Quest 처리를 위해 추가
+	*/
+	if (UBZQuestEventSubsystem* QuestEventSubsystem = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
+	{
+		QuestEventSubsystem->BroadcastQuestTargetAcquired(NearbyPickup);
+	}
 
 	NearbyPickup->Destroy();
 	NearbyPickup = nullptr;
