@@ -12,6 +12,7 @@
 
 #include "BZPlayerCharacter.generated.h"
 
+class ABZItemPickup;
 DECLARE_DELEGATE_OneParam(FOnBossAttack, float /*Camera Shake Amplitude*/)
 
 /// <summary>
@@ -131,6 +132,7 @@ public:
 public:
 	FORCEINLINE void SetNearbyPickup(ABZWeaponPickup* Pickup) { NearbyPickup = Pickup; }
 	
+	FORCEINLINE void SetNearbyItemPickup(ABZItemPickup* Pickup) { NearbyItemPickup = Pickup; }
 	// Component private.
 private:
 	// 카메라 세팅.
@@ -202,6 +204,9 @@ private:
 	// 근처 픽업 참조.
 	UPROPERTY()
 	TObjectPtr<ABZWeaponPickup> NearbyPickup;
+	
+	UPROPERTY()
+	TObjectPtr<ABZItemPickup> NearbyItemPickup;
 	
 	// Montage private.
 private:

@@ -22,6 +22,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Engine/DamageEvents.h"
+#include "Item/BZItemPickup.h"
 
 // Sets default values
 ABZPlayerCharacter::ABZPlayerCharacter()
@@ -716,7 +717,15 @@ void ABZPlayerCharacter::SetupHUDWidget(UBZUserWidget* InWidget)
 
 void ABZPlayerCharacter::PlayerInteract(const FInputActionValue& Value)
 {
-	if (!NearbyPickup || !NearbyPickup->GetWeaponClass()) return;
+	if (!NearbyPickup || !NearbyPickup->GetWeaponClass())
+	{
+		if (NearbyItemPickup)
+		{
+			NearbyItemPickup->ItemPickup();
+			NearbyItemPickup = nullptr;
+		}
+		return;
+	}
 
 	if (Weapon)
 	{
