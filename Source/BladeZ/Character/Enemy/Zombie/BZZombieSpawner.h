@@ -25,22 +25,38 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
+
 private:
-	//죽은 좀비들을 스폰해줌 
-	void ZombieSpawn() const;
-	
+	// 풀에서 좀비를 하나 꺼내 이 스포너 영역 안에 활성화한다.
+	bool ZombieSpawn();
+
 	FVector GetSpawnLocation() const;
-	
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zombie Spawn|SpawnerEnable")
+	bool bSpawnEnabled = false;
+
+	UFUNCTION(BlueprintCallable, Category="Zombie Spawn|SpawnerEnable")
+	void SetSpawnEnabled(bool bEnable);
+
+	UFUNCTION(BlueprintCallable, Category="Zombie Spawn|SpawnerEnable")
+	void ResetSpawner();
 
 private:
 	//좀비를 스폰 할 때 사용 할 함수
 	UPROPERTY(EditAnywhere, Category="Zombie Spawn")
 	TSubclassOf<ABZZombie> ZombieClass;
 	
-	//좀비 풀 크기
-	UPROPERTY(editAnywhere, Category="Zombie Spawn")
-	int32 ZombiePoolSize;	
+	// 이 스포너가 게임 시작 시 공용 풀에 추가할 좀비 수.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zombie Spawn", meta=(AllowPrivateAccess="true", ClampMin="0"))
+	int32 ZombiePoolSize = 30;
+
+	// 이 스포너가 활성화됐을 때 최대 몇 마리까지 소환할지 정한다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Zombie Spawn", meta=(AllowPrivateAccess="true", ClampMin="0"))
+	int32 MaxSpawnCount = 30;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Zombie Spawn", meta=(AllowPrivateAccess="true"))
+	int32 CurrentSpawnCount = 0;
 	
 	UPROPERTY(EditAnywhere, Category="Zombie Spawn")
 	UBoxComponent* SpawnArea;

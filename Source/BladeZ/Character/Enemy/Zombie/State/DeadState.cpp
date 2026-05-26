@@ -1,6 +1,9 @@
 ﻿#include "DeadState.h"
 
+#include <gsl/pointers>
+
 #include "Character/Enemy/Zombie/BZZombie.h"
+#include "Components/CapsuleComponent.h"
 
 void DeadState::OnEnter()
 {
@@ -9,8 +12,9 @@ void DeadState::OnEnter()
 
 	// 죽음 스테이트 시작할 때 아래 코드를 실행시키면 반복 실행되는 문제가 있음.
 
-	Owner->SetActorEnableCollision(false);
+	//Owner->SetActorEnableCollision(false);
 	//트레이스 웨폰 채널 이그노어 변경하기 
+	Owner->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1,/*WeaponTrace*/ECR_Ignore);
 	
 	UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
 	if (!AnimInstance || !Owner->ZombieDeathAnim)

@@ -47,17 +47,37 @@ void ABZZombieSpawner::BeginPlay()
 void ABZZombieSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	ZombieSpawn();
+
+	if (bSpawnEnabled && CurrentSpawnCount < MaxSpawnCount)
+	{
+		if (ZombieSpawn())
+		{
+			++CurrentSpawnCount;
+		}
+	}
 }
 
-void ABZZombieSpawner::ZombieSpawn() const
+void ABZZombieSpawner::SetSpawnEnabled(bool bEnable)
+{
+	bSpawnEnabled = bEnable;
+}
+
+void ABZZombieSpawner::ResetSpawner()
+{
+	CurrentSpawnCount = 0;
+	bSpawnEnabled = false;
+}
+
+bool ABZZombieSpawner::ZombieSpawn()
 {
 	//풀에 존재 할 때 마다 좀비 스폰(활성화)
 	if (ObjectPool)
 	{
-		ObjectPool->GetZombieFromPool(
-			FVector(GetSpawnLocation()),GetActorRotation());
+		return ObjectPool->GetZombieFromPool(
+			FVector(GetSpawnLocation()), GetActorRotation()) != nullptr;
 	}
+
+	return false;
 }
 
 FVector ABZZombieSpawner::GetSpawnLocation() const

@@ -26,6 +26,12 @@ void ABZZombieNiagaraSwapManager::BeginPlay()
 void ABZZombieNiagaraSwapManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!bSpawnEnabled || CurrentSpawnCount >= MaxSpawnCount)
+	{
+		return;
+	}
+
 	ProcessPendingSpawns();
 }
 
@@ -36,6 +42,11 @@ void ABZZombieNiagaraSwapManager::ReceiveParticleData_Implementation(
 {
 	// UE_LOG(LogTemp, Warning, TEXT("[Swap] ReceiveParticleData called, Data.Num=%d, SimOffset=%s"),
 	// 	Data.Num(), *SimulationPositionOffset.ToString());
+
+	if (!bSpawnEnabled || CurrentSpawnCount >= MaxSpawnCount)
+	{
+		return;
+	}
 
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
 	if (!PlayerPawn)
@@ -101,6 +112,20 @@ void ABZZombieNiagaraSwapManager::ResetSpawnedIds()
 {
 	PendingSpawns.Reset();
 	SpawnedParticleIds.Reset();
+	CurrentSpawnCount = 0;
+}
+
+void ABZZombieNiagaraSwapManager::SetSpawnEnabled(bool bEnable)
+{
+	bSpawnEnabled = bEnable;
+}
+
+void ABZZombieNiagaraSwapManager::ResetSwapManager()
+{
+	PendingSpawns.Reset();
+	SpawnedParticleIds.Reset();
+	CurrentSpawnCount = 0;
+	bSpawnEnabled = false;
 }
 
 void ABZZombieNiagaraSwapManager::RegisterNiagaraCallbackHandler()
@@ -129,7 +154,8 @@ void ABZZombieNiagaraSwapManager::ProcessPendingSpawns()
 		//UE_LOG(LogTemp, Warning, TEXT("[Swap] ProcessPendingSpawns: %d pending"), PendingSpawns.Num());
 	}
 
-	const int32 SpawnCount = FMath::Min(MaxSpawnPerFrame, PendingSpawns.Num());
+	const int32 RemainingSpawnCount = MaxSpawnCount - CurrentSpawnCount;
+	const int32 SpawnCount = FMath::Min(FMath::Min(MaxSpawnPerFrame, PendingSpawns.Num()), RemainingSpawnCount);
 	for (int32 i = 0; i < SpawnCount; ++i)
 	{
 		const FZombieParticleSpawnData SpawnData = PendingSpawns[0];
@@ -148,6 +174,14 @@ void ABZZombieNiagaraSwapManager::ProcessPendingSpawns()
 
 		Zombie->SetSourceParticleId(SpawnData.ParticleId);
 		SpawnedParticleIds.Add(SpawnData.ParticleId);
+		++CurrentSpawnCount;
+
+		if (CurrentSpawnCount >= MaxSpawnCount)
+		{
+			bSpawnEnabled = false;
+			PendingSpawns.Reset();
+			break;
+		}
 
 		// UE_LOG(LogTemp, Warning, TEXT("[Swap]   * Spawned zombie at %s (ID=%d)"),
 		// 	*SpawnData.Location.ToString(), SpawnData.ParticleId);

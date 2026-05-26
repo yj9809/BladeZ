@@ -1,5 +1,7 @@
 ﻿#include "ChaseState.h"
 
+
+
 #include "AIController.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
 #include "Components/CapsuleComponent.h"
@@ -50,6 +52,7 @@ void ChaseState::OnUpdate(float DeltaTime)
 	{
 		return;
 	}
+	
 	
 	/*
 	 * 작성자: 강준형.

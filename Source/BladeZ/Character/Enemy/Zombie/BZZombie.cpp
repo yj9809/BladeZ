@@ -19,6 +19,7 @@
 #include "Game/BZQuestEventSubsystem.h"
 
 
+// 생성자: 기본 상태, AI, 스탯 컴포넌트, 기본 애니메이션 애셋을 준비한다.
 ABZZombie::ABZZombie()
 {
 	//Todo : 틱-> false, 열거형 초기화 -> Inactive
@@ -56,6 +57,7 @@ ABZZombie::ABZZombie()
 	}
 }
 
+// 게임 시작 시 FSM 객체, 이동 속도, Overlap 이벤트, 기본 타겟을 설정한다.
 void ABZZombie::BeginPlay()
 {
 	Super::BeginPlay();
@@ -80,6 +82,7 @@ void ABZZombie::BeginPlay()
 	SetZombieState(IsValid(TargetActor) ? EZombieState::Idle : EZombieState::Inactive);
 }
 
+// 컴포넌트 초기화 후 HP 0 이벤트와 랜덤 메시 비동기 로드를 연결한다.
 void ABZZombie::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -97,6 +100,7 @@ void ABZZombie::PostInitializeComponents()
 			                   &ABZZombie::ZombieMeshLoadCompleted));
 }
 
+// HP가 0이 되면 죽음 이벤트를 알리고 Dead 상태로 전환한다.
 void ABZZombie::OnHpZero()
 {
 	/*
@@ -112,6 +116,7 @@ void ABZZombie::OnHpZero()
 	SetZombieState(EZombieState::Dead);
 }
 
+// 대미지를 적용하고, 필요하면 넉백/피격 애니메이션/사망 전환을 처리한다.
 float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
                             class AController* EventInstigator, AActor* DamageCauser)
 {
@@ -152,6 +157,7 @@ float ABZZombie::TakeDamage(float DamageAmount, struct FDamageEvent const& Damag
 	return DamageAmount;
 }
 
+// 매 프레임 현재 FSM 상태를 갱신한다.
 void ABZZombie::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -159,6 +165,7 @@ void ABZZombie::Tick(float DeltaTime)
 	TickFSM(DeltaTime);
 }
 
+// 풀에서 다시 활성화될 때 타겟, HP, 상태, 애니메이션을 초기화한다.
 void ABZZombie::InitializeFSM(AActor* InTargetActor)
 {
 	/*
@@ -196,6 +203,7 @@ void ABZZombie::InitializeFSM(AActor* InTargetActor)
 	GetMesh()->InitAnim(true);
 }
 
+// 현재 상태에 대응하는 FSM 객체의 Update를 호출한다.
 void ABZZombie::TickFSM(float DeltaTime)
 {
 	/*
@@ -229,12 +237,14 @@ void ABZZombie::TickFSM(float DeltaTime)
 		
 }
 
+// 공격 중복 판정 목록을 초기화한다.
 void ABZZombie::ClearAttackHitActors()
 {
 	AttackHitActors.Empty();
 }
 
 //비동기 랜덤 매쉬 적용
+// 로드된 랜덤 스켈레탈 메시를 실제 메시 컴포넌트에 적용한다.
 void ABZZombie::ZombieMeshLoadCompleted()
 {
 	if (ZombieMeshHandle.IsValid())
@@ -251,6 +261,7 @@ void ABZZombie::ZombieMeshLoadCompleted()
 }
 
 //새로운 좀비 상태 적용
+// 상태 전환 시 이전 상태 Exit와 새 상태 Enter를 호출한다.
 void ABZZombie::SetZombieState(EZombieState NewState)
 {
 	if (CurrentState == NewState)
@@ -283,6 +294,7 @@ void ABZZombie::SetZombieState(EZombieState NewState)
 }
 
 //오브젝트 풀에 좀비 넣는 함수
+// 상태를 Inactive로 바꾸고 풀 타입에 맞는 풀로 반환한다.
 void ABZZombie::ReturnZombieToPool()
 {
 	/*
@@ -313,6 +325,7 @@ void ABZZombie::ReturnZombieToPool()
 }
 
 // 타겟 방향 계산 함수
+// 타겟까지의 평면 거리만 계산한다.
 float ABZZombie::GetDistanceToTarget2D() const
 {
 	if (!IsValid(TargetActor))
@@ -324,6 +337,7 @@ float ABZZombie::GetDistanceToTarget2D() const
 }
 
 //트레이스 시작 함수 
+// 공격 Notify에서 호출되어 이번 공격의 Trace를 시작한다.
 void ABZZombie::StartAttackTrace()
 {
 	if (CurrentState == EZombieState::Dead)
@@ -339,6 +353,7 @@ void ABZZombie::StartAttackTrace()
 
 
 //트레이스 디버깅용
+// 공격 소켓 기준으로 Sweep Trace를 수행하고 타겟에게 대미지를 준다.
 void ABZZombie::PerformAttackTrace()
 {
 	//예외처리
@@ -517,6 +532,7 @@ void ABZZombie::PerformAttackTrace()
 }
 
 //Todo : 넉백 함수 리팩토링 필요 
+// 대미지 이벤트 타입에 따라 직접 타격/폭발 넉백을 적용한다.
 void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 {	
 	// 작성자: 강준형
@@ -602,6 +618,7 @@ void ABZZombie::KnockBack(FDamageEvent const& DamageEvent)
 }
 
 //넉백 끝나면 초기화 함수
+// 넉백 연쇄 대미지 상태를 종료하고 충돌 설정을 복구한다.
 void ABZZombie::EndKnockbackOverlapDamage()
 {
 	bCanDamageOverlappedZombies = false;
@@ -645,6 +662,7 @@ void ABZZombie::EndKnockbackOverlapDamage()
 }
 
 //넉백 연쇄 대미지 적용
+// 넉백 중 겹친 다른 좀비에게 한 번만 연쇄 대미지를 준다.
 void ABZZombie::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
                                       AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp,
@@ -686,11 +704,13 @@ void ABZZombie::OnCapsuleBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	OtherZombie->TakeDamage(KnockbackOverlapDamage, ChainDamageEvent, nullptr, this);
 }
 
+// 스탯 컴포넌트가 사용할 데이터 Row 이름을 반환한다.
 FName ABZZombie::GetStatRowName() const
 {
 	return StatRowName;
 }
 
+// 광폭화 상태에 따라 속도, 크기, 대미지 배율, 머티리얼 색상을 변경한다.
 void ABZZombie::SetFrenzyMode(bool bEnable)
 {
 	if (bIsFrenzied == bEnable)

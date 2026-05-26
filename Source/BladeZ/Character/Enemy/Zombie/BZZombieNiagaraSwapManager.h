@@ -53,6 +53,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Zombie|Niagara Swap")
 	void ResetSpawnedIds();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Niagara Swap|SpawnerEnable")
+	bool bSpawnEnabled = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie|Niagara Swap|SpawnerEnable")
+	void SetSpawnEnabled(bool bEnable);
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie|Niagara Swap|SpawnerEnable")
+	void ResetSwapManager();
+
 private:
 	void RegisterNiagaraCallbackHandler();
 	void ProcessPendingSpawns();
@@ -70,6 +79,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Zombie|Niagara Swap", meta = (ClampMin = "1"))
 	int32 MaxSpawnPerFrame = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie|Niagara Swap", meta = (AllowPrivateAccess = "true", ClampMin = "0"))
+	int32 MaxSpawnCount = 30;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zombie|Niagara Swap", meta = (AllowPrivateAccess = "true"))
+	int32 CurrentSpawnCount = 0;
 
 	// Niagara Export Particle Data 콜백 수신자 등록에 사용하는 파라미터 이름.
 	UPROPERTY(EditAnywhere, Category = "Zombie|Niagara Swap")

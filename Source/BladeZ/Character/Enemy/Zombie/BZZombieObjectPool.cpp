@@ -3,6 +3,7 @@
 
 #include "BZZombieObjectPool.h"
 #include "BZZombie.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -81,44 +82,13 @@ void UBZZombieObjectPool::ReturnZombieToPool(ABZZombie* ReturnZombie)
 	}
 	ReturnZombie->SetActorEnableCollision(false);
 	ReturnZombie->GetCharacterMovement()->SetMovementMode(MOVE_None);
-
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *ReturnZombie->GetName());
-
-	// UAnimInstance* AnimInstance = ReturnZombie->GetMesh()->GetAnimInstance();
-	// if (!AnimInstance || !ZombieDeathAnim)
-	// {
-	// 	return;
-	// }
-
+	
 	// 비활성화.
 	DeActiveZombies(ReturnZombie);
 	// 풀 목록에 추가.
 	ZombiePool.Push(ReturnZombie);
 
-	// 이미 죽는 몽타주 재생 중이면 다시 Play 하지 않음
-	//if (AnimInstance->Montage_IsPlaying(ZombieDeathAnim))
-	//{
-	//	return;
-	//}
 	
-	// const float PlayResult = AnimInstance->Montage_Play(ZombieDeathAnim);
-	// if (PlayResult <= 0.f)
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("Death montage failed to play"));
-	// 	return;
-	// }
-
-
-	// FOnMontageEnded EndMontage;
-	// EndMontage.BindLambda([this, ReturnZombie](UAnimMontage* Montage, bool bInterrupted)
-	// {
-	// //활성화
-	// 	DeActiveZombies(ReturnZombie);
-	// 	ZombiePool.Push(ReturnZombie);
-	// 	
-	// });
-	//
-	// AnimInstance->Montage_SetEndDelegate(EndMontage,ZombieDeathAnim );
 }
 
 void UBZZombieObjectPool::ReturnNiagaraZombieToPool(ABZZombie* ReturnZombie)
@@ -213,6 +183,7 @@ void UBZZombieObjectPool::ActiveZombies(ABZZombie* InZombie)
 {
 	if (InZombie)
 	{
+		InZombie->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1,/*WeaponTrace*/ECR_Overlap);
 		InZombie->SetActorHiddenInGame(false);
 		InZombie->SetActorEnableCollision(true);
 		InZombie->SetActorTickEnabled(true);
