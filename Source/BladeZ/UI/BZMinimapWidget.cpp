@@ -25,6 +25,8 @@ void UBZMinimapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	ApplyLevelMinimapSettings();
+
 	// Background에 넣어준 Material instance로부터 DynamicMaterial 얻기.
 	if (MinimapBackgroundImage)
 	{
@@ -102,6 +104,32 @@ TSubclassOf<UUserWidget> UBZMinimapWidget::GetIconClassForActor(const AActor* Ac
 
 
 
+void UBZMinimapWidget::ApplyLevelMinimapSettings()
+{
+	const FName CurrentLevelName(
+		*UGameplayStatics::GetCurrentLevelName(this, true)
+	);
+
+	const FBZLevelMinimapSettings* Settings =
+		LevelMinimapSettings.Find(CurrentLevelName);
+
+	if (!Settings)
+	{
+		return;
+	}
+
+	CurrentMinimapSettings = *Settings;
+
+	if (MinimapBackgroundImage && Settings->MinimapMaterial)
+	{
+		MinimapBackgroundImage->SetBrushFromMaterial(Settings->MinimapMaterial);
+		MinimapMaterialInstance = MinimapBackgroundImage->GetDynamicMaterial();
+	}
+
+	WorldToMinimapScale =
+		MaxIconDistance / (Settings->VisibleWorldDiameter * 0.5f);
+}
+
 void UBZMinimapWidget::UpdateMinimap()
 {
 	AActor* PlayerActor = CachedPlayerActor;
@@ -116,12 +144,17 @@ void UBZMinimapWidget::UpdateMinimap()
 	// MaxIconDistance가 미니맵 UI 반경이면,
 	// 월드 반경 1024uu가 UI 반경 MaxIconDistance에 대응됨.
 	constexpr float VisibleWorldDiameter = 2048.0f;
-	const float VisibleRatio = VisibleWorldDiameter / BakedMapWorldWidth;
+	const float VisibleRatio =
+		CurrentMinimapSettings.VisibleWorldDiameter /
+		CurrentMinimapSettings.BakedMapWorldWidth;
 
 	// 플레이어의 월드 위치를 구워진 전체 미니맵 텍스처 UV로 변환.
 	const FVector2D PlayerUV(
-		0.5f + (PlayerLocation.Y - BakedMapCenter.Y) / BakedMapWorldWidth,
-		0.5f - (PlayerLocation.X - BakedMapCenter.X) / BakedMapWorldWidth
+		0.5f + (PlayerLocation.Y - CurrentMinimapSettings.BakedMapCenter.Y)
+		/ CurrentMinimapSettings.BakedMapWorldWidth,
+
+		0.5f - (PlayerLocation.X - CurrentMinimapSettings.BakedMapCenter.X)
+		/ CurrentMinimapSettings.BakedMapWorldWidth
 	);
 
 	MinimapMaterialInstance->SetVectorParameterValue(

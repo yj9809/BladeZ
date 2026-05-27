@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/BZUserWidget.h"
+#include "UI/BZLevelMinimapSettings.h"
 #include "BZMinimapWidget.generated.h"
 
 /**
@@ -12,6 +13,7 @@
 class UOverlay;
 class UImage;
 class UMaterialInstanceDynamic;
+
 
 UCLASS()
 class BLADEZ_API UBZMinimapWidget : public UBZUserWidget
@@ -53,6 +55,9 @@ protected:
 	) override;
 
 private:
+	// 현재 Level에 대한 MinimapSetting 적용.
+	void ApplyLevelMinimapSettings();
+
 	// Minimap이 받은 정보를 바탕으로 UI 갱신.
 	void UpdateMinimap();
 
@@ -125,18 +130,16 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> MinimapMaterialInstance;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
-	FVector2D BakedMapCenter = FVector2D::ZeroVector;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
-	float BakedMapWorldWidth = 24755.291016f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Minimap")
 	float WorldToMinimapScale = 0.1171875f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Minimap")
 	float MaxIconDistance = 120.0f;
 
+	// Level별로 Minimap의 카메라 Setting별 오차를 계산해 넣어주기 위한 Setting.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
-	TMap<FName, TSoftObjectPtr<UMaterialInterface>> LevelMinimapMaterials;
+	TMap<FName, FBZLevelMinimapSettings> LevelMinimapSettings;
+
+	// 현재 적용된 MinimapSetting.
+	FBZLevelMinimapSettings CurrentMinimapSettings;
 };
