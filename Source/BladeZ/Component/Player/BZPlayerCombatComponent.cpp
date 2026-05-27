@@ -14,6 +14,7 @@
 
 #include "RuntimeInspectorWidget.h"
 #include "Component/BZCharacterStatComponent.h"
+#include "Game/BZSoundManager.h"
 
 // Sets default values for this component's properties
 UBZPlayerCombatComponent::UBZPlayerCombatComponent()
@@ -311,13 +312,8 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 
 	if (CurrentData && CurrentData->HitSound)
 	{
-		UGameplayStatics::PlaySound2D(
-			GetWorld(),
-			CurrentData->HitSound,
-			1.5f,
-			1.2f,
-			0.15f
-		);
+		if (UBZSoundManager* SM = UBZSoundManager::Get(this))
+			SM->PlaySFX(CurrentData->HitSound, 1.5f, 1.2f, 0.15f);
 	}
 
 	if (CurrentData && !CurrentData->HitStopValue.IsEmpty() && !bIsHitStop)
