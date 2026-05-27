@@ -34,6 +34,9 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
+	// 컷신 등에서 HUD를 켜고 끄기.
+	void SetCombatHUDVisible(bool bVisible);
+
 	// 여러 UI에서 게임 흐름을 건드리는 기능을 중복 구현 대신 Controller로 이동.
 	UFUNCTION()
 	void QuitGame();

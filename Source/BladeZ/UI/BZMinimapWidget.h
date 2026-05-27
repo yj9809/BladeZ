@@ -132,8 +132,11 @@ protected:
 	float BakedMapWorldWidth = 24755.2910f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
-	float WorldToMinimapScale = 0.05f;
+	float WorldToMinimapScale = 0.1171875ff
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
 	float MaxIconDistance = 120.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
+	TMap<FName, TSoftObjectPtr<UMaterialInterface>> LevelMinimapMaterials;
 };

@@ -28,7 +28,6 @@ void UBZMinimapWidget::NativeConstruct()
 	// Background에 넣어준 Material instance로부터 DynamicMaterial 얻기.
 	if (MinimapBackgroundImage)
 	{
-		
 		MinimapMaterialInstance = MinimapBackgroundImage->GetDynamicMaterial();
 	}
 

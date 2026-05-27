@@ -466,6 +466,22 @@ void ABZPlayerController::BindGameplayEvents()
 	}
 }
 
+void ABZPlayerController::SetCombatHUDVisible(bool bVisible)
+{
+	const ESlateVisibility NewVisibility =
+		bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+
+	if (HUDWidget)
+	{
+		HUDWidget->SetVisibility(NewVisibility);
+	}
+
+	if (BossHUDWidget)
+	{
+		BossHUDWidget->SetVisibility(NewVisibility);
+	}
+}
+
 void ABZPlayerController::QuitGame()
 {
 	UKismetSystemLibrary::QuitGame(
