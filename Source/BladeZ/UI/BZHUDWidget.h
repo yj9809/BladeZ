@@ -88,6 +88,8 @@ public:
 		int32 TargetValue
 	);
 
+	void UpdateQuestTargetOnMinimap(const FBZQuestData& QuestData);
+
 
 	// HUD에 포함된 하위 Widgets.
 	// meta 정보를 BindWidget으로 설정하면, 

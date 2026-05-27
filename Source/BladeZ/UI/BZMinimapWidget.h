@@ -128,8 +128,14 @@ private:
 	TMap<TWeakObjectPtr<AActor>, TObjectPtr<UUserWidget>> ActorIconMap;
 
 protected:
-	UPROPERTY()
-	TObjectPtr<UImage> TargetArrow;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UImage> TargetArrowImage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap|Quest")
+	TObjectPtr<UTexture2D> TargetArrowTexture;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap|Quest")
+	TObjectPtr<UTexture2D> TargetInsideTexture;
 
 private:
 	UPROPERTY()

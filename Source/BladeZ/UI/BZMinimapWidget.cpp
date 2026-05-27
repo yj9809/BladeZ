@@ -115,6 +115,8 @@ void UBZMinimapWidget::ApplyLevelMinimapSettings()
 
 	if (!Settings)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("UBZMinimapWidget::ApplyLevelMinimapSettings: No Setting with the Level Name %s"), *CurrentLevelName.ToString());
+
 		return;
 	}
 
@@ -141,18 +143,6 @@ void UBZMinimapWidget::UpdateMinimap()
 	const FName CurrentLevelName(
 		*UGameplayStatics::GetCurrentLevelName(this, true)
 	);
-
-	const FBZLevelMinimapSettings* Settings =
-		LevelMinimapSettings.Find(CurrentLevelName);
-
-	if (!Settings)
-	{
-		if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(MinimapUpdateTimerHandle);
-		}
-		return;
-	}
 	
 	const FVector PlayerLocation = PlayerActor->GetActorLocation();
 
@@ -238,7 +228,7 @@ void UBZMinimapWidget::UpdateMinimap()
 	}
 
 	// =============== TargetActor의 위치에 대해 설정 ====================
-	if (TargetArrow && IsValid(QuestTargetActor))
+	if (TargetArrowImage && IsValid(QuestTargetActor))
 	{
 		const FVector Delta = QuestTargetActor->GetActorLocation() - PlayerLocation;
 
@@ -249,27 +239,48 @@ void UBZMinimapWidget::UpdateMinimap()
 
 		if (DistanceFromCenter <= KINDA_SMALL_NUMBER)
 		{
-			TargetArrow->SetVisibility(ESlateVisibility::Hidden);
+			TargetArrowImage->SetVisibility(ESlateVisibility::Hidden);
 		}
 		else
 		{
-			TargetArrow->SetVisibility(ESlateVisibility::Visible);
+			TargetArrowImage->SetVisibility(ESlateVisibility::Visible);
 
+			const bool bIsInsideMinimap = DistanceFromCenter <= MaxIconDistance;
 			const FVector2D Direction = Offset.GetSafeNormal();
-			const FVector2D ArrowOffset =
-				Direction * FMath::Min(DistanceFromCenter, MaxIconDistance);
 
-			TargetArrow->SetRenderTranslation(ArrowOffset);
+			const FVector2D TargetOffset = bIsInsideMinimap
+				? Offset
+				: Direction * MaxIconDistance;
 
-			const float AngleDegrees =
-				FMath::RadiansToDegrees(FMath::Atan2(Direction.X, -Direction.Y));
+			TargetArrowImage->SetRenderTranslation(TargetOffset);
 
-			TargetArrow->SetRenderTransformAngle(AngleDegrees);
+
+			if (bIsInsideMinimap)
+			{
+				if (TargetInsideTexture)
+				{
+					TargetArrowImage->SetBrushFromTexture(TargetInsideTexture);
+				}
+			
+				TargetArrowImage->SetRenderTransformAngle(0.0f);
+			}
+			else
+			{
+				if (TargetArrowTexture)
+				{
+					TargetArrowImage->SetBrushFromTexture(TargetArrowTexture);
+				}
+			
+				const float AngleDegrees =
+					FMath::RadiansToDegrees(FMath::Atan2(Direction.X, -Direction.Y));
+			
+				TargetArrowImage->SetRenderTransformAngle(AngleDegrees);
+			}
 		}
 	}
-	else if (TargetArrow)
+	else if (TargetArrowImage)
 	{
-		TargetArrow->SetVisibility(ESlateVisibility::Hidden);
+		TargetArrowImage->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -363,9 +374,9 @@ void UBZMinimapWidget::SetQuestTargetActor(AActor* InTargetActor)
 {
 	QuestTargetActor = InTargetActor;
 
-	if (TargetArrow)
+	if (TargetArrowImage)
 	{
-		TargetArrow->SetVisibility(
+		TargetArrowImage->SetVisibility(
 			IsValid(QuestTargetActor)
 			? ESlateVisibility::Visible
 			: ESlateVisibility::Hidden
@@ -377,9 +388,9 @@ void UBZMinimapWidget::ClearQuestTarget()
 {
 	QuestTargetActor = nullptr;
 
-	if (TargetArrow)
+	if (TargetArrowImage)
 	{
-		TargetArrow->SetVisibility(ESlateVisibility::Hidden);
+		TargetArrowImage->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 

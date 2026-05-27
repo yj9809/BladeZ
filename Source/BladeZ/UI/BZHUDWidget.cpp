@@ -117,6 +117,8 @@ void UBZHUDWidget::SetDisplayedQuest(FName InQuestID)
 
 	QuestInfoWidget->SetQuestInfo(*QuestData);
 
+	UpdateQuestTargetOnMinimap(*QuestData);
+
 	const int32 CurrentProgress =
 		BoundQuestComponent->GetQuestProgress(DisplayedQuestID);
 
@@ -178,27 +180,7 @@ void UBZHUDWidget::HandleQuestActivated(FName QuestID, const FBZQuestData& Quest
 		QuestData.TargetProgress
 	);
 
-	if (MinimapWidget)
-	{
-		if (QuestData.QuestType == EQuestType::GoNextPlace &&
-			!QuestData.TargetActorTag.IsNone())
-		{
-			TArray<AActor*> FoundActors;
-			UGameplayStatics::GetAllActorsWithTag(
-				this,
-				QuestData.TargetActorTag,
-				FoundActors
-			);
-
-			MinimapWidget->SetQuestTargetActor(
-				FoundActors.Num() > 0 ? FoundActors[0] : nullptr
-			);
-		}
-		else
-		{
-			MinimapWidget->ClearQuestTarget();
-		}
-	}
+	UpdateQuestTargetOnMinimap(QuestData);
 }
 
 void UBZHUDWidget::HandleQuestProgressChanged(FName QuestID, int32 CurrentValue, int32 TargetValue)
@@ -209,6 +191,32 @@ void UBZHUDWidget::HandleQuestProgressChanged(FName QuestID, int32 CurrentValue,
 	}
 
 	UpdateQuestProgress(CurrentValue, TargetValue);
+}
+
+void UBZHUDWidget::UpdateQuestTargetOnMinimap(const FBZQuestData& QuestData)
+{
+	if (!MinimapWidget)
+	{
+		return;
+	}
+
+	if (QuestData.QuestType != EQuestType::GoNextPlace ||
+		QuestData.TargetActorTag.IsNone())
+	{
+		MinimapWidget->ClearQuestTarget();
+		return;
+	}
+
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsWithTag(
+		this,
+		QuestData.TargetActorTag,
+		FoundActors
+	);
+
+	MinimapWidget->SetQuestTargetActor(
+		FoundActors.Num() > 0 ? FoundActors[0] : nullptr
+	);
 }
 
 const bool UBZHUDWidget::GetOptionVisibility()
