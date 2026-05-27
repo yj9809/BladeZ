@@ -51,6 +51,7 @@ void UBZTankState_ThrowBarrel::OnUpdate(AActor* Owner, float DeltaTime)
 			
 			FVector Direction = (ThrowTarget->GetActorLocation() - TankCharacter->GetActorLocation()).GetSafeNormal2D();
 			FVector TeleportPos = ThrowTarget->GetActorLocation() - Direction * (NearDist - 50.0f);
+			TeleportPos.Z += 300.0f;
 			
 			TankCharacter->SetActorLocation(TeleportPos, false, nullptr, ETeleportType::TeleportPhysics);
 			ThrowObject();

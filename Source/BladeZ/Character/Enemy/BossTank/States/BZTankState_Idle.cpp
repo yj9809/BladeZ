@@ -20,10 +20,10 @@ void UBZTankState_Idle::OnUpdate(AActor* Owner, float DeltaTime)
 {
 	Super::OnUpdate(Owner, DeltaTime);
 
-	// Roar 진행
-	if (TankCharacter && TankCharacter->StateMachine && TankCharacter->ChaseStateInstance)
+	// 다음 진행
+	if (TankCharacter && TankCharacter->StateMachine)
 	{
-		TankCharacter->StateMachine->ChangeState(TankCharacter->RoarStateInstance);
+	TankCharacter->StateMachine->ChangeState(TankCharacter->SkillSelectionStateInstance);
 	}
 }
 
