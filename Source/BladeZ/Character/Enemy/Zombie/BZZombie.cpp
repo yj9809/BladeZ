@@ -363,27 +363,32 @@ void ABZZombie::PerformAttackTrace()
 	}
 
 	USkeletalMeshComponent* MeshComp = FindComponentByClass<USkeletalMeshComponent>();
+	// if (!MeshComp)
+	// {
+	// 	if (bDrawAttackTraceDebug)
+	// 	{
+	// 		DrawDebugSphere(GetWorld(), GetActorLocation(), 60.0f, 16, FColor::Magenta, false, AttackTraceDebugTime);
+	// 	}
+	//
+	// 	return;
+	// }
+	//
+	// if (!MeshComp->DoesSocketExist(AttackTraceSocketName))
+	// {
+	// 	if (bDrawAttackTraceDebug)
+	// 	{
+	// 		DrawDebugSphere(GetWorld(), MeshComp->GetComponentLocation(), 60.0f, 16, FColor::Orange, false,
+	// 		                AttackTraceDebugTime);
+	// 	}
+	//
+	// 	return;
+	// }
+
 	if (!MeshComp)
 	{
-		if (bDrawAttackTraceDebug)
-		{
-			DrawDebugSphere(GetWorld(), GetActorLocation(), 60.0f, 16, FColor::Magenta, false, AttackTraceDebugTime);
-		}
-
 		return;
 	}
-
-	if (!MeshComp->DoesSocketExist(AttackTraceSocketName))
-	{
-		if (bDrawAttackTraceDebug)
-		{
-			DrawDebugSphere(GetWorld(), MeshComp->GetComponentLocation(), 60.0f, 16, FColor::Orange, false,
-			                AttackTraceDebugTime);
-		}
-
-		return;
-	}
-
+	
 	//오른손 소켓에서 트레이스 시작
 	const FVector TraceStart = MeshComp->GetSocketLocation(AttackTraceSocketName);
 
@@ -456,23 +461,23 @@ void ABZZombie::PerformAttackTrace()
 	}
 
 	//유효한 타겟이면 디버깅 그리기
-	if (bDrawAttackTraceDebug)
-	{
-		const FColor DebugColor = bHitTarget
-			                          ? AttackTraceHitColor
-			                          : (bHitBlockedTarget ? AttackTraceBlockedColor : AttackTraceMissColor);
-
-		DrawDebugLine(GetWorld(), TraceStart, TraceEnd, DebugColor, false, AttackTraceDebugTime, 0, 2.0f);
-		//DrawDebugSphere(GetWorld(), TraceStart, AttackTraceRadius, 16, FColor::Cyan, false, AttackTraceDebugTime);
-		DrawDebugSphere(GetWorld(), TraceEnd, AttackTraceRadius, 16, DebugColor, false, AttackTraceDebugTime);
-
-		if (bHitTarget || bHitBlockedTarget)
-		{
-			DrawDebugSphere(GetWorld(), TargetHitPoint, AttackTraceRadius * 0.5f, 12, DebugColor, false,
-			                AttackTraceDebugTime);
-			DrawDebugPoint(GetWorld(), TargetHitPoint, 14.0f, DebugColor, false, AttackTraceDebugTime);
-		}
-	}
+	// if (bDrawAttackTraceDebug)
+	// {
+	// 	const FColor DebugColor = bHitTarget
+	// 		                          ? AttackTraceHitColor
+	// 		                          : (bHitBlockedTarget ? AttackTraceBlockedColor : AttackTraceMissColor);
+	//
+	// 	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, DebugColor, false, AttackTraceDebugTime, 0, 2.0f);
+	// 	//DrawDebugSphere(GetWorld(), TraceStart, AttackTraceRadius, 16, FColor::Cyan, false, AttackTraceDebugTime);
+	// 	DrawDebugSphere(GetWorld(), TraceEnd, AttackTraceRadius, 16, DebugColor, false, AttackTraceDebugTime);
+	//
+	// 	if (bHitTarget || bHitBlockedTarget)
+	// 	{
+	// 		DrawDebugSphere(GetWorld(), TargetHitPoint, AttackTraceRadius * 0.5f, 12, DebugColor, false,
+	// 		                AttackTraceDebugTime);
+	// 		DrawDebugPoint(GetWorld(), TargetHitPoint, 14.0f, DebugColor, false, AttackTraceDebugTime);
+	// 	}
+	// }
 
 	//대미지 처리
 	for (const FHitResult& Hit : HitResults)
