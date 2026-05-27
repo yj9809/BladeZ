@@ -129,7 +129,7 @@ private:
 
 protected:
 	UPROPERTY()
-	TObjectPtr<UImage> QuestDirectionArrow;
+	TObjectPtr<UImage> TargetArrow;
 
 private:
 	UPROPERTY()

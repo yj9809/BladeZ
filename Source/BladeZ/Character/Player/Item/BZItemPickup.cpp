@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/Player/Item/BZItemPickup.h"
@@ -6,6 +6,7 @@
 #include "Character/Player/BZPlayerCharacter.h"
 #include "Component/BZKeyUIComponent.h"
 #include "Components/SphereComponent.h"
+#include "Game/BZQuestEventSubsystem.h"
 
 // Sets default values
 ABZItemPickup::ABZItemPickup()
@@ -71,7 +72,17 @@ void ABZItemPickup::ItemPickup()
 {
 	//블루프린트 하위 클래스에게 획득 신호를 먼저 보낸다.
 	BP_OnItemPickedUp();
-	
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.27
+	* 작성 사유: HandleGimmick Quest 처리를 위해 추가
+	*/
+	if (UBZQuestEventSubsystem* QuestEventSubsystem = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
+	{
+		QuestEventSubsystem->BroadcastQuestTargetAcquired(this);
+	}
+
 	OnItemPickup.ExecuteIfBound();
 	Destroy();
 }
@@ -83,6 +94,8 @@ void ABZItemPickup::BeginPlay()
 	
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABZItemPickup::OnSphereBeginOverlap);
 	SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABZItemPickup::OnSphereEndOverlap);
+
+
 }
 
 

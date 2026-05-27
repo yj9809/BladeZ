@@ -11,6 +11,7 @@
 #include "BZGameOverWidget.h"
 #include "BZOptionWidget.h"
 #include "Component/Player/BZPlayerQuestComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 UBZHUDWidget::UBZHUDWidget(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
@@ -176,6 +177,28 @@ void UBZHUDWidget::HandleQuestActivated(FName QuestID, const FBZQuestData& Quest
 		CurrentProgress,
 		QuestData.TargetProgress
 	);
+
+	if (MinimapWidget)
+	{
+		if (QuestData.QuestType == EQuestType::GoNextPlace &&
+			!QuestData.TargetActorTag.IsNone())
+		{
+			TArray<AActor*> FoundActors;
+			UGameplayStatics::GetAllActorsWithTag(
+				this,
+				QuestData.TargetActorTag,
+				FoundActors
+			);
+
+			MinimapWidget->SetQuestTargetActor(
+				FoundActors.Num() > 0 ? FoundActors[0] : nullptr
+			);
+		}
+		else
+		{
+			MinimapWidget->ClearQuestTarget();
+		}
+	}
 }
 
 void UBZHUDWidget::HandleQuestProgressChanged(FName QuestID, int32 CurrentValue, int32 TargetValue)

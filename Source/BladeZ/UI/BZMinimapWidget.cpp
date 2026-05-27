@@ -133,11 +133,27 @@ void UBZMinimapWidget::ApplyLevelMinimapSettings()
 void UBZMinimapWidget::UpdateMinimap()
 {
 	AActor* PlayerActor = CachedPlayerActor;
-	if (!IsValid(PlayerActor))
+	if (!IsValid(PlayerActor) )
 	{
 		return;
 	}
 
+	const FName CurrentLevelName(
+		*UGameplayStatics::GetCurrentLevelName(this, true)
+	);
+
+	const FBZLevelMinimapSettings* Settings =
+		LevelMinimapSettings.Find(CurrentLevelName);
+
+	if (!Settings)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(MinimapUpdateTimerHandle);
+		}
+		return;
+	}
+	
 	const FVector PlayerLocation = PlayerActor->GetActorLocation();
 
 	// UI 아이콘 위치 변환용 스케일.
@@ -219,6 +235,41 @@ void UBZMinimapWidget::UpdateMinimap()
 
 		// 실제 위치 설정.
 		IconWidget->SetRenderTranslation(Offset);
+	}
+
+	// =============== TargetActor의 위치에 대해 설정 ====================
+	if (TargetArrow && IsValid(QuestTargetActor))
+	{
+		const FVector Delta = QuestTargetActor->GetActorLocation() - PlayerLocation;
+
+		FVector2D Offset(Delta.Y, -Delta.X);
+		Offset *= WorldToMinimapScale;
+
+		const float DistanceFromCenter = Offset.Size();
+
+		if (DistanceFromCenter <= KINDA_SMALL_NUMBER)
+		{
+			TargetArrow->SetVisibility(ESlateVisibility::Hidden);
+		}
+		else
+		{
+			TargetArrow->SetVisibility(ESlateVisibility::Visible);
+
+			const FVector2D Direction = Offset.GetSafeNormal();
+			const FVector2D ArrowOffset =
+				Direction * FMath::Min(DistanceFromCenter, MaxIconDistance);
+
+			TargetArrow->SetRenderTranslation(ArrowOffset);
+
+			const float AngleDegrees =
+				FMath::RadiansToDegrees(FMath::Atan2(Direction.X, -Direction.Y));
+
+			TargetArrow->SetRenderTransformAngle(AngleDegrees);
+		}
+	}
+	else if (TargetArrow)
+	{
+		TargetArrow->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -306,6 +357,30 @@ void UBZMinimapWidget::RemoveTrackedActor(AActor* Actor)
 
 	ActorIconMap.Remove(ActorKey);
 	TrackedActors.Remove(ActorKey);
+}
+
+void UBZMinimapWidget::SetQuestTargetActor(AActor* InTargetActor)
+{
+	QuestTargetActor = InTargetActor;
+
+	if (TargetArrow)
+	{
+		TargetArrow->SetVisibility(
+			IsValid(QuestTargetActor)
+			? ESlateVisibility::Visible
+			: ESlateVisibility::Hidden
+		);
+	}
+}
+
+void UBZMinimapWidget::ClearQuestTarget()
+{
+	QuestTargetActor = nullptr;
+
+	if (TargetArrow)
+	{
+		TargetArrow->SetVisibility(ESlateVisibility::Hidden);
+	}
 }
 
 void UBZMinimapWidget::SetTrackedActorVisible(AActor* Actor, bool bVisible)
