@@ -40,6 +40,16 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	/*
+	 *작성자: 강준형
+	 *작성일: 26.05.27
+	 *사유: 스테이지 1 퀘스트 아이템 획득 시 벽 철거 만들기
+	 **/
+	
+	// 신규 아이템이 완전히 획득되어 파괴되기 직전에 블루프린트로 신호를 보내는 이벤트
+	UFUNCTION(BlueprintImplementableEvent, Category="Pickup", meta=(DisplayName = "On Item Pick Up"))
+	void BP_OnItemPickedUp();
 
 public:
 	// 퀘스트 아이템 픽업 알림용 델리게이트.

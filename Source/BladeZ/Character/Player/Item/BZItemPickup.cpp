@@ -69,6 +69,9 @@ void ABZItemPickup::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComp, AAct
 
 void ABZItemPickup::ItemPickup()
 {
+	//블루프린트 하위 클래스에게 획득 신호를 먼저 보낸다.
+	BP_OnItemPickedUp();
+	
 	OnItemPickup.ExecuteIfBound();
 	Destroy();
 }
@@ -81,4 +84,5 @@ void ABZItemPickup::BeginPlay()
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABZItemPickup::OnSphereBeginOverlap);
 	SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABZItemPickup::OnSphereEndOverlap);
 }
+
 
