@@ -75,7 +75,8 @@ void ABZQuestActor::HandleProgressChange(AActor* TargetActor)
 		Data->QuestType == EQuestType::CollectItems ||
 		Data->QuestType == EQuestType::GetWeapon ||
 		Data->QuestType == EQuestType::KillEnemies ||
-		Data->QuestType == EQuestType::KillOneTarget;
+		Data->QuestType == EQuestType::KillOneTarget ||
+		Data->QuestType == EQuestType::HandleGimick;
 
 	if (!bCanProgressByAcquire)
 	{

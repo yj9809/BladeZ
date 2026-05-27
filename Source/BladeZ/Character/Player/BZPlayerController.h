@@ -55,11 +55,11 @@ public:
 	// Player의 Delegate에 Binding되므로 public.
 	void ShowGameOver();
 
-	// ==================== For Quest =========================== //
-	// Quest 하나가 끝났을 때 Bind할 Event.
-	UFUNCTION()
-	void HandleQuestCompleted(FName QuestID);
+	// Boss 죽고 Level에서 컷신 끝나면 연결해줄 함수.
+	UFUNCTION(BlueprintCallable, Category = "Clear")
+	void ShowGameClear();
 
+	// ==================== For Quest =========================== //
 	// HUD를 Set.
 	void SetDisplayedQuestToHUD(FName QuestID);
 

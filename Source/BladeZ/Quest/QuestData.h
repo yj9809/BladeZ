@@ -25,7 +25,8 @@ enum class EQuestType: uint8
 	GoNextPlace UMETA(DisplayName = "GoNextPlace"),
 	CollectItems UMETA(DisplayName = "CollectItems"),
 	KillEnemies UMETA(DisplayName = "KillEnemies"),
-	KillOneTarget UMETA(DisplayName = "KillBoss")
+	KillOneTarget UMETA(DisplayName = "KillBoss"),
+	HandleGimick UMETA(DisplayName = "HandleGimick")
 };
 
 // Quest가 완료되면 진행할 Action.
@@ -75,7 +76,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	TSubclassOf<AActor> TargetActor;
 
+
+	/*
+	* 지도에 Target Actor 위치를 표시해야 할 때,
+	* TargetActor에 들어가는 Tag.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
+	FName TargetActorTag;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Quest)
 	int32 TargetProgress;
 
-};
+
+};  
