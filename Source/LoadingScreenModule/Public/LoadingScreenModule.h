@@ -5,6 +5,7 @@
 #include "UObject/StrongObjectPtr.h"
 
 class UTexture2D;
+struct FStreamableHandle;
 
 // Loading screen module implementation.
 // Handles initialization and display of loading screens during gameplay.
@@ -13,6 +14,9 @@ class LOADINGSCREENMODULE_API FLoadingScreenModule: public IModuleInterface
 public:
 	// Called when module is first loaded.
 	virtual void StartupModule() override;
+
+	// Called before module is unloaded.
+	virtual void ShutdownModule() override;
 
 	// Identifies this as a game module, not an editor module.
 	virtual bool IsGameModule() const override;
@@ -23,6 +27,15 @@ public:
 	virtual void EndLoadingScreen(UWorld* InLoadedWorld);
 
 private:
-	// Store the background textrue to prevent it from being garbage collected.
+	void PreloadLoadingScreenImages();
+	void OnLoadingScreenImageLoaded(FSoftObjectPath ImagePath);
+
+private:
+	FDelegateHandle PostEngineInitHandle;
+
 	TStrongObjectPtr<UTexture2D> BackgroundTexture;
+
+	TMap<FSoftObjectPath, UTexture2D*> PreloadedTextures;
+	TArray<TStrongObjectPtr<UTexture2D>> StrongPreloadedTextures;
+	TArray<TSharedPtr<FStreamableHandle>> PreloadHandles;
 };

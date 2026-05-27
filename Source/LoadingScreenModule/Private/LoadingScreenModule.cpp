@@ -4,6 +4,10 @@
 #include "MoviePlayer.h"
 #include "LevelLoadingSettings.h"
 
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
+
+
 void FLoadingScreenModule::StartupModule()
 {
     // Load When moduel initializes
@@ -36,6 +40,24 @@ void FLoadingScreenModule::StartupModule()
     *  매 Scene마다 다른 resource를 사용하는 LoadingScene을 사용하게 되어,
     * 실제 로딩할 맵 이름을 아는 StartLoadingScreen에서 Asset 선택하는 방식으로 변경.
     */
+    PostEngineInitHandle = FCoreDelegates::OnPostEngineInit.AddRaw(
+        this,
+        &FLoadingScreenModule::PreloadLoadingScreenImages
+    );
+}
+
+void FLoadingScreenModule::ShutdownModule()
+{
+    if (PostEngineInitHandle.IsValid())
+    {
+        FCoreDelegates::OnPostEngineInit.Remove(PostEngineInitHandle);
+        PostEngineInitHandle.Reset();
+    }
+
+    PreloadHandles.Empty();
+    StrongPreloadedTextures.Empty();
+    PreloadedTextures.Empty();
+    BackgroundTexture.Reset();
 }
 
 bool FLoadingScreenModule::IsGameModule() const
@@ -135,27 +157,15 @@ void FLoadingScreenModule::StartLoadingScreen(const FString& MapName)
     }
     else if(!MatchedEntry->BackgroundImage.IsNull())
     {
-        // 비디오가 지정되지 않았으면, Image가 비어있지 않은지 검사.
-        // Image가 지정되었으면, Image를 Load해서 Slate Widget에 지정.
-        // 새 로딩 화면 시작 시 새 텍스처를 다시 잡는다.
-        BackgroundTexture.Reset();
+        UTexture2D* SelectedTexture = PreloadedTextures.FindRef(MatchedEntry->BackgroundImage);
 
-        UTexture2D* SelectedTexture = Cast<UTexture2D>(
-            StaticLoadObject(
-                UTexture2D::StaticClass(),
-                nullptr,
-                *MatchedEntry->BackgroundImage.ToString()
-            )
-        );
+        if (!SelectedTexture && !Settings->DefaultBackgroundImage.IsNull())
+        {
+            SelectedTexture = PreloadedTextures.FindRef(Settings->DefaultBackgroundImage);
+        }
 
-        // MoviePlayer 로딩 화면은 별도 Slate thread에서 그려질 수 있으므로,
-        // 지역 변수 SelectedTexture만으로는 수명 보장이 안 됨.
-        // TStrongObjectPtr로 모듈이 텍스처를 강하게 참조해서 GC를 막는다.
-        BackgroundTexture = TStrongObjectPtr<UTexture2D>(SelectedTexture);
-
-        // 모듈이 보관 중인 강한 참조에서 포인터를 넘긴다.
         LoadingScreen.WidgetLoadingScreen =
-            SNew(SLoadingScreen).BackgroundTexture(BackgroundTexture.Get());
+            SNew(SLoadingScreen).BackgroundTexture(SelectedTexture);
     }
 
 
@@ -180,7 +190,61 @@ void FLoadingScreenModule::EndLoadingScreen(UWorld* InLoadedWorld)
     //GetMoviePlayer()->StopMovie();
     //UE_LOG(LogTemp, Warning, TEXT("After StopMovie"));
 
-    BackgroundTexture.Reset();
+    //BackgroundTexture.Reset();
+}
+
+void FLoadingScreenModule::PreloadLoadingScreenImages()
+{
+    const ULevelLoadingSettings* Settings = GetDefault<ULevelLoadingSettings>();
+    if (!Settings)
+    {
+        return;
+    }
+
+    FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+
+    auto RequestPreload = [this, &StreamableManager](const FSoftObjectPath& ImagePath)
+        {
+            if (ImagePath.IsNull() || PreloadedTextures.Contains(ImagePath))
+            {
+                return;
+            }
+
+            TSharedPtr<FStreamableHandle> Handle = StreamableManager.RequestAsyncLoad(
+                ImagePath,
+                FStreamableDelegate::CreateRaw(this, &FLoadingScreenModule::OnLoadingScreenImageLoaded, ImagePath)
+            );
+
+            if (Handle.IsValid())
+            {
+                PreloadHandles.Add(Handle);
+            }
+        };
+
+    RequestPreload(Settings->DefaultBackgroundImage);
+
+    for (const FLevelLoadingScreenEntry& Entry : Settings->LoadingScreens)
+    {
+        RequestPreload(Entry.BackgroundImage);
+    }
+}
+
+void FLoadingScreenModule::OnLoadingScreenImageLoaded(FSoftObjectPath ImagePath)
+{
+    UTexture2D* LoadedTexture = Cast<UTexture2D>(ImagePath.ResolveObject());
+    if (!LoadedTexture)
+    {
+        LoadedTexture = Cast<UTexture2D>(ImagePath.TryLoad());
+    }
+
+    if (!LoadedTexture)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to preload loading screen image: %s"), *ImagePath.ToString());
+        return;
+    }
+
+    PreloadedTextures.Add(ImagePath, LoadedTexture);
+    StrongPreloadedTextures.Add(TStrongObjectPtr<UTexture2D>(LoadedTexture));
 }
 
 
