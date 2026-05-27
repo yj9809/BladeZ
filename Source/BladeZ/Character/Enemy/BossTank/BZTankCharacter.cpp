@@ -96,6 +96,25 @@ void ABZTankCharacter::PlayEffect(bool IsGroundEffect)
 void ABZTankCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// 죽었을 때 Dissolve 효과 처리
+	if (bIsDead && BodyMID)
+	{
+		if (CurrentDissolveValue < 1.0f)
+		{
+			CurrentDissolveValue = FMath::Clamp(CurrentDissolveValue + (DissolveSpeed * DeltaTime), -0.5f, 1.0f);
+			BodyMID->SetScalarParameterValue(FName("Dissolve"), CurrentDissolveValue);
+			
+			// 완전히 사라지면 액터 파괴 고려 (혹은 Mesh 숨기기)
+			if (CurrentDissolveValue >= 1.0f)
+			{
+				GetMesh()->SetHiddenInGame(true);
+				// 소환된 이펙트 등 정리 후 파괴하려면 여기서 처리
+				Destroy(); 
+			}
+		}
+	}
+
 	if (TargetActor)
 	{
 		DistanceToTarget = FVector::Dist(this->GetActorLocation(), TargetActor->GetActorLocation());
@@ -245,6 +264,8 @@ void ABZTankCharacter::SetDead()
 	if (bIsDead) return;
 	bIsDead = true;
 
+	SetActorEnableCollision(false);
+	
 	BOSS_LOG(Warning, "BossDead");
 
 	// 레벨 BP 등에서 수신할 수 있도록 죽음 이벤트 방송
@@ -283,6 +304,9 @@ void ABZTankCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeBoss();
+
+	// 머티리얼 인스턴스 캐싱
+	BodyMID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
 
 	/*
 	* 작성자: 강수연
@@ -468,9 +492,11 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 			FRotator::ZeroRotator, FVector(2.0f, 2.0f, 2.0f),
 			EAttachLocation::KeepRelativeOffset);
 		
-		// 빨간 정도
-		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
-		MID->SetScalarParameterValue(FName("Redness"), 0.2f); // float
+		// 빨간 정도 (캐싱된 BodyMID 사용)
+		if (BodyMID)
+		{
+			BodyMID->SetScalarParameterValue(FName("Redness"), 0.2f);
+		}
 		
 		// 연기 스폰
 		UParticleEmitter* Emitter = SteamEffect->Emitters[0]; // 0번 에미터
@@ -485,9 +511,11 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 	
 	else if (CurrentPhase == EBossPhase::Phase3)
 	{
-		// 빨간 정도
-		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
-		MID->SetScalarParameterValue(FName("Redness"), 0.5f); // float
+		// 빨간 정도 (캐싱된 BodyMID 사용)
+		if (BodyMID)
+		{
+			BodyMID->SetScalarParameterValue(FName("Redness"), 0.5f);
+		}
 		
 		// 연기 스폰
 		UParticleEmitter* Emitter = SteamEffect->Emitters[0]; // 0번 에미터
@@ -502,9 +530,11 @@ void ABZTankCharacter::OnBossPhaseChanged(EBossPhase NewPhase)
 	
 	else if (CurrentPhase == EBossPhase::Enraged)
 	{
-		// 빨간 정도
-		UMaterialInstanceDynamic* MID = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
-		MID->SetScalarParameterValue(FName("Redness"), 1.0f); // float
+		// 빨간 정도 (캐싱된 BodyMID 사용)
+		if (BodyMID)
+		{
+			BodyMID->SetScalarParameterValue(FName("Redness"), 1.0f);
+		}
 		
 		// 연기 스폰
 		UParticleEmitter* Emitter = SteamEffect->Emitters[0]; // 0번 에미터

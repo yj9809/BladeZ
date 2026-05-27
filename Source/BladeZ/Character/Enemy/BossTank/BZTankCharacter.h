@@ -247,14 +247,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	class UAnimMontage* BackUpMontage;
-UPROPERTY(EditAnywhere, Category = "Animation")
-class UAnimMontage* PushThroughMontage;
 
-UPROPERTY(EditAnywhere, Category = "Animation")
-class UAnimMontage* StunMontage;
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* PushThroughMontage;
 
-UPROPERTY(EditAnywhere, Category = "Animation")
-class UAnimMontage* DeathMontage;
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* StunMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* DeathMontage;
 
 public:
 	UPROPERTY(EditAnywhere, Category = "Animation")
@@ -277,6 +278,12 @@ private:
 
 	UFUNCTION()
 	void OnTransitionMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> BodyMID;
+
+	float CurrentDissolveValue = -0.5f;
+	float DissolveSpeed = 0.2f;
 
 private:
 	bool bIsPlayingCustomRootMotion;
