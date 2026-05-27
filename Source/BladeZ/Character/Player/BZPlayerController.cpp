@@ -190,33 +190,10 @@ void ABZPlayerController::ShowGameOver()
 	ShowGameEndHUD(false);
 }
 
-void ABZPlayerController::HandleQuestCompleted(FName QuestID)
+void ABZPlayerController::ShowGameClear()
 {
-	APawn* PlayerPawn = GetPawn();
-	if (!PlayerPawn)
-	{
-		return;
-	}
-
-	UBZPlayerQuestComponent* QuestComponent =
-		PlayerPawn->FindComponentByClass<UBZPlayerQuestComponent>();
-
-	if (!QuestComponent)
-	{
-		return;
-	}
-
-	const FBZQuestData* QuestData = QuestComponent->GetQuestData(QuestID);
-	if (!QuestData)
-	{
-		return;
-	}
-
-	if (QuestData->CompletionAction == EQuestCompletionAction::GameClear)
-	{
-		GameClearWidget->SetVisibility(ESlateVisibility::Visible);
-		ShowGameEndHUD(true);
-	}
+	GameClearWidget->SetVisibility(ESlateVisibility::Visible);
+	ShowGameEndHUD(true);
 }
 
 void ABZPlayerController::SetDisplayedQuestToHUD(FName QuestID)
@@ -451,11 +428,6 @@ void ABZPlayerController::BindGameplayEvents()
 		}
 
 		MainHUDWidget->BindQuestComponent(QuestComponent);
-
-		QuestComponent->OnQuestCompleted.AddUniqueDynamic(
-			this,
-			&ABZPlayerController::HandleQuestCompleted
-		);
 	}
 
 

@@ -35,6 +35,13 @@ public:
 	*/
 	void RemoveTrackedActor(AActor* Actor);
 
+	// 현재 Quest에 목적지 Actor가 있을 때.
+	void SetQuestTargetActor(AActor* InTargetActor);
+
+	// 목적지 Quest 해결(도달) => 해제.
+	void ClearQuestTarget();
+
+
 protected:
 	// UMG가 초기화될 때 호출되는 함수.
 	virtual void NativeConstruct() override;
@@ -119,6 +126,14 @@ private:
 
 	// TrackedActor 각각에 대한 아이콘 Widget을 관리.
 	TMap<TWeakObjectPtr<AActor>, TObjectPtr<UUserWidget>> ActorIconMap;
+
+protected:
+	UPROPERTY()
+	TObjectPtr<UImage> QuestDirectionArrow;
+
+private:
+	UPROPERTY()
+	TObjectPtr<AActor> QuestTargetActor;
 
 protected:
 	// Background 관련.
