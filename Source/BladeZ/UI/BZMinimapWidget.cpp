@@ -112,12 +112,13 @@ void UBZMinimapWidget::UpdateMinimap()
 
 	const FVector PlayerLocation = PlayerActor->GetActorLocation();
 
-	const float VisibleWorldDiameter =
-		MaxIconDistance * 2.0f / WorldToMinimapScale;
+	// UI 아이콘 위치 변환용 스케일.
+	// MaxIconDistance가 미니맵 UI 반경이면,
+	// 월드 반경 1024uu가 UI 반경 MaxIconDistance에 대응됨.
+	constexpr float VisibleWorldDiameter = 2048.0f;
+	const float VisibleRatio = VisibleWorldDiameter / BakedMapWorldWidth;
 
-	const float VisibleRatio =
-		VisibleWorldDiameter / BakedMapWorldWidth;
-
+	// 플레이어의 월드 위치를 구워진 전체 미니맵 텍스처 UV로 변환.
 	const FVector2D PlayerUV(
 		0.5f + (PlayerLocation.Y - BakedMapCenter.Y) / BakedMapWorldWidth,
 		0.5f - (PlayerLocation.X - BakedMapCenter.X) / BakedMapWorldWidth

@@ -129,10 +129,10 @@ protected:
 	FVector2D BakedMapCenter = FVector2D::ZeroVector;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
-	float BakedMapWorldWidth = 24755.2910f;
+	float BakedMapWorldWidth = 24755.291016f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
-	float WorldToMinimapScale = 0.1171875ff
+	float WorldToMinimapScale = 0.1171875f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Minimap")
 	float MaxIconDistance = 120.0f;
