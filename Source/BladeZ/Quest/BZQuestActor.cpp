@@ -19,6 +19,11 @@ void ABZQuestActor::SetPlayerQuestComponent(UBZPlayerQuestComponent* InQuestComp
 	// QuestManagerActor가 BeginPlay에서 Player의 QuestComponent를 연결해줌.
 	// 이후 QuestActor가 이벤트를 받으면, 해당 Component에 진행도 증가를 요청.
 	PlayerQuestComponent = InQuestComponent;
+
+	if (TargetQuestCollision)
+	{
+		TargetQuestCollision->InitializeQuestCollision(QuestID, PlayerQuestComponent);
+	}
 }
 
 // Called when the game starts or when spawned

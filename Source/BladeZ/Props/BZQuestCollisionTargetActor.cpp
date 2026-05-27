@@ -4,7 +4,8 @@
 #include "Props/BZQuestCollisionTargetActor.h"
 #include "Components/BoxComponent.h"
 #include "Game/BZQuestEventSubsystem.h"
-#include "Character/Player/BZPlayerCharacter.h"
+#include "Component/Player/BZPlayerQuestComponent.h"
+
 
 // Sets default values
 ABZQuestCollisionTargetActor::ABZQuestCollisionTargetActor()
@@ -25,6 +26,12 @@ ABZQuestCollisionTargetActor::ABZQuestCollisionTargetActor()
 	);
 }
 
+void ABZQuestCollisionTargetActor::InitializeQuestCollision(FName InQuestID, UBZPlayerQuestComponent* InQuestComponent)
+{
+	QuestID = InQuestID;
+	PlayerQuestComponent = InQuestComponent;
+}
+
 // Called when the game starts or when spawned
 void ABZQuestCollisionTargetActor::BeginPlay()
 {
@@ -40,8 +47,9 @@ void ABZQuestCollisionTargetActor::OnBoxBeginOverlap(
 	const FHitResult& SweepResult
 )
 {
-	ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(OtherActor);
-	if (!Player)
+	if (!PlayerQuestComponent ||
+		QuestID.IsNone() ||
+		!PlayerQuestComponent->IsQuestActive(QuestID))
 	{
 		return;
 	}

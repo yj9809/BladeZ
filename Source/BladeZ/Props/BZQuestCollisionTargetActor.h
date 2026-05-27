@@ -7,6 +7,7 @@
 #include "BZQuestCollisionTargetActor.generated.h"
 
 class UBoxComponent;
+class UBZPlayerQuestComponent;
 
 UCLASS()
 class BLADEZ_API ABZQuestCollisionTargetActor : public AActor
@@ -16,6 +17,9 @@ class BLADEZ_API ABZQuestCollisionTargetActor : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABZQuestCollisionTargetActor();
+
+public:
+	void InitializeQuestCollision(FName InQuestID, UBZPlayerQuestComponent* InQuestComponent);
 
 protected:
 	// Called when the game starts or when spawned
@@ -37,5 +41,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Quest")
 	TObjectPtr<UBoxComponent> BoxComponent;
 
+private:
+	UPROPERTY()
+	TObjectPtr<UBZPlayerQuestComponent> PlayerQuestComponent;
 
+	UPROPERTY()
+	FName QuestID;
 };

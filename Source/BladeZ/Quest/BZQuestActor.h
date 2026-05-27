@@ -5,11 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "QuestData.h"
+#include "Props/BZQuestCollisionTargetActor.h"
 #include "BZQuestActor.generated.h"
 
 class UBZQuestEventSubsystem;
 class UBZPlayerQuestComponent;
-
+class ABZQuestCollisionTargetActor;
 
 /*
  * 레벨당 하나만 존재하는 퀘스트 Actor.
@@ -67,10 +68,10 @@ private:
 	TObjectPtr<UBZPlayerQuestComponent> PlayerQuestComponent;
 
 private:
-
-
 	UPROPERTY(EditAnywhere, Category = "Quest")
 	FName QuestID;
 
+	UPROPERTY(EditAnywhere, Category = "Quest")
+	TObjectPtr<ABZQuestCollisionTargetActor> TargetQuestCollision;
 
 };

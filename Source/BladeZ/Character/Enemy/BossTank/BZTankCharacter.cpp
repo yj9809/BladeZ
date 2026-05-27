@@ -289,6 +289,12 @@ void ABZTankCharacter::SetDead()
 		PlayAnimMontage(DeathMontage, 1.0f);
 	}
 
+	// 4. 죽음 Event를 Quest로 보내기
+	if (UBZQuestEventSubsystem* EnemyEvents = GetWorld()->GetSubsystem<UBZQuestEventSubsystem>())
+	{
+		EnemyEvents->BroadcastEnemyDied(this);
+	}
+
 }
 
 void ABZTankCharacter::PostInitializeComponents()
