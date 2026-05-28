@@ -652,7 +652,8 @@ void ABZZombie::EndKnockbackOverlapDamage()
 	else
 	{
 		// 완전히 허공으로 빠져나왔을 때만 안전하게 충돌을 Block으로 돌린다.
-		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, PreviousPawnCollisionResponse);
+		KnockbackDamagedActors.Empty();
 		
 		// 플레이어를 명시적으로 무시하게 했다면 해제 한다. 
 		if (APawn* PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn())

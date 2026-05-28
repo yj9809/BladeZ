@@ -22,10 +22,17 @@ AABZPickupBase::AABZPickupBase()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(RootComponent);
 	
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MeshComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	
 	// 물리 및 충돌 세팅
 	SphereComponent->SetSimulatePhysics(true);
 	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	SphereComponent->SetCollisionObjectType(ECC_WorldDynamic);
+	
+	// 바닥에 안정적으로 안착하도록 회전/ 선형 감쇄값 적용(미끄럼, 구름 방지)
+	SphereComponent->SetLinearDamping(1.0f);
+	SphereComponent->SetAngularDamping(5.0f);
 	
 	// 프리셋 커스텀 조율(플레이어는 겹치게 설정)
 	SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);

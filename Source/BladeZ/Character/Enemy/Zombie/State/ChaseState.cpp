@@ -46,13 +46,33 @@ void ChaseState::OnUpdate(float DeltaTime)
 		Owner->SetZombieState(EZombieState::Attack);
 		return;
 	}
-
+	
+	/*
+	 * 작성자: 강준형.
+	 * 작성일: 26.05.28
+	 * 작성 사유: 건물 붕괴(플랙처 기믹 가동)시 병목현상으로 느려지는 현상 조정 
+	 */
+	
+	// 안전성 검사 및 이동 가능 여부는 타이머와 관계없이 '매 프레임' 검사한다.
 	AAIController* AIController = Cast<AAIController>(Owner->GetController());
-	if (!AIController && !Owner->bCanMove)
+		
+	if (!AIController || !Owner->bCanMove)
 	{
+		// 컨트롤러가 없거나, 움직일 수 없는 상태라면 즉시 실행 중단
 		return;
 	}
 	
+	// 해당 좀비 고유의 누적 시간 업데이트
+	PathfindingElapsedTime += DeltaTime;
+	
+	// 0.25초가 지난 순간에만 단 한번 무거운 길찾기 연산을 수행한다. 
+	if (PathfindingElapsedTime >= 0.25f)
+	{
+		PathfindingElapsedTime = 0.0f;
+		
+		// 묵서운 MoveToActor 호출을 반드시 타이머 '내부'에 위치시켜야 병목이 해결됨
+		AIController->MoveToActor(Owner->TargetActor, Owner->ChaseAcceptanceRadius);
+	}
 	
 	/*
 	 * 작성자: 강준형.
