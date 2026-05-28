@@ -50,5 +50,5 @@ public:
 	// Minimum duration (in seconds) that the loading screen will be displayed
 	// Default value of 2.0 seconds
 	UPROPERTY(Config, EditAnywhere, Category = "Loading Screen")
-	float MinimumLoadingScreenDisplayTime = 2.0f;
+	float MinimumLoadingScreenDisplayTime = 5.0f;
 };
