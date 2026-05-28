@@ -3,6 +3,7 @@
 #include "BZTankState_MoveJumpTo.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
+#include "Character/Player/BZPlayerController.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 #include "Interactable/BZThrowable.h"
 #include "Kismet/GameplayStatics.h"
@@ -16,6 +17,10 @@ void UBZTankState_ThrowCar::OnEnter(AActor* Owner)
 	// 시네마틱 재생
 	if (TankCharacter)
 	{
+		if (ABZPlayerController* BZPC = Cast<ABZPlayerController>(TankCharacter->GetWorld()->GetFirstPlayerController()))
+		{
+			BZPC->SetCombatHUDVisible(false);
+		}
 		TankCharacter->PlayThrowCarCinematic();
 		UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(), ASkeletalMeshActor::StaticClass(),
 		                                             FName("ThrowCarSeq"), CinematicActor);
@@ -82,7 +87,12 @@ void UBZTankState_ThrowCar::OnExit(AActor* Owner)
 	{
 		TankCharacter->SetPlayerInputEnabled(true);
 	}
-
+	
+	if (ABZPlayerController* BZPC = Cast<ABZPlayerController>(TankCharacter->GetWorld()->GetFirstPlayerController()))
+	{
+		BZPC->SetCombatHUDVisible(true);
+	}
+	
 	if (TankCharacter->CustomMoveTo)
 	{
 		TankCharacter->CustomMoveTo->SetEnabled(true);

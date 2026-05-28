@@ -2,6 +2,7 @@
 #include "BZTankStateMachine.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
 #include "Character/Player/BZPlayerCharacter.h"
+#include "Character/Player/BZPlayerController.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -62,6 +63,10 @@ void UBZTankState_ThrowPlayer::OnUpdate(AActor* Owner, float DeltaTime)
 
 			// 시네마틱 재생
 			TankCharacter->PlaySpecialCinematic();
+			if (ABZPlayerController* BZPC = Cast<ABZPlayerController>(TankCharacter->GetWorld()->GetFirstPlayerController()))
+			{
+				BZPC->SetCombatHUDVisible(false);
+			}
 
 			TankCharacter->PlayAnimMontage(TankCharacter->ThrowPlayerMontage, TankCharacter->CurrentAnimPlayRate);
 		}

@@ -1,6 +1,7 @@
 #include "BZTankState_MoveJumpTo.h"
 #include "BZTankStateMachine.h"
 #include "Character/Enemy/BossTank/BZTankCharacter.h"
+#include "Character/Player/BZPlayerController.h"
 #include "Component/Boss/BZCustomMoveTo.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -80,6 +81,11 @@ void UBZTankState_MoveJumpTo::OnExit(AActor* Owner)
 		TankCharacter->GetCharacterMovement()->GravityScale = 2.0f;
 	}
 
+	if (ABZPlayerController* BZPC = Cast<ABZPlayerController>(TankCharacter->GetWorld()->GetFirstPlayerController()))
+	{
+		BZPC->SetCombatHUDVisible(true);
+	}
+	
 	if (TankCharacter)
 	{
 		TankCharacter->SetBlendingMotion(true);
