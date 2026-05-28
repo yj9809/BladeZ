@@ -28,7 +28,7 @@ protected:
 protected:
 	// Option Toggle Button.
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> ExitButton;
+	TObjectPtr<UButton> OptionExitButton;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> QuitButton;

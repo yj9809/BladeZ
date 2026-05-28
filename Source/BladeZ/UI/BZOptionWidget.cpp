@@ -19,14 +19,14 @@ void UBZOptionWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	// 제대로 Bind 됐는지 확인.
-	ensureAlways(ExitButton);
+	ensureAlways(OptionExitButton);
 	ensureAlways(QuitButton);
 
 	// Button에 Event Bind.
 	if (ABZPlayerController* PC = GetOwningPlayer<ABZPlayerController>())
 	{
 		// 옵션 닫기는 Controller가 Pause/InputMode까지 함께 복구.
-		ExitButton->OnClicked.AddUniqueDynamic(
+		OptionExitButton->OnClicked.AddUniqueDynamic(
 			PC,
 			&ABZPlayerController::HideOptionMenu
 		);
