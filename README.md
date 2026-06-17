@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/combat-feel.gif" width="720" alt="BladeZ 전투 타격감" />
+  <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/combat-feel.gif" width="720" alt="BladeZ 전투 타격감" />
   <br/>
   <sub><i>HitStop · 카메라 쉐이크 · Niagara 이펙트로 완성한 전투 타격감</i></sub>
 </p>
@@ -95,7 +95,7 @@
 
 | 문제 (공중 이탈) | 해결 (`FallingLateralFriction` 적용) |
 | :---: | :---: |
-| <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/dash-cliff-bug.gif" width="360" /> | <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/dash-fixed.gif" width="360" /> |
+| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/dash-cliff-bug.gif" width="360" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/dash-fixed.gif" width="360" /> |
 
 </details>
 
@@ -108,7 +108,7 @@
 
 | 보간 처리 전 (프레임 사이 빈틈) | 보간 처리 후 (빈틈 보완) |
 | :---: | :---: |
-| <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-before.gif" width="360" /> | <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-after.gif" width="360" /> |
+| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-before.gif" width="360" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-after.gif" width="360" /> |
 
 <details>
 <summary><b>⚠️ HitResults 배열 재사용으로 밀착 시 충돌 미감지</b></summary>
@@ -139,7 +139,7 @@ for (int i = 0; i < NumCount; i++)
 
 | 동일 배열 재사용 (밀착 시 미감지) | 포인트별 배열 분리 + Append |
 | :---: | :---: |
-| <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-hitresults-bug.gif" width="360" /> | <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-hitresults-fixed.gif" width="360" /> |
+| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-hitresults-bug.gif" width="360" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-hitresults-fixed.gif" width="360" /> |
 
 </details>
 
