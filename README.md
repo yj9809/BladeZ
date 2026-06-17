@@ -9,6 +9,12 @@
   <img src="https://img.shields.io/badge/Platform-PC-lightgrey" />
 </p>
 
+<p align="center">
+  <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/combat-feel.gif" width="720" alt="BladeZ 전투 타격감" />
+  <br/>
+  <sub><i>HitStop · 카메라 쉐이크 · Niagara 이펙트로 완성한 전투 타격감</i></sub>
+</p>
+
 ---
 
 ## 📌 프로젝트 개요
@@ -87,6 +93,10 @@
 - **시도** — Gravity 값 조정 → 너무 빠르게 떨어져 착지감이 부자연스러워 실패
 - **해결** — 대시 시작 시 `FallingLateralFriction = 5.0f` 적용, `OnLandMontageEnded` 콜백에서 `0.0f`로 복구하여 공중 수평 마찰로 이동량이 자연스럽게 감소
 
+| 문제 (공중 이탈) | 해결 (`FallingLateralFriction` 적용) |
+| :---: | :---: |
+| <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/dash-cliff-bug.gif" width="360" /> | <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/dash-fixed.gif" width="360" /> |
+
 </details>
 
 ### 4) 무기 SphereTrace 판정
@@ -95,6 +105,10 @@
 
 - Step 보간(계산량 과다), 단일 Sphere 연결(크기 과대), 8점 직선 Trace(감지 사각 발생) 안을 기각
 - 무기 트레이스 영역의 포인트마다 `이전 위치 → 현재 위치`를 Sphere Trace로 연결 → 불필요한 감지 영역 최소화 + 빈틈 보완
+
+| 보간 처리 전 (프레임 사이 빈틈) | 보간 처리 후 (빈틈 보완) |
+| :---: | :---: |
+| <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-before.gif" width="360" /> | <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-after.gif" width="360" /> |
 
 <details>
 <summary><b>⚠️ HitResults 배열 재사용으로 밀착 시 충돌 미감지</b></summary>
@@ -122,6 +136,10 @@ for (int i = 0; i < NumCount; i++)
     HitResults.Append(PointHitResults);  // 전체 배열에 통합
 }
 ```
+
+| 동일 배열 재사용 (밀착 시 미감지) | 포인트별 배열 분리 + Append |
+| :---: | :---: |
+| <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-hitresults-bug.gif" width="360" /> | <img src="https://github.com/victoryAshe/BladeZ/releases/download/media-assets/trace-hitresults-fixed.gif" width="360" /> |
 
 </details>
 
