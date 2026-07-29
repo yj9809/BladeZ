@@ -638,23 +638,31 @@ void ABZPlayerCharacter::PlayerParryEnd(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (Montage == LandMontage && !bInterrupted)
-	{
-		bIsLanding = false;
-		GetCharacterMovement()->FallingLateralFriction = 0.0f; // 착지 후 마찰 값을 원래대로 설정.
-	}
+	if (Montage == LandMontage)
+    {
+        bIsLanding = false;
+        GetCharacterMovement()->FallingLateralFriction = 0.0f;
+    }
 }
 
 void ABZPlayerCharacter::OnDashMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (Montage == DashMontage)
-	{
-		bIsDashing = false;
-		DashHitActors.Empty();
-		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-		GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &ABZPlayerCharacter::OnCapsuleOverlap);
-		GetCharacterMovement()->FallingLateralFriction = 0.0f;
-	}
+	if (Montage != DashMontage)
+    {
+        return;
+    }
+
+    bIsDashing = false;
+    DashHitActors.Empty();
+
+    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+    GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &ABZPlayerCharacter::OnCapsuleOverlap);
+
+    // 아직 공중이면 착지할 때까지 마찰값 유지.
+    if (!GetCharacterMovement()->IsFalling())
+    {
+        GetCharacterMovement()->FallingLateralFriction = 0.0f;
+    }
 }
 
 void ABZPlayerCharacter::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -708,8 +716,15 @@ void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, u
 void ABZPlayerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
-	bIsLanding = true;
-	GetMesh()->GetAnimInstance()->Montage_JumpToSection("Land", LandMontage); 
+	
+	// 실제 착지 시 마찰값 복원
+    GetCharacterMovement()->FallingLateralFriction = 0.0f;
+    bIsLanding = true;
+
+    if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+    {
+        AnimInstance->Montage_JumpToSection(TEXT("Land"), LandMontage);
+    }
 }
 
 FName ABZPlayerCharacter::GetStatRowName() const
