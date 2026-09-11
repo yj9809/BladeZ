@@ -1,211 +1,122 @@
 # ⚔️ BladeZ
 
-> **Unreal Engine 5 · C++** 기반으로 컴포넌트 분리 · TMap 콤보 · DataAsset 데이터 관리 · 루트 모션 대시를 직접 구현한 **3D 무쌍 액션 플레이어 캐릭터 시스템** 프로젝트
+> **UE5 C++ 기반 3D 무쌍 액션 — 플레이어 이동·카메라·전투 구현**
+>
+> 빠른 무기의 프레임 사이 판정 공백을 보완하고, 연타와 단일 입력을 수용하는 콤보 정책을 설계했습니다. 공격별 설정은 DataAsset으로 분리하고, 팀원과 대미지 전달·피격 반응을 연결했습니다.
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Unreal_Engine-5.6-0E1128?logo=unrealengine&logoColor=white" />
-  <img src="https://img.shields.io/badge/Language-C++-00599C?logo=cplusplus&logoColor=white" />
-  <img src="https://img.shields.io/badge/Genre-3D_Hack_&_Slash-orange" />
-  <img src="https://img.shields.io/badge/Platform-PC-lightgrey" />
+  <img src="https://img.shields.io/badge/Unreal_Engine-5.6-0E1128?logo=unrealengine&logoColor=white" alt="Unreal Engine 5.6" />
+  <img src="https://img.shields.io/badge/Language-C++-00599C?logo=cplusplus&logoColor=white" alt="C++" />
+  <img src="https://img.shields.io/badge/Genre-3D_Hack_&_Slash-orange" alt="3D Hack and Slash" />
+  <img src="https://img.shields.io/badge/Platform-PC-lightgrey" alt="PC" />
 </p>
 
 <p align="center">
-  <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/combat-feel.gif" width="720" alt="BladeZ 전투 타격감" />
-  <br/>
-  <sub><i>HitStop · 카메라 쉐이크 · Niagara 이펙트로 완성한 전투 타격감</i></sub>
+  <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/combat-feel.gif" width="720" alt="BladeZ 전투 플레이" />
+  <br />
+  <sub>HitStop · 카메라 셰이크 · Niagara 이펙트를 연결한 전투 피드백</sub>
 </p>
 
----
-
-## 📌 프로젝트 개요
+## 프로젝트 개요
 
 | 항목 | 내용 |
 | --- | --- |
-| **게임 이름** | BladeZ |
-| **플랫폼** | PC (Unreal Engine 5) |
-| **장르** | 3D 무쌍 액션 |
-| **제작 방식** | C++ 전용 |
-| **개발 스택** | Unreal Engine 5.6 / C++ / DataAsset / AnimNotify / Niagara / StateTree |
-| **개발 기간** | 2026.05.12 ~ 2026.05.28 |
-| **팀 구성** | 5인 협업 |
+| 개발 기간 | 2026.05.12 ~ 2026.05.28 |
+| 팀 구성 | 5인 협업 |
+| 플랫폼·장르 | PC · 3D 무쌍 액션 |
+| 기술 | Unreal Engine 5.6 · C++ · DataAsset · AnimNotify · Root Motion · Niagara |
+| 포트폴리오 역할 | Combat Gameplay · C++ |
+| 담당 | 플레이어 이동·카메라·전투, 아이템·무기 획득, 전투 연동 협의 및 팀원 디버깅 지원 |
 
-**담당 업무** — 플레이어 캐릭터 전체(이동 · 콤보 · 대시 · 피격/죽음 · 전투 피드백) · 팀원 디버깅 지원 · 기능 협업
+[상세 포트폴리오 — Notion](https://app.notion.com/p/3678d1fa63aa8168b98ac79c315019c9) · [본문 코드 기준 — b7738e1](https://github.com/yj9809/BladeZ/tree/b7738e12f035c26306fbf16c580cfd450257d8e7)
 
----
+## 핵심 구현
 
-## 🎯 핵심 목표
+### 1. 프레임 사이 무기 판정 보완
 
-- 컴포넌트 기반 전투 설계로 **전투 로직을 캐릭터 클래스에서 분리**
-- **DataAsset(`UPrimaryDataAsset`)** 으로 공격 데이터(데미지 · 히트스톱 · 이펙트 · 카메라 쉐이크)를 에셋에서 관리
-- **TMap 콤보 구조**와 **루트 모션 대시**를 C++로 직접 구현
-- 이동부터 전투 피드백(HitStop · 카메라 쉐이크 · Niagara 이펙트)까지 플레이어 캐릭터 전체 구현
+현재 프레임의 무기 길이만 검사하면 빠르게 휘두를 때 다음 프레임의 Trace 영역과 떨어지는 구간이 생겼습니다. 무기 시작점과 끝점 사이에 **5개 지점**을 두고, 각 지점의 이전·현재 위치를 Sphere Trace로 연결했습니다.
 
----
+- 현재 무기 길이 방향 1회와 이동 경로 5회를 합쳐 판정 활성 프레임마다 총 6회 검사합니다.
+- 지점별 `PointHitResults`를 별도로 받은 뒤 `Append`해 앞선 검사 결과가 덮어써지지 않게 했습니다.
+- 같은 Trace 활성 구간에서 이미 맞은 액터는 제외하고, 새 구간의 첫 프레임에는 이전 위치를 현재 위치로 초기화합니다.
 
-## ✨ Key Points
+| 보완 전 | 보완 후 |
+| :---: | :---: |
+| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-before.gif" width="360" alt="프레임 사이 Trace 공백" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-after.gif" width="360" alt="이전 현재 위치를 연결한 다중 Sphere Trace" /> |
 
-| 구현 | 설명 |
+30 FPS의 실제 플레이 조건에서 보완을 확인한 뒤, 팀원의 맵 정리·최적화 후 60 FPS와 추가 조건인 10·20·120 FPS에서도 판정 공백의 재현 여부를 확인했습니다. 반복 측정을 통한 누락 횟수·미스율 비교는 진행하지 않았습니다. 이 방식은 5개 지점의 직선 이동을 이용한 근사이며, 프레임 사이 회전 궤적 전체를 복원하지는 않습니다.
+
+[현재 구현 — `PerformTrace`](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Character/Player/Weapon/BZWeaponActor.cpp#L60) · [판정 구간 제어 — AnimNotifyState](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Character/Player/Animation/BZANSPlayerTrace.cpp#L9) · [변경 이력](https://github.com/yj9809/BladeZ/commit/d95cd508e67486b317448e521b1211fc24cf1563)
+
+### 2. 최신 입력 하나를 소비하는 콤보
+
+공격 재생 속도가 빨라질수록 짧은 입력 구간에서 콤보가 끊기는 문제가 있었습니다. 입력 수락과 공격 전환 시점을 분리해 한 번 누르기와 연타를 모두 수용했습니다.
+
+| 시점 | 처리 |
 | --- | --- |
-| **컴포넌트 분리로 전투 로직 캡슐화** | `BZPlayerCombatComponent`가 콤보 · 히트스톱 · 이펙트를 모두 담당, 캐릭터 클래스는 입력 전달만 수행 |
-| **DataAsset 기반 데이터 분리** | `UPrimaryDataAsset`으로 공격별 데미지 · 히트스톱 · 이펙트 · 카메라 쉐이크를 에셋에서 독립 관리 → 로직 수정 없이 기획 반영 |
-| **루트 모션 대시 버그 해결** | `FallingLateralFriction = 5.0f` 적용으로 낭떠러지 앞 대시 시 공중 이탈 현상 해결 |
-| **TMap 콤보 윈도우 설계** | `입력 타입 + 섹션명` 조합 키로 다음 공격 결정, AnimNotify를 커밋 트리거로 사용 |
-| **HitStop 실시간 타이머** | `SetGlobalTimeDilation` + `GetRealTimeSeconds` 기준 (DeltaTime은 TimeDilation 영향으로 사용 불가) |
+| 공격 시작 | 이전 버퍼를 비우고 공격 상태로 전환 |
+| 공격 중 좌·우 입력 | `NextInputType`을 마지막 입력으로 갱신 |
+| 콤보 Notify 도달 | 현재 섹션과 입력으로 다음 섹션을 결정하고 버퍼 소비 |
 
----
+연타한 횟수만큼 공격을 예약하지 않고 **최신 입력 하나만 유지**합니다. 처음에는 짧은 Notify Window를 원인으로 봤지만, Blend In/Out 값에 따라 Window 시작이 실행되지 않는 현상도 확인했기 때문에 최초 가설을 확정 원인으로 단정하지 않았습니다.
 
-## 🛠 핵심 구현
+[현재 구현 — `SetAttackInput` / `CheckCombo`](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Component/Player/BZPlayerCombatComponent.cpp#L157) · [Notify 호출 경로](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Character/Player/Animation/BZANComboCheck.cpp#L8) · [변경 이력](https://github.com/yj9809/BladeZ/commit/6ba69add0d513779432a9966484e6f36874e541d)
 
-### 1) 콤보 시스템 (TMap + AnimNotify)
+### 3. 공격 데이터와 피격 연동
 
-- 공격 입력(Left/Right)과 현재 섹션명을 키로 조합: `"{SectionName}_{InputType}"` → `TMap<FName, FName>`으로 다음 섹션명 조회
-- `FBZAttackData`(데미지 · HitStop 등)는 `AttackDataArray`에서 `FindByPredicate`로 별도 조회
-- 공격 중 입력은 `NextInputType`에 즉시 버퍼링하고 최신 입력으로 계속 덮어씀
-- `BZANComboCheck` 노티파이는 입력 게이트가 아닌 **커밋 트리거**로 동작 → 도달 시 마지막 버퍼 입력 기준으로 다음 섹션 결정
-- 첫 공격은 `L_1 / L_1_1` 중 랜덤 선택으로 시작 패턴 다양화
+공격별 콤보 전환·대미지·넉백·HitStop·이펙트·카메라 강도를 DataAsset으로 분리했습니다. 명중 감지와 공격 정보 해석은 플레이어 전투 코드가 담당하고, 대상에는 `FBZDamageEvent`로 피격 유형·넉백 여부·강도를 전달합니다.
 
-<details>
-<summary><b>⚠️ PlayRate 가속 시 콤보 입력 누락 문제</b></summary>
-
-- **문제** — 무쌍 장르의 속도감을 위해 PlayRate를 올렸더니 콤보 윈도우(노티파이 구간)가 짧아져 정확한 타이밍에 입력하지 않으면 콤보가 끊김
-- **원인** — 기존 설계는 `BZANComboCheck` 노티파이 수신 구간에서만 입력을 허용 → PlayRate가 빨라질수록 입력 가능 창이 비례해 좁아짐
-- **해결** — 입력 수락 시점과 콤보 전환 시점을 분리. `SetAttackInput()`에서 `bIsAttacking` 상태면 언제든 입력을 버퍼링하고, 노티파이(`CheckCombo()`)는 저장된 마지막 입력을 읽어 다음 섹션으로 점프하는 커밋 트리거 역할만 수행
-
-</details>
-
-### 2) Montage Curve 기반 동적 PlayRate
-
-- `AttackMontage`에 내장된 `AttackRate Float Curve`를 `TickComponent`에서 매 프레임 Evaluate
-- `Montage_GetPosition`으로 현재 재생 위치를 구한 뒤 `GetCurveData()`로 커브 값 샘플링
-- `BasePlayRate(2.5f) × CurveValue`로 PlayRate 실시간 갱신 → 몽타주 에셋에서 직접 속도 프로파일 조정 가능
-
-### 3) 루트 모션 대시
-
-- 8방향 입력 → `GetDashSectionName()`으로 대응 몽타주 섹션 결정 후 루트 모션 적용
-- 대시 중 캡슐 충돌을 `ECR_Overlap`으로 전환해 적을 관통, `OnCapsuleOverlap`에서 적의 좌우 방향을 계산해 `LaunchCharacter`로 밀어냄
-- 쿨다운 타이머로 연속 입력 방지, 추락 중 대시 불가 처리
-
-<details>
-<summary><b>⚠️ 낭떠러지 앞 대시 시 공중 이탈 문제</b></summary>
-
-- **문제** — 낭떠러지 앞에서 대시 시 공중에서 이동량이 유지된 채 멀리 날아감
-- **원인** — 공중에서는 지면 마찰이 없어 루트 모션 이동량이 감소하지 않고 누적됨
-- **시도** — Gravity 값 조정 → 너무 빠르게 떨어져 착지감이 부자연스러워 실패
-- **해결** — 대시 시작 시 `FallingLateralFriction = 5.0f` 적용, `OnLandMontageEnded` 콜백에서 `0.0f`로 복구하여 공중 수평 마찰로 이동량이 자연스럽게 감소
-
-| 문제 (공중 이탈) | 해결 (`FallingLateralFriction` 적용) |
-| :---: | :---: |
-| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/dash-cliff-bug.gif" width="360" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/dash-fixed.gif" width="360" /> |
-
-</details>
-
-### 4) 무기 SphereTrace 판정
-
-프레임 사이 빈틈 없이 타격을 감지하기 위해 **다중 Sphere 보간** 방식을 채택:
-
-- Step 보간(계산량 과다), 단일 Sphere 연결(크기 과대), 8점 직선 Trace(감지 사각 발생) 안을 기각
-- 무기 트레이스 영역의 포인트마다 `이전 위치 → 현재 위치`를 Sphere Trace로 연결 → 불필요한 감지 영역 최소화 + 빈틈 보완
-
-| 보간 처리 전 (프레임 사이 빈틈) | 보간 처리 후 (빈틈 보완) |
-| :---: | :---: |
-| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-before.gif" width="360" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-after.gif" width="360" /> |
-
-<details>
-<summary><b>⚠️ HitResults 배열 재사용으로 밀착 시 충돌 미감지</b></summary>
-
-- **문제** — 트레이스 보간 적용 후 적과 밀착 시 충돌 처리가 발생하지 않음
-- **원인** — `SphereTraceMulti`에 동일한 `HitResults` 배열을 재사용하면 for 루프마다 배열이 덮어써져, 충돌이 없는 포인트가 이전 결과를 지움
-- **해결** — 루프 내부에 `PointHitResults` 별도 배열 생성 후 `Append`로 통합, 이미 히트한 Actor 필터링으로 중복 타격 방지
-
-```cpp
-for (int i = 0; i < NumCount; i++)
-{
-    float Alpha = static_cast<float>(i) / (NumCount - 1);
-    FVector PrevPoint = FMath::Lerp(PrevStart, PrevEnd, Alpha);
-    FVector CurrPoint = FMath::Lerp(StartLocation, EndLocation, Alpha);
-
-    TArray<FHitResult> PointHitResults;  // 포인트별 개별 배열
-
-    UKismetSystemLibrary::SphereTraceMulti(
-        this, PrevPoint, CurrPoint, Radius,
-        UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2),
-        false, ActorsToIgnore, EDrawDebugTrace::ForDuration,
-        PointHitResults,
-        true, FLinearColor::Red, FLinearColor::Green, 1.0f
-    );
-    HitResults.Append(PointHitResults);  // 전체 배열에 통합
-}
+```mermaid
+flowchart TD
+    W["Weapon · 명중 감지"] -->|OnAttackHit| C["CombatComponent · 공격 정보 해석"]
+    D["DataAsset · 공격별 설정"] --> C
+    C -->|"TakeDamage · FBZDamageEvent"| T["피격 대상 · 반응 처리"]
+    C --> F["HitStop · 카메라 · 이펙트"]
 ```
 
-| 동일 배열 재사용 (밀착 시 미감지) | 포인트별 배열 분리 + Append |
-| :---: | :---: |
-| <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-hitresults-bug.gif" width="360" /> | <img src="https://github.com/yj9809/BladeZ/releases/download/media-assets/trace-hitresults-fixed.gif" width="360" /> |
+저는 플레이어 전투와 공통 전달 형식을 구현하고 연결을 검증했습니다. 좀비의 수신·넉백 처리는 팀원이 구현했습니다.
 
-</details>
+[공격 데이터 — `FBZAttackData`](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Character/Player/BZPlayerAttackData.h#L10) · [대미지 전달 — `OnAttackHit`](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Component/Player/BZPlayerCombatComponent.cpp#L285) · [공통 전달 형식 — `FBZDamageEvent`](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Common/FBZDamageEvent.h#L4) · [팀원 구현 — 좀비 KnockBack](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Character/Enemy/Zombie/BZZombie.cpp#L541)
 
-### 5) 전투 피드백 (HitStop · 카메라 쉐이크 · Niagara)
+## 추가 구현
 
-- **HitStop** — `SetGlobalTimeDilation`으로 시간 감속, 지속 시간은 `GetWorld()->GetRealTimeSeconds()` 기준 (DeltaTime은 TimeDilation 영향으로 사용 불가). 다수의 적을 상대하는 게임 특성상 모든 공격이 아닌 특정 콤보에서만 적용
-- **카메라 쉐이크** — `FOnCameraShake` 델리게이트 체인 → `UBZCameraShakeComponent` 수신, DataAsset Scale로 공격별 강도 독립 조절
-- **Niagara 이펙트** — `FBZAttackData.HitEffect` 배열(최대 2개)로 공격별 파티클 독립 지정
-- **처리 순서** — 카메라 쉐이크 → 데미지 → HitStop → Niagara 이펙트
+- **이동·카메라** — 3인칭 이동, 시점 전환, 카메라 충돌 대응
+- **루트 모션 대시** — 방향별 몽타주 섹션, 적 관통·밀치기, 공중 이동량 보정과 착지 상태 복원
+- **전투 피드백** — DataAsset 설정에 따른 HitStop, 카메라 셰이크, 사운드, Niagara 이펙트 연결
+- **아이템·무기 획득** — 무기 교체와 획득 이벤트 연결
 
-### 6) 피격 / 죽음 처리
+## 협업
 
-- `FBZDamageEvent`(커스텀 데미지 이벤트)로 DamageType 전달: `Light / Heavy / Knockdown` → 수신 측에서 몽타주 섹션 분기
-- `SetDead()` — 충돌 무시 설정 → DeadMontage 재생 → 입력 차단 → `OpenLevel`
+Niagara 파티클을 좀비 액터로 전환하는 기능의 담당 팀원과 연동 문제를 디버깅했습니다. 파티클 ID를 C++에서 Niagara로 역전달하던 경로를 제거하고, Niagara는 거리 조건에 따른 파티클 제거를, C++는 좀비 생성을 담당하도록 역할을 나눴습니다. 수정안을 직접 테스트한 뒤 담당 팀원과 재검증해 반영했습니다.
 
-<details>
-<summary><b>⚠️ PIE 레벨 전환 시 레벨명 접두사 문제</b></summary>
+또한 `BZSoundManager`를 구현하고 UI 담당자가 Blueprint에서 독립적으로 연결할 수 있도록 볼륨 초기화·변경·저장 시점을 문서로 전달했습니다.
 
-- **문제** — PIE 실행 시 `OpenLevel` 호출이 실패하거나 잘못된 레벨로 전환됨
-- **원인** — PIE 환경에서 레벨명에 `"UEDPIE_0_"` 접두사가 자동으로 붙어 기존 레벨명으로 찾을 수 없음
-- **해결** — `RemoveFromStart("UEDPIE_0_")`로 접두사 제거 후 레벨 전환
+[Niagara 역전달 경로 제거](https://github.com/yj9809/BladeZ/commit/505e266bb0b131993c83fe38f4b77941d3265b77) · [`BZSoundManager`](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Game/BZSoundManager.cpp#L13) · [Blueprint 호출 인터페이스](https://github.com/yj9809/BladeZ/blob/b7738e12f035c26306fbf16c580cfd450257d8e7/Source/BladeZ/Game/BZSoundManager.h#L32)
 
-</details>
+## 프로젝트 구조
 
----
-
-## 📂 프로젝트 구조
-
-```
+```text
 Source/BladeZ/
-├─ Character/
-│  ├─ Player/                 # 플레이어 캐릭터 (담당 영역)
-│  │  ├─ Animation/           # AnimInstance, 콤보/트레이스/패링 노티파이
-│  │  ├─ BZPlayerCharacter    # 플레이어 캐릭터 클래스 (입력 전달)
-│  │  └─ BZPlayerAttackData   # 공격 DataAsset
-│  └─ Enemy/
-│     ├─ BossTank/            # 보스(탱크) - StateMachine 기반 행동
-│     └─ Zombie/              # 좀비 - 오브젝트 풀 · Niagara 스왑 · State
-└─ LoadingScreenModule/       # 로딩 스크린 모듈
-
-Source/LoadingScreenModule/   # 별도 런타임 모듈 (PreLoadingScreen)
+├─ Character/Player/
+│  ├─ Animation/                 # 콤보·Trace·패링 AnimNotify
+│  ├─ Weapon/BZWeaponActor       # 무기 Trace와 중복 피격 방지
+│  ├─ BZPlayerCharacter          # 이동·입력·대시·피격·획득
+│  └─ BZPlayerAttackData         # 공격별 DataAsset 정의
+├─ Component/Player/
+│  ├─ BZPlayerCombatComponent    # 콤보·대미지·전투 피드백
+│  └─ BZCameraShakeComponent     # 카메라 셰이크 실행
+└─ Game/BZSoundManager           # 볼륨 제어·저장과 BP 인터페이스
 ```
 
-> `Variant_Combat` · `Variant_Platforming` · `Variant_SideScrolling`은 언리얼 템플릿 기본 제공 코드입니다.
+`Variant_Combat`, `Variant_Platforming`, `Variant_SideScrolling`은 Unreal Engine 템플릿 기본 제공 코드입니다.
 
----
+## 빌드·실행
 
-## ▶️ 빌드 / 실행
+1. Unreal Engine 5.6과 Visual Studio의 C++ 게임 개발 도구를 설치합니다.
+2. 저장소를 클론한 뒤 `BladeZ.uproject`에서 Visual Studio 프로젝트 파일을 생성합니다.
+3. `Development Editor / Win64` 구성으로 빌드합니다.
+4. `BladeZ.uproject`를 실행합니다.
 
-1. **Unreal Engine 5.6** 설치
-2. 리포지토리 클론 후 `BladeZ.uproject` 우클릭 → **Generate Visual Studio project files**
-3. `BladeZ.sln`을 Visual Studio로 열어 **Development Editor** 구성으로 빌드
-4. 빌드 완료 후 `BladeZ.uproject` 실행
+## 저장소 정리
 
----
-
-## 🔎 회고
-
-- 컴포넌트 분리와 DataAsset 구조를 직접 설계하며 **"기획 변경에 코드가 흔들리지 않는 구조"** 가 어떤 형태인지 체감
-- 루트 모션 · Niagara SIMD · PIE 접두사까지 엔진 내부 동작을 **가설 → 검증**으로 파고드는 디버깅 습관 형성
-- 팀원이 내 시스템을 쓸 수 있도록 문서화하면서 **"구현보다 전달이 어렵다"** 는 점을 체감
-
----
-
-## 🤝 협업 기여
-
-- 팀 코딩 표준 문서 수립 → 팀 전체 코드 일관성 확보
-- `BZSoundManager` 구현 후 BP 연동 가이드 작성 → UI 담당 팀원의 독립 연동 지원
-- Niagara ↔ C++ 파티클 변환 시스템 디버깅 (SIMD 배치 처리 문제 → 독립 동작 구조로 재설계 후 팀 공유)
+포트폴리오 공개본에서는 사용하지 않는 RuntimeInspector 편집기 플러그인과 테스트 위젯을 제거했습니다. 공격 데이터 배열과 주요 객체 접근에는 범위·유효성 검사를 추가했습니다.
