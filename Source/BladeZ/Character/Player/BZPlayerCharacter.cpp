@@ -261,9 +261,18 @@ void ABZPlayerCharacter::BeginPlay()
 	{
 		if (GI->SavedWeaponClass)
 		{
-			Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(GI->SavedWeaponClass);
-			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
-			Weapon->OnAttackHit.BindUObject(CombatComponent, &UBZPlayerCombatComponent::OnAttackHit);
+			if (UWorld* World = GetWorld())
+			{
+				Weapon = World->SpawnActor<ABZWeaponActor>(GI->SavedWeaponClass);
+				if (Weapon)
+				{
+					Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
+					if (CombatComponent)
+					{
+						Weapon->OnAttackHit.BindUObject(CombatComponent, &UBZPlayerCombatComponent::OnAttackHit);
+					}
+				}
+			}
 		}
 	}
 
@@ -399,7 +408,12 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	class AController* EventInstigator, AActor* DamageCauser)
 {
-	if (Stat)
+	if (!Stat)
+	{
+		return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	}
+
+	if (CombatComponent)
 	{
 		if (CombatComponent->IsPerfectParry())
 		{
@@ -411,55 +425,61 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 		{
 			DamageAmount *= BlockDamageReduction;
 		}
-		
-		Stat->ApplyDamage(DamageAmount);
 
 		if (CombatComponent->IsParry())
 		{
+			Stat->ApplyDamage(DamageAmount);
 			CombatComponent->OnBlockHit();
 			return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 		}
 
 		if (CombatComponent->GetSuperArmored())
 		{
+			Stat->ApplyDamage(DamageAmount);
 			return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 		}
-		
-		// 중간 보스가 구현되면 중간 보스부터 아닐 경우 보스만 피격 허용.
-		if (!DamageCauser->IsA(ABZZombie::StaticClass()))
-		{
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (
-				AnimInstance->Montage_IsPlaying(DeadMontage)
+	}
+
+	Stat->ApplyDamage(DamageAmount);
+
+	// 일반 좀비 이외의 공격은 피격 몽타주로 반응한다.
+	if (DamageCauser && !DamageCauser->IsA(ABZZombie::StaticClass()))
+	{
+		UAnimInstance* AnimInstance = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
+		if (AnimInstance
+			&& (AnimInstance->Montage_IsPlaying(DeadMontage)
 				|| AnimInstance->Montage_IsPlaying(HitMontage)
-				|| AnimInstance->Montage_IsPlaying(LandMontage))
+				|| AnimInstance->Montage_IsPlaying(LandMontage)))
+		{
+			return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+		}
+
+		FName SectionName;
+		if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
+		{
+			const FBZDamageEvent* DE = static_cast<const FBZDamageEvent*>(&DamageEvent);
+
+			switch (DE->GetDamageType())
 			{
-				return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-			}	
-			FName SectionName;
-			if (DamageEvent.IsOfType(FBZDamageEvent::ClassID))
-			{
-				FBZDamageEvent* DE = static_cast<FBZDamageEvent*>(const_cast<FDamageEvent*>(&DamageEvent));
-				
-				switch (DE->GetDamageType())
-				{
-				default:
-				case 0:
-					SectionName = "Hit_Light";
-					break;
-				case 1:
-					SectionName = "Hit_Heavy";
-					break;
-				case 2:
-					SectionName = "Knockdown";
-					break;
-				}
+			default:
+			case 0:
+				SectionName = "Hit_Light";
+				break;
+			case 1:
+				SectionName = "Hit_Heavy";
+				break;
+			case 2:
+				SectionName = "Knockdown";
+				break;
 			}
-			
+		}
+
+		if (AnimInstance)
+		{
 			PlayAnimMontage(HitMontage, 2.0f, SectionName);
 		}
 	}
-	
+
 	return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 }
 
@@ -514,14 +534,14 @@ void ABZPlayerCharacter::PlayerRunEnd(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 {
-	if (!Weapon)
+	if (!Weapon || !CombatComponent)
 	{
 		return;
 	}
 	
 	// 히트 모션일 경우 공격 불가.
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance->Montage_IsPlaying(HitMontage))
+	if (AnimInstance && AnimInstance->Montage_IsPlaying(HitMontage))
 	{
 		return;
 	}
@@ -543,7 +563,7 @@ void ABZPlayerCharacter::PlayerLeftAttack(const FInputActionValue& Value)
 
 void ABZPlayerCharacter::PlayerRightAttack(const FInputActionValue& Value)
 {
-	if (!Weapon)
+	if (!Weapon || !CombatComponent)
 	{
 		return;
 	}
@@ -566,7 +586,7 @@ void ABZPlayerCharacter::PlayerDash(const FInputActionValue& Value)
 	
 	// 히트 모션일 경우 대쉬 불가.
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance->Montage_IsPlaying(HitMontage))
+	if (AnimInstance && AnimInstance->Montage_IsPlaying(HitMontage))
 	{
 		return;
 	}
@@ -707,7 +727,8 @@ void ABZPlayerCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, u
 	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
 	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (GetCharacterMovement()->IsFalling() && !AnimInstance->Montage_IsPlaying(DeadMontage))
+	if (GetCharacterMovement()->IsFalling()
+		&& (!AnimInstance || !AnimInstance->Montage_IsPlaying(DeadMontage)))
 	{
 		PlayAnimMontage(LandMontage);
 	}
@@ -777,12 +798,24 @@ void ABZPlayerCharacter::PlayerInteract(const FInputActionValue& Value)
 		return;
 	}
 
+	UWorld* World = GetWorld();
+	if (!World || !CombatComponent)
+	{
+		return;
+	}
+
+	ABZWeaponActor* NewWeapon = World->SpawnActor<ABZWeaponActor>(NearbyPickup->GetWeaponClass());
+	if (!NewWeapon)
+	{
+		return;
+	}
+
 	if (Weapon)
 	{
 		Weapon->Destroy();
 	}
 
-	Weapon = GetWorld()->SpawnActor<ABZWeaponActor>(NearbyPickup->GetWeaponClass());
+	Weapon = NewWeapon;
 	Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("WeaponSocket"));
 	Weapon->OnAttackHit.BindUObject(CombatComponent, &UBZPlayerCombatComponent::OnAttackHit);
 

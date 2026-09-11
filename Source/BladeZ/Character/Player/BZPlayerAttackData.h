@@ -45,7 +45,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effect)
 	TArray<TObjectPtr<class UNiagaraSystem>> HitEffect;
 	
-	// 콤보 이름? 콤보 명칭??
+	// 공격 데이터 식별에 사용하는 콤보 이름.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = ComboName)
 	FName ComboName;
 	

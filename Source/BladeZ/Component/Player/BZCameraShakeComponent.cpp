@@ -1,19 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Component/Player//BZCameraShakeComponent.h"
+#include "Component/Player/BZCameraShakeComponent.h"
 
-#include "Common/BZLog.h"
 #include "GameFramework/Character.h"
 
 // Sets default values for this component's properties
 UBZCameraShakeComponent::UBZCameraShakeComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
-	// ...
 	static ConstructorHelpers::FClassFinder<UCameraShakeBase> CameraShakeClassRef(
 		TEXT("/Game/BZ/Character/Player/BP_CameraShake.BP_CameraShake_C")
 	);
@@ -24,24 +20,6 @@ UBZCameraShakeComponent::UBZCameraShakeComponent()
 }
 
 
-// Called when the game starts
-void UBZCameraShakeComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// ...
-	
-}
-
-
-// Called every frame
-void UBZCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-
 void UBZCameraShakeComponent::OnCameraShake(float Amplitude)
 {
 	if (!CameraShakeClass)
@@ -49,16 +27,27 @@ void UBZCameraShakeComponent::OnCameraShake(float Amplitude)
 		return;
 	}
 
-	float Now = GetWorld()->GetTimeSeconds();
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const float Now = World->GetTimeSeconds();
 	if (Now - LastShakeTime < ShakeCooldown)
 	{
 		return;
 	}
 	LastShakeTime = Now;
 
-	APlayerController* PlayerController =
-		Cast<APlayerController>(Cast<ACharacter>(GetOwner())->GetController());
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	APlayerController* PlayerController = OwnerCharacter
+		? Cast<APlayerController>(OwnerCharacter->GetController())
+		: nullptr;
 
-	PlayerController->ClientStartCameraShake(CameraShakeClass, Amplitude);
+	if (PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(CameraShakeClass, Amplitude);
+	}
 }
 

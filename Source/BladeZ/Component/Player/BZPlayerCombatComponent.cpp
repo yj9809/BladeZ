@@ -4,15 +4,12 @@
 #include "BZPlayerCombatComponent.h"
 
 #include "NiagaraFunctionLibrary.h"
-#include "Blueprint/UserWidget.h"
 #include "Character/Player/BZPlayerCharacter.h"
-#include "Common/BZLog.h"
 #include "Common/FBZDamageEvent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "RuntimeInspectorWidget.h"
 #include "Component/BZCharacterStatComponent.h"
 #include "Game/BZSoundManager.h"
 
@@ -50,19 +47,11 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 		ParryMontage = ParryMontageRef.Object;
 	}
 
-	// Test: Widget Test중.
-	static ConstructorHelpers::FClassFinder<URuntimeInspectorWidget> InspectorWidgetClassRef(
-		TEXT("/Game/BZ/UI/Test/WB_TestWidget.WB_TestWidget_C")
-	);
-	if (InspectorWidgetClassRef.Succeeded())
-	{
-		InspectorWidgetClass = InspectorWidgetClassRef.Class;
-	}
 }
 
 bool UBZPlayerCombatComponent::GetSuperArmored() const
 {
-	if (!bIsAttacking) return false;
+	if (!bIsAttacking || !AttackData) return false;
 
 	const FBZAttackData* CurrentData = AttackData->GetAttackDataArray().FindByPredicate(
 		[this](const FBZAttackData& Data)
@@ -80,7 +69,7 @@ void UBZPlayerCombatComponent::BeginPlay()
 
 	Owner = Cast<ACharacter>(GetOwner());
 
-	if (Owner)
+	if (Owner && Owner->GetMesh())
 	{
 		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
 		if (AnimInstance && AttackMontage)
@@ -96,27 +85,29 @@ void UBZPlayerCombatComponent::BeginPlay()
 		}
 	}
 
-	for (const FBZAttackData& Data : AttackData->GetAttackDataArray())
+	if (AttackData)
 	{
-		FName key = *FString::Printf(TEXT("%s_%d"), *Data.CurrentSectionName.ToString(), (int32)Data.AttackInputType);
-		AttackSectionMap.Add(key, Data.NextSectionName);
+		for (const FBZAttackData& Data : AttackData->GetAttackDataArray())
+		{
+			const FName Key = *FString::Printf(
+				TEXT("%s_%d"),
+				*Data.CurrentSectionName.ToString(),
+				static_cast<int32>(Data.AttackInputType)
+			);
+			AttackSectionMap.Add(Key, Data.NextSectionName);
+		}
 	}
-
-	// Test: Debug Widget.
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	InspectorWidget = CreateWidget<URuntimeInspectorWidget>(
-		PC,
-		InspectorWidgetClass
-	);
-	InspectorWidget->AddToViewport(100);
-	InspectorWidget->Inspect(AttackData);
-	InspectorWidget->SetVisibility(ESlateVisibility::Hidden);
 }
 
 void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick TickType,
                                              FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
 
 	// 공격 중일 때만 처리
 	if (bIsAttacking && AttackMontage)
@@ -124,7 +115,7 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(GetOwner()); // 캐릭터 얻기
 		if (Player)
 		{
-			UAnimInstance* AnimInstance = Player->GetMesh()->GetAnimInstance();
+			UAnimInstance* AnimInstance = Player->GetMesh() ? Player->GetMesh()->GetAnimInstance() : nullptr;
 			if (AnimInstance)
 			{
 				// 현재 몽타주 재생 위치
@@ -153,20 +144,13 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 
 	if (bIsHitStop)
 	{
-		float ElapsedTime = GetWorld()->GetRealTimeSeconds() - HitStopStartRealTime;
+		const float ElapsedTime = World->GetRealTimeSeconds() - HitStopStartRealTime;
 		if (ElapsedTime >= HitStopEndTime)
 		{
-			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+			UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
 			bIsHitStop = false;
 			HitStopEndTime = 0.0f;
 		}
-	}
-
-	// Test: Debug Widget.
-	if (GetWorld()->GetFirstPlayerController()->WasInputKeyJustPressed(EKeys::F9))
-	{
-		bool bVisible = InspectorWidget->GetVisibility() == ESlateVisibility::Visible;
-		InspectorWidget->SetVisibility(bVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
 	}
 }
 
@@ -183,19 +167,19 @@ void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 
 void UBZPlayerCombatComponent::StartComboAttack()
 {
+	if (!Owner || !AttackMontage)
+	{
+		return;
+	}
+
 	// 공격 상태 확인 플래그 변경.
 	bHasNextInput = false;
 	bIsAttacking = true;
 
-	if (AttackMontage)
-	{
-		FName Key = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
+	const FName Key = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
 
-		Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
-
-		// 첫 번째 섹션 이름으로 변경.
-		CurrentComboName = Key;
-	}
+	Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
+	CurrentComboName = Key;
 }
 
 void UBZPlayerCombatComponent::CheckCombo()
@@ -205,18 +189,26 @@ void UBZPlayerCombatComponent::CheckCombo()
 		return;
 	}
 
-	UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
-	int32 AttackInput = static_cast<int32>(NextInputType);
-	FName key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
+	if (!Owner || !AttackMontage)
+	{
+		bHasNextInput = false;
+		return;
+	}
 
-	FName* SectionName = AttackSectionMap.Find(key);
+	UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr;
+	if (!AnimInstance)
+	{
+		bHasNextInput = false;
+		return;
+	}
+
+	int32 AttackInput = static_cast<int32>(NextInputType);
+	const FName Key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
+
+	FName* SectionName = AttackSectionMap.Find(Key);
 	if (SectionName)
 	{
-		if (AnimInstance && AttackMontage)
-		{
-			AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
-		}
-
+		AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
 		CurrentComboName = *SectionName;
 	}
 	else
@@ -242,22 +234,30 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 
 void UBZPlayerCombatComponent::StartParry()
 {
-	if (bIsAttacking)
+	if (bIsAttacking || !Owner || !ParryMontage)
+	{
+		return;
+	}
+
+	UCharacterMovementComponent* MovementComponent = Owner->GetCharacterMovement();
+	if (!MovementComponent)
 	{
 		return;
 	}
 
 	bIsParry = true;
-	Owner->GetCharacterMovement()->DisableMovement();
+	MovementComponent->DisableMovement();
 	Owner->PlayAnimMontage(ParryMontage, 1.5f);
 }
 
 void UBZPlayerCombatComponent::EndParry()
 {
-	if (!bIsParry) return;
+	if (!bIsParry || !Owner) return;
 
-	UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
-	AnimInstance->Montage_Stop(0.2f, ParryMontage);
+	if (UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr)
+	{
+		AnimInstance->Montage_Stop(0.2f, ParryMontage);
+	}
 }
 
 void UBZPlayerCombatComponent::OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -266,7 +266,10 @@ void UBZPlayerCombatComponent::OnParryMontageEnded(UAnimMontage* Montage, bool b
 
 	bIsParry = false;
 	bIsPerfectParry = false;
-	Owner->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	if (Owner && Owner->GetCharacterMovement())
+	{
+		Owner->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
 }
 
 bool UBZPlayerCombatComponent::CheckKnockbackCombo(const FName& SectionName) const
@@ -281,12 +284,18 @@ bool UBZPlayerCombatComponent::CheckKnockbackCombo(const FName& SectionName) con
 
 void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVector Point)
 {
-	const FBZAttackData* CurrentData = AttackData->GetAttackDataArray().FindByPredicate(
-		[this](const FBZAttackData& Data)
-		{
-			return Data.CurrentSectionName == CurrentComboName;
-		}
-	);
+	if (!Enemy || !Owner)
+	{
+		return;
+	}
+
+	const FBZAttackData* CurrentData = AttackData
+		? AttackData->GetAttackDataArray().FindByPredicate(
+			[this](const FBZAttackData& Data)
+			{
+				return Data.CurrentSectionName == CurrentComboName;
+			})
+		: nullptr;
 
 	if (CurrentData)
 	{
@@ -299,11 +308,17 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	DamageEvent.SetKnockbackPower(CurrentData ? CurrentData->KnockbackPower : 1.0f);
 
 	
-	if (Enemy->GetActor())
+	if (AActor* HitActor = Enemy->GetActor())
 	{
 		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(Owner);
-		const_cast<AActor*>(Enemy->GetActor())->TakeDamage(
-			CurrentData ? CurrentData->Damage + Player->GetStatComponent()->GetBaseAttackPower() : 0.0f,
+		float DamageAmount = CurrentData ? CurrentData->Damage : 0.0f;
+		if (Player && Player->GetStatComponent())
+		{
+			DamageAmount += Player->GetStatComponent()->GetBaseAttackPower();
+		}
+
+		HitActor->TakeDamage(
+			DamageAmount,
 			DamageEvent,
 			Owner->GetController(),
 			Owner
@@ -316,40 +331,52 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 			SM->PlaySFX(CurrentData->HitSound, 1.5f, 1.2f, 0.15f);
 	}
 
-	if (CurrentData && !CurrentData->HitStopValue.IsEmpty() && !bIsHitStop)
+	if (CurrentData
+		&& CurrentData->HitStopValue.IsValidIndex(0)
+		&& CurrentData->HitStopValue.IsValidIndex(1)
+		&& !bIsHitStop)
 	{
-		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), CurrentData->HitStopValue[1]);
-		HitStopEndTime = CurrentData->HitStopValue[0];
-		HitStopStartRealTime = GetWorld()->GetRealTimeSeconds();
-		bIsHitStop = true;
+		if (UWorld* World = GetWorld())
+		{
+			UGameplayStatics::SetGlobalTimeDilation(World, CurrentData->HitStopValue[1]);
+			HitStopEndTime = CurrentData->HitStopValue[0];
+			HitStopStartRealTime = World->GetRealTimeSeconds();
+			bIsHitStop = true;
+		}
 	}
 
-	if (CurrentData && !CurrentData->HitEffect.IsEmpty())
+	if (CurrentData)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			CurrentData->HitEffect[0],
-			Point,
-			FRotator::ZeroRotator
-		);
-
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			CurrentData->HitEffect[1],
-			Point,
-			FRotator::ZeroRotator
-		);
+		UWorld* World = GetWorld();
+		for (const TObjectPtr<UNiagaraSystem>& HitEffect : CurrentData->HitEffect)
+		{
+			if (World && HitEffect)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					World,
+					HitEffect.Get(),
+					Point,
+					FRotator::ZeroRotator
+				);
+			}
+		}
 	}
 }
 
 void UBZPlayerCombatComponent::OnBlockHit()
 {
-	UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
-	AnimInstance->Montage_JumpToSection("Hit", ParryMontage);
+	if (!Owner || !ParryMontage) return;
+
+	if (UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr)
+	{
+		AnimInstance->Montage_JumpToSection("Hit", ParryMontage);
+	}
 }
 
 void UBZPlayerCombatComponent::OnPerfectParrySucceeded()
 {
+	if (!Owner || !AttackMontage) return;
+
 	OnParrySuccess.ExecuteIfBound();
 	CurrentComboName = "CounterAttack";
 	bIsAttacking = true;

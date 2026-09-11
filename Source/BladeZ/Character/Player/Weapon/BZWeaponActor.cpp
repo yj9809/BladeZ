@@ -2,8 +2,6 @@
 
 
 #include "Character/Player/Weapon/BZWeaponActor.h"
-#include "DrawDebugHelpers.h"
-#include "Common/BZLog.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
@@ -61,10 +59,13 @@ void ABZWeaponActor::Tick(float DeltaTime)
 
 void ABZWeaponActor::PerformTrace()
 {
-	FVector StartLocation = TraceStart->GetComponentLocation();
-	FVector EndLocation = TraceEnd->GetComponentLocation();
+	if (!TraceStart || !TraceEnd)
+	{
+		return;
+	}
 
-	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(20.0f);
+	const FVector StartLocation = TraceStart->GetComponentLocation();
+	const FVector EndLocation = TraceEnd->GetComponentLocation();
 
 	TArray<FHitResult> HitResults;
 	TArray<AActor*> ActorsToIgnore;
@@ -95,18 +96,17 @@ void ABZWeaponActor::PerformTrace()
 	);
 
 	// 포인트 Trace 처리.
-	int32 NumCount = 5;
+	constexpr int32 NumCount = 5;
 
-	float WeaponLength = FVector::Dist(StartLocation, EndLocation);
-	float Radius = (WeaponLength / (NumCount - 1)) * 0.5f;
-	FCollisionShape CollisionShapeChekePoint = FCollisionShape::MakeSphere(Radius);
+	const float WeaponLength = FVector::Dist(StartLocation, EndLocation);
+	const float Radius = (WeaponLength / (NumCount - 1)) * 0.5f;
 
 	// Trace 프레임 사이 보간을 위해 각 포인트 별 Shpere Trace를 추가.
-	for (int i = 0; i < NumCount; i++)
+	for (int32 Index = 0; Index < NumCount; ++Index)
 	{
-		float Alpha = static_cast<float>(i) / (NumCount - 1);
-		FVector PrevPoint = FMath::Lerp(PrevStart, PrevEnd, Alpha); // 저장 없이 바로 계산
-		FVector CurrPoint = FMath::Lerp(StartLocation, EndLocation, Alpha);
+		const float Alpha = static_cast<float>(Index) / (NumCount - 1);
+		const FVector PrevPoint = FMath::Lerp(PrevStart, PrevEnd, Alpha);
+		const FVector CurrPoint = FMath::Lerp(StartLocation, EndLocation, Alpha);
 		
 		// Point별 배열 추가.
 		TArray<FHitResult> PointHitResults;
@@ -129,7 +129,7 @@ void ABZWeaponActor::PerformTrace()
 		HitResults.Append(PointHitResults);
 	}
 
-	for (FHitResult Hit : HitResults)
+	for (const FHitResult& Hit : HitResults)
 	{
 		AActor* HitActor = Hit.GetActor();
 		if (HitActor && !HitActors.Contains(HitActor))

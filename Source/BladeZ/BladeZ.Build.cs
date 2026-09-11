@@ -22,11 +22,9 @@ public class BladeZ : ModuleRules
 			"Slate",
 			"Niagara",
 			"GameplayCameras",
-			"RuntimeInspector",
 			"LevelSequence",
 			"MovieScene",
-			//"MoviePlayer", // Used for loading screens.
-			"LoadingScreenModule" // Used for loading screens.
+			"LoadingScreenModule"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "EngineCameras" });
@@ -48,12 +46,5 @@ public class BladeZ : ModuleRules
 			"BladeZ/Variant_SideScrolling/UI",
 		});
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
-
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
 	}
 }

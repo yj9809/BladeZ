@@ -84,9 +84,9 @@ private:
 	bool CheckKnockbackCombo(const FName& SectionName) const;
 	
 private:
-	// 컴포넌트를 가지고 있는 캐릭터.
+	// 컴포넌트를 소유한 캐릭터.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
-	ACharacter* Owner;
+	TObjectPtr<ACharacter> Owner = nullptr;
 	
 	// 데이터 에셋에서 만든 TArray를 가져와서 보관할 변수.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
@@ -148,11 +148,4 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Sound)
 	bool bCanPlayHitSound = false;
 	
-	// Widget Test
-private:
-	UPROPERTY(VisibleAnywhere, Category=Widget)
-	TSubclassOf<class URuntimeInspectorWidget> InspectorWidgetClass;
-	
-	UPROPERTY(VisibleAnywhere, Category=Widget)
-	TObjectPtr<URuntimeInspectorWidget> InspectorWidget;
 };
