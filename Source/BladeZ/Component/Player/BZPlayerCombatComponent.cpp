@@ -176,6 +176,7 @@ void UBZPlayerCombatComponent::StartComboAttack()
 	bHasNextInput = false;
 	bIsAttacking = true;
 
+	// [2026-10-28] CPU 비교 측정용 L_1 고정을 해제하고 기존 첫 공격 무작위 선택으로 복원했다.
 	const FName Key = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
 
 	Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
