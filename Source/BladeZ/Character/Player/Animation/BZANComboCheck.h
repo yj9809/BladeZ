@@ -15,5 +15,7 @@ class BLADEZ_API UBZANComboCheck : public UAnimNotify
 	GENERATED_BODY()
 	
 public:
+	UBZANComboCheck();
+	
 	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 };

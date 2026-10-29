@@ -207,6 +207,14 @@ void UBZPlayerCombatComponent::CheckCombo()
 	if (!NextNode)
 	{
 		bHasNextInput = false;
+		
+		bool bIsLastNode = !CurrentNode->LeftNextNodeId.IsValid() && !CurrentNode->RightNextNodeId.IsValid();
+		bool bIsLeftEndChain = !CurrentNode->LeftNextNodeId.IsValid() && CurrentNode->RightNextNodeId.IsValid();
+		if (!bIsLastNode && !bIsLeftEndChain)
+		{
+			return;
+		}
+		
 		const FBZComboNode* StartNode = ComboData->StartNode();
 		if (!StartNode)
 		{
@@ -220,6 +228,8 @@ void UBZPlayerCombatComponent::CheckCombo()
 
 		AnimInstance->Montage_JumpToSection(StartNode->SectionName, ComboData->GetMontage());
 		CurrentComboNodeId = StartNode->NodeId;
+		return;
+		
 		return;
 	}
 

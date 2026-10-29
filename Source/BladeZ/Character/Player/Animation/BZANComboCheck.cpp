@@ -5,6 +5,11 @@
 
 #include "Character/Player/BZPlayerCharacter.h"
 
+UBZANComboCheck::UBZANComboCheck()
+{
+	bIsNativeBranchingPoint = true;
+}
+
 void UBZANComboCheck::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	Super::Notify(MeshComp, Animation);
