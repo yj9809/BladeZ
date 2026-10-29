@@ -79,7 +79,13 @@ public:
 	{
 		return AttackMontage;
 	}
-
+	
+	// 에디터에서 콤보 데이터 검사를 위한 함수.
+public:
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif
+	
 private:
 	UPROPERTY(EditAnywhere, Category = Combo)
 	TObjectPtr<UAnimMontage> AttackMontage;
