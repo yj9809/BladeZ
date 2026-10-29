@@ -160,15 +160,6 @@ ABZPlayerCharacter::ABZPlayerCharacter()
 		DashAction = DashActionRef.Object;
 	}
 
-	// 패리 액션 가져오기.
-	static ConstructorHelpers::FObjectFinder<UInputAction> ParryActionRef(
-		TEXT("/Game/BZ/Input/IA_Parry.IA_Parry")
-	);
-	if (ParryActionRef.Succeeded())
-	{
-		ParryAction = ParryActionRef.Object;
-	}
-
 	// 인터랙트 액션 가져오기.
 	static ConstructorHelpers::FObjectFinder<UInputAction> InteractActionRef(
 		TEXT("/Game/BZ/Input/IA_Interact.IA_Interact")
@@ -374,20 +365,6 @@ void ABZPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			this,
 			&ABZPlayerCharacter::PlayerDash
 		);
-		
-		EnhancedInputComponent->BindAction(
-			ParryAction,
-			ETriggerEvent::Started,
-			this,
-			&ABZPlayerCharacter::PlayerParryStart
-		);
-		
-		EnhancedInputComponent->BindAction(
-			ParryAction,
-			ETriggerEvent::Completed,
-			this,
-			&ABZPlayerCharacter::PlayerParryEnd
-		);
 
 		EnhancedInputComponent->BindAction(
 			InteractAction,
@@ -415,24 +392,6 @@ float ABZPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent con
 
 	if (CombatComponent)
 	{
-		if (CombatComponent->IsPerfectParry())
-		{
-			CombatComponent->OnPerfectParrySucceeded();
-			return DamageAmount;
-		}
-		
-		if (CombatComponent->IsParry())
-		{
-			DamageAmount *= BlockDamageReduction;
-		}
-
-		if (CombatComponent->IsParry())
-		{
-			Stat->ApplyDamage(DamageAmount);
-			CombatComponent->OnBlockHit();
-			return Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-		}
-
 		if (CombatComponent->GetSuperArmored())
 		{
 			Stat->ApplyDamage(DamageAmount);
@@ -644,16 +603,6 @@ FName ABZPlayerCharacter::GetDashSectionName(float Direction)
 		return TEXT("Left");
     
 	return TEXT("ForwardLeft");
-}
-
-void ABZPlayerCharacter::PlayerParryStart(const FInputActionValue& Value)
-{
-	CombatComponent->StartParry();
-}
-
-void ABZPlayerCharacter::PlayerParryEnd(const FInputActionValue& Value)
-{
-	CombatComponent->EndParry();
 }
 
 void ABZPlayerCharacter::OnLandMontageEnded(UAnimMontage* Montage, bool bInterrupted)

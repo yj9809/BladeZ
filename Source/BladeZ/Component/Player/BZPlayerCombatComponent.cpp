@@ -5,9 +5,9 @@
 
 #include "NiagaraFunctionLibrary.h"
 #include "Character/Player/BZPlayerCharacter.h"
+#include "Character/Player/Data/BZComboData.h"
 #include "Common/FBZDamageEvent.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "Component/BZCharacterStatComponent.h"
@@ -20,47 +20,30 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// 공격 데이터 에셋 등록.
-	static ConstructorHelpers::FObjectFinder<UBZPlayerAttackData> AttackDataRef(
-		TEXT("/Game/BZ/Character/Player/Data/DA_PlayerData.DA_PlayerData")
+	// 노드형 콤보 데이터 에셋 등록.
+	static ConstructorHelpers::FObjectFinder<UBZComboData> ComboDataRef(
+		TEXT("/Game/BZ/Character/Player/Data/DA_ComboData.DA_ComboData")
 	);
-	if (AttackDataRef.Succeeded())
+	if (ComboDataRef.Succeeded())
 	{
-		AttackData = AttackDataRef.Object;
+		ComboData = ComboDataRef.Object;
 	}
-
-	// 공격 애니메이션 몽타주 등록.
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> AttackMontageRef(
-		TEXT("/Game/BZ/Character/Player/Animation/AM_Attack.AM_Attack")
-	);
-	if (AttackMontageRef.Succeeded())
-	{
-		AttackMontage = AttackMontageRef.Object;
-	}
-
-	// 패리 애니메이션 몽타주 등록.
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> ParryMontageRef(
-		TEXT("/Game/BZ/Character/Player/Animation/AM_Parry.AM_Parry")
-	);
-	if (ParryMontageRef.Succeeded())
-	{
-		ParryMontage = ParryMontageRef.Object;
-	}
-
 }
 
 bool UBZPlayerCombatComponent::GetSuperArmored() const
 {
-	if (!bIsAttacking || !AttackData) return false;
+	if (!bIsAttacking || !ComboData)
+	{
+		return false;
+	}
 
-	const FBZAttackData* CurrentData = AttackData->GetAttackDataArray().FindByPredicate(
-		[this](const FBZAttackData& Data)
-		{
-			return Data.CurrentSectionName == CurrentComboName;
-		}
-	);
+	const FBZComboNode* CurrentNode = ComboData->FindNode(CurrentComboNodeId);
+	if (!CurrentNode)
+	{
+		return false;
+	}
 
-	return CurrentData && CurrentData->bSuperArmor;
+	return CurrentNode->bSuperArmor;
 }
 
 void UBZPlayerCombatComponent::BeginPlay()
@@ -71,30 +54,19 @@ void UBZPlayerCombatComponent::BeginPlay()
 
 	if (Owner && Owner->GetMesh())
 	{
+		if (!ComboData)
+		{
+			UE_LOG(LogTemp, Error, TEXT("ComboData is not valid."));
+			return;
+		}
+
 		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
-		if (AnimInstance && AttackMontage)
+		if (AnimInstance && ComboData->GetMontage())
 		{
 			AnimInstance->OnMontageEnded.AddDynamic(
 				this,
 				&UBZPlayerCombatComponent::OnAttackEnded
 			);
-			AnimInstance->OnMontageEnded.AddDynamic(
-				this,
-				&UBZPlayerCombatComponent::OnParryMontageEnded
-			);
-		}
-	}
-
-	if (AttackData)
-	{
-		for (const FBZAttackData& Data : AttackData->GetAttackDataArray())
-		{
-			const FName Key = *FString::Printf(
-				TEXT("%s_%d"),
-				*Data.CurrentSectionName.ToString(),
-				static_cast<int32>(Data.AttackInputType)
-			);
-			AttackSectionMap.Add(Key, Data.NextSectionName);
 		}
 	}
 }
@@ -108,6 +80,8 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 	{
 		return;
 	}
+
+	UAnimMontage* AttackMontage = ComboData ? ComboData->GetMontage() : nullptr;
 
 	// 공격 중일 때만 처리
 	if (bIsAttacking && AttackMontage)
@@ -167,35 +141,46 @@ void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
 
 void UBZPlayerCombatComponent::StartComboAttack()
 {
-	if (!Owner || !AttackMontage)
+	if (!Owner || !ComboData || !ComboData->GetMontage())
+	{
+		return;
+	}
+
+	// 콤보 시작 노드 가져오기
+	const FBZComboNode* StartNode = ComboData->StartNode();
+	if (!StartNode)
+	{
+		return;
+	}
+
+	if (!ComboData->GetMontage()->IsValidSectionName(StartNode->SectionName))
+	{
+		return;
+	}
+
+	// 시작 노드의 섹션 이름으로 공격 몽타주 재생.
+	const float PlayState = Owner->PlayAnimMontage(ComboData->GetMontage(), BasePlayRate, StartNode->SectionName);
+	if (PlayState <= 0.0f)
 	{
 		return;
 	}
 
 	// 공격 상태 확인 플래그 변경.
+	CurrentComboNodeId = StartNode->NodeId;
 	bHasNextInput = false;
 	bIsAttacking = true;
-
-	// [2026-10-28] CPU 비교 측정용 L_1 고정을 해제하고 기존 첫 공격 무작위 선택으로 복원했다.
-	const FName Key = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
-
-	Owner->PlayAnimMontage(AttackMontage, BasePlayRate, Key);
-	CurrentComboName = Key;
 }
 
 void UBZPlayerCombatComponent::CheckCombo()
 {
-	if (!bHasNextInput)
-	{
-		return;
-	}
-
-	if (!Owner || !AttackMontage)
+	// 소유자 및 콤보 데이터 유효성 확인.
+	if (!Owner || !ComboData || !ComboData->GetMontage())
 	{
 		bHasNextInput = false;
 		return;
 	}
 
+	// 애니메이션 인스턴스 가져오기.
 	UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr;
 	if (!AnimInstance)
 	{
@@ -203,84 +188,72 @@ void UBZPlayerCombatComponent::CheckCombo()
 		return;
 	}
 
-	int32 AttackInput = static_cast<int32>(NextInputType);
-	const FName Key = *FString::Printf(TEXT("%s_%d"), *CurrentComboName.ToString(), AttackInput);
-
-	FName* SectionName = AttackSectionMap.Find(Key);
-	if (SectionName)
+	// 입력 확인.
+	if (!bHasNextInput)
 	{
-		AnimInstance->Montage_JumpToSection(*SectionName, AttackMontage);
-		CurrentComboName = *SectionName;
+		return;
+	}
+
+	// 현재 콤보 노드 가져오기.
+	const FBZComboNode* CurrentNode = ComboData->FindNode(CurrentComboNodeId);
+	if (!CurrentNode)
+	{
+		bHasNextInput = false;
+		return;
+	}
+
+	// 다음 콤보 노드 가져오기.
+	const FBZComboNode* NextNode = ComboData->FindNextNode(*CurrentNode, NextInputType);
+	if (!NextNode)
+	{
+		bHasNextInput = false;
+		const FBZComboNode* StartNode = ComboData->StartNode();
+		if (!StartNode)
+		{
+			return;
+		}
+
+		if (!ComboData->GetMontage()->IsValidSectionName(StartNode->SectionName))
+		{
+			return;
+		}
+
+		AnimInstance->Montage_JumpToSection(StartNode->SectionName, ComboData->GetMontage());
+		CurrentComboNodeId = StartNode->NodeId;
+		return;
+	}
+
+	// 다음 콤보 노드의 섹션 이름으로 몽타주 점프.
+	const FName* SectionName = NextNode->SectionName.IsNone() ? nullptr : &NextNode->SectionName;
+	if (!SectionName)
+	{
+		bHasNextInput = false;
+		return;
+	}
+
+	if (ComboData->GetMontage()->IsValidSectionName(*SectionName))
+	{
+		AnimInstance->Montage_JumpToSection(*SectionName, ComboData->GetMontage());
+		CurrentComboNodeId = NextNode->NodeId;
+		bHasNextInput = false;
 	}
 	else
 	{
-		// 마지막 콤보 → 랜덤으로 첫 섹션으로 점프 (몽타주 재시작 X)
-		FName NextKey = FMath::RandBool() ? TEXT("L_1") : TEXT("L_1_1");
-		AnimInstance->Montage_JumpToSection(NextKey, AttackMontage);
-		CurrentComboName = NextKey;
+		bHasNextInput = false;
+		return;
 	}
-
-	bHasNextInput = false;
 }
 
 void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (Montage != AttackMontage)
+	if (!ComboData || Montage != ComboData->GetMontage())
 	{
 		return;
 	}
 
+	CurrentComboNodeId = FGuid();
+	bHasNextInput = false;
 	bIsAttacking = false;
-}
-
-void UBZPlayerCombatComponent::StartParry()
-{
-	if (bIsAttacking || !Owner || !ParryMontage)
-	{
-		return;
-	}
-
-	UCharacterMovementComponent* MovementComponent = Owner->GetCharacterMovement();
-	if (!MovementComponent)
-	{
-		return;
-	}
-
-	bIsParry = true;
-	MovementComponent->DisableMovement();
-	Owner->PlayAnimMontage(ParryMontage, 1.5f);
-}
-
-void UBZPlayerCombatComponent::EndParry()
-{
-	if (!bIsParry || !Owner) return;
-
-	if (UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr)
-	{
-		AnimInstance->Montage_Stop(0.2f, ParryMontage);
-	}
-}
-
-void UBZPlayerCombatComponent::OnParryMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (Montage != ParryMontage) return;
-
-	bIsParry = false;
-	bIsPerfectParry = false;
-	if (Owner && Owner->GetCharacterMovement())
-	{
-		Owner->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-	}
-}
-
-bool UBZPlayerCombatComponent::CheckKnockbackCombo(const FName& SectionName) const
-{
-	if (SectionName == "LLLL_4" || SectionName == "LLLLR_5")
-	{
-		return true;
-	}
-
-	return false;
 }
 
 void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVector Point)
@@ -290,29 +263,26 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 		return;
 	}
 
-	const FBZAttackData* CurrentData = AttackData
-		? AttackData->GetAttackDataArray().FindByPredicate(
-			[this](const FBZAttackData& Data)
-			{
-				return Data.CurrentSectionName == CurrentComboName;
-			})
-		: nullptr;
-
-	if (CurrentData)
+	const FBZComboNode* CurrentNode = ComboData ? ComboData->FindNode(CurrentComboNodeId) : nullptr;
+	if (!CurrentNode || !CurrentNode->HitEffectPreset)
 	{
-		OnCameraShake.ExecuteIfBound(CurrentData->Amplitude);
+		return;
 	}
+
+	const FBZHitEffectData& HitEffectData = CurrentNode->HitEffectPreset->GetHitEffectData();
+
+	OnCameraShake.ExecuteIfBound(HitEffectData.Amplitude);
 
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
-	DamageEvent.SetKnockback(CheckKnockbackCombo(CurrentComboName));
-	DamageEvent.SetKnockbackPower(CurrentData ? CurrentData->KnockbackPower : 1.0f);
+	DamageEvent.SetKnockback(CurrentNode->KnockbackPower > 0.0f);
+	DamageEvent.SetKnockbackPower(CurrentNode->KnockbackPower);
 
-	
+
 	if (AActor* HitActor = Enemy->GetActor())
 	{
 		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(Owner);
-		float DamageAmount = CurrentData ? CurrentData->Damage : 0.0f;
+		float DamageAmount = CurrentNode->Damage;
 		if (Player && Player->GetStatComponent())
 		{
 			DamageAmount += Player->GetStatComponent()->GetBaseAttackPower();
@@ -326,30 +296,27 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 		);
 	}
 
-	if (CurrentData && CurrentData->HitSound)
-	{
-		if (UBZSoundManager* SM = UBZSoundManager::Get(this))
-			SM->PlaySFX(CurrentData->HitSound, 1.5f, 1.2f, 0.15f);
-	}
+	if (UBZSoundManager* SM = UBZSoundManager::Get(this))
+		SM->PlaySFX(HitEffectData.HitSound, 1.5f, 1.2f, 0.15f);
 
-	if (CurrentData
-		&& CurrentData->HitStopValue.IsValidIndex(0)
-		&& CurrentData->HitStopValue.IsValidIndex(1)
+	if (HitEffectData.HitStopValue.Num() >= 2
+		&& HitEffectData.HitStopValue[0] >= 0
+		&& HitEffectData.HitStopValue[1] >= 0
 		&& !bIsHitStop)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			UGameplayStatics::SetGlobalTimeDilation(World, CurrentData->HitStopValue[1]);
-			HitStopEndTime = CurrentData->HitStopValue[0];
+			UGameplayStatics::SetGlobalTimeDilation(World, HitEffectData.HitStopValue[1]);
+			HitStopEndTime = HitEffectData.HitStopValue[0];
 			HitStopStartRealTime = World->GetRealTimeSeconds();
 			bIsHitStop = true;
 		}
 	}
 
-	if (CurrentData)
+	if (HitEffectData.HitEffect.Num() > 0)
 	{
 		UWorld* World = GetWorld();
-		for (const TObjectPtr<UNiagaraSystem>& HitEffect : CurrentData->HitEffect)
+		for (const TObjectPtr<UNiagaraSystem>& HitEffect : HitEffectData.HitEffect)
 		{
 			if (World && HitEffect)
 			{
@@ -362,26 +329,4 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 			}
 		}
 	}
-}
-
-void UBZPlayerCombatComponent::OnBlockHit()
-{
-	if (!Owner || !ParryMontage) return;
-
-	if (UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr)
-	{
-		AnimInstance->Montage_JumpToSection("Hit", ParryMontage);
-	}
-}
-
-void UBZPlayerCombatComponent::OnPerfectParrySucceeded()
-{
-	if (!Owner || !AttackMontage) return;
-
-	OnParrySuccess.ExecuteIfBound();
-	CurrentComboName = "CounterAttack";
-	bIsAttacking = true;
-	Owner->PlayAnimMontage(AttackMontage, 1.5f, "CounterAttack");
-	bIsParry = false;
-	bIsPerfectParry = false;
 }

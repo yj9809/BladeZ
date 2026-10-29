@@ -96,10 +96,6 @@ private:
 	void PlayerDash(const FInputActionValue& Value);
 	
 	FName GetDashSectionName(float Direction);
-	
-	void PlayerParryStart(const FInputActionValue& Value);
-
-	void PlayerParryEnd(const FInputActionValue& Value);
 
 	void PlayerInteract(const FInputActionValue& Value);
 	
@@ -184,10 +180,6 @@ private:
 	// 대쉬 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> DashAction;
-	
-	// 패리 액션.
-	UPROPERTY(EditAnywhere, Category = Input)
-	TObjectPtr<UInputAction> ParryAction;
 
 	// 인터랙트 액션.
 	UPROPERTY(EditAnywhere, Category = Input)
@@ -254,12 +246,6 @@ private:
 	// Land 상태 값.
 	UPROPERTY(VisibleAnywhere, Category = Land)
 	bool bIsLanding = false;
-	
-	// Parry value private.
-private:
-	// 패리 시 데미지 감소율.
-	UPROPERTY(EditAnywhere, Category = Parry)
-	float BlockDamageReduction = 0.3f;
 	
 	// Light value private.
 private:
