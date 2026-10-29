@@ -19,10 +19,10 @@ public:
 	virtual void NotifyEnd(USkeletalMeshComponent * MeshComp, UAnimSequenceBase * Animation, const FAnimNotifyEventReference& EventReference) override;
 	virtual void NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime, const FAnimNotifyEventReference& EventReference) override;
 	
-public:
-	UPROPERTY(EditAnywhere, Category=Trace)
-	FName SectionName = NAME_None;
-	
+private:
+	// 현재 노티파이가 위치한 섹션의 이름 가져오는 함수.
+	FName GetCurrentSectionName(UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const;
+public:	
 	UPROPERTY(EditAnywhere, Category=Trace)
 	FName WindowName = NAME_None;
 };

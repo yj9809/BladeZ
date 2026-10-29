@@ -37,14 +37,14 @@ struct FBZWeaponTraceWindow
 	FName WindowName = NAME_None;
 
 	// 타격 구간이 속한 몽타주 섹션.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Trace)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Trace, meta=(GetOptions="GetMontageSectionNames"))
 	FName SectionName = NAME_None;
 
 	// 몽타주 시간 기준 판정 시작, 종료 시점.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Trace)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category=Trace)
 	float StartTime = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Trace)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category=Trace)
 	float EndTime = 0.0f;
 
 	// Time 오름차순. 시작, 종료 시점의 샘플도 포함.
@@ -61,6 +61,9 @@ public:
 	// 데이터 에셋의 Details에서 실행할 버튼.
 	UFUNCTION(CallInEditor, Category="Trace|Bake")
 	void BakeSamples();
+	
+	UFUNCTION()
+	TArray<FName> GetMontageSectionNames() const;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Trace)

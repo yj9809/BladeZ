@@ -32,6 +32,8 @@ void UBZANSPlayerTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 	{
 		return;
 	}
+	
+	const FName SectionName = GetCurrentSectionName(Animation, EventReference);
 
 	Weapon->StartTrace(MeshComp, Cast<UAnimMontage>(Animation), SectionName, WindowName);
 
@@ -69,6 +71,8 @@ void UBZANSPlayerTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		return;
 	}
 
+	const FName SectionName = GetCurrentSectionName(Animation, EventReference);
+	
 	Weapon->EndTraceFromNotify(
 		Cast<UAnimMontage>(Animation),
 		SectionName,
@@ -100,6 +104,8 @@ void UBZANSPlayerTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
 		return;
 	}
 
+	const FName SectionName = GetCurrentSectionName(Animation, EventReference);
+	
 	Weapon->UpdateTraceFromNotify(
 		Cast<UAnimMontage>(Animation),
 		SectionName,
@@ -107,4 +113,25 @@ void UBZANSPlayerTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
 		UAnimNotifyLibrary::GetCurrentAnimationTime(EventReference),
 		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference)
 	);
+}
+
+FName UBZANSPlayerTrace::GetCurrentSectionName(UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const
+{
+	UAnimMontage* Montage = Cast<UAnimMontage>(Animation);
+	const FAnimNotifyEvent* Event = EventReference.GetNotify();
+
+	if (!Montage || !Event)
+	{
+		return NAME_None;
+	}
+
+	const int32 SectionIndex =
+		Montage->GetSectionIndexFromPosition(Event->GetTime());
+
+	if (SectionIndex == INDEX_NONE)
+	{
+		return NAME_None;
+	}
+	
+	return Montage->GetSectionName(SectionIndex);
 }
