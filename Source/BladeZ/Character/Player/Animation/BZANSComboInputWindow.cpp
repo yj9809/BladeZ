@@ -34,7 +34,7 @@ void UBZANSComboInputWindow::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnim
 	}
 
 	// 공격 입력 허용.
-	CombatComponent->SetIsInputEnabled(true);
+	CombatComponent->OpenComboInputWindow();
 }
 
 void UBZANSComboInputWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
@@ -60,5 +60,5 @@ void UBZANSComboInputWindow::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSe
 	}
 
 	// 공격 입력 불가.
-	CombatComponent->SetIsInputEnabled(false);
+	CombatComponent->ClosedComboInputWindow();
 }

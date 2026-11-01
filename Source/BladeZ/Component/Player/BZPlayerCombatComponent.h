@@ -20,9 +20,12 @@ public:
 	// Sets default values for this component's properties
 	UBZPlayerCombatComponent();
 	
-	// 공격 입력 허용.
-	FORCEINLINE void SetIsInputEnabled(bool bEnabled) { bIsInputEnabled = bEnabled; }
-	FORCEINLINE bool GetIsInputEnabled() const { return bIsInputEnabled; }
+	// 공격 입력 함수들.
+	void OpenComboInputWindow();
+	void ClosedComboInputWindow();
+	void SetAttackInput(const EBZAttackInputType NewInputType);
+	bool ConsumeComboInput(EBZAttackInputType& OutInputType);
+	void ResetComboInput();
 	
 	// 공격 중 상태 확인.
 	FORCEINLINE bool GetIsAttacking() const { return bIsAttacking; }
@@ -35,9 +38,6 @@ protected:
 	
 public:	
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
-	// 공격 입력 값 추가용 함수.
-	void SetAttackInput(const EBZAttackInputType NewInputType);
 	
 	// 공격 시작용 함수.
 	void StartComboAttack();
@@ -65,10 +65,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	EBZAttackInputType NextInputType;
 	
-	// 다음 입력이 있는지 확인용 플래그.
-	UPROPERTY(VisibleAnywhere, Category = Combat)
-	bool bHasNextInput = false;
-	
 	// 노드형 콤보 데이터.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	TObjectPtr<UBZComboData> ComboData;
@@ -78,8 +74,8 @@ private:
 	FGuid CurrentComboNodeId;
 	
 	// 공격 입력 가능 상태 확인용 플래그.
-	UPROPERTY(VisibleAnywhere, Category = Combat)
-	bool bIsInputEnabled = false;
+	UPROPERTY(VisibleAnywhere, Category = Combat, meta=( AllowPrivateAccess = "true"))
+	EComboInputState ComboInputState = EComboInputState::Closed;
 
 	// 공격 중 상태 확인용 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)

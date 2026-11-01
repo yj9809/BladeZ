@@ -30,6 +30,64 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	}
 }
 
+void UBZPlayerCombatComponent::OpenComboInputWindow()
+{
+	if (ComboInputState == EComboInputState::Closed)
+	{
+		ComboInputState = EComboInputState::Open;
+	}
+}
+
+void UBZPlayerCombatComponent::ClosedComboInputWindow()
+{
+	if (ComboInputState == EComboInputState::OpenBuffered)
+	{
+		ComboInputState = EComboInputState::ClosedBuffered;
+	}
+	else if (ComboInputState == EComboInputState::Open)
+	{
+		ComboInputState = EComboInputState::Closed;
+	}
+}
+
+void UBZPlayerCombatComponent::SetAttackInput(const EBZAttackInputType NewInputType)
+{
+	if (!bIsAttacking ||
+		(ComboInputState != EComboInputState::Open &&
+			ComboInputState != EComboInputState::OpenBuffered))
+	{
+		return;
+	}
+
+	if (ComboInputState != EComboInputState::OpenBuffered)
+	{
+		ComboInputState = EComboInputState::OpenBuffered;
+	}
+
+	if (NextInputType != NewInputType)
+	{
+		NextInputType = NewInputType;
+	}
+}
+
+bool UBZPlayerCombatComponent::ConsumeComboInput(EBZAttackInputType& OutInputType)
+{
+	if (ComboInputState != EComboInputState::OpenBuffered && ComboInputState != EComboInputState::ClosedBuffered)
+	{
+		return false;
+	}
+
+	OutInputType = NextInputType;
+	ResetComboInput();
+	return true;
+}
+
+void UBZPlayerCombatComponent::ResetComboInput()
+{
+	ComboInputState = EComboInputState::Closed;
+	NextInputType = EBZAttackInputType::None;
+}
+
 bool UBZPlayerCombatComponent::GetSuperArmored() const
 {
 	if (!bIsAttacking || !ComboData)
@@ -128,22 +186,6 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 	}
 }
 
-void UBZPlayerCombatComponent::SetAttackInput(const EBZAttackInputType NewInputType)
-{
-	if (!bIsInputEnabled || !bIsAttacking)
-	{
-		return;
-	}
-
-	if (bHasNextInput && NextInputType == NewInputType)
-	{
-		return;
-	}
-
-	NextInputType = NewInputType;
-	bHasNextInput = true;
-}
-
 void UBZPlayerCombatComponent::StartComboAttack()
 {
 	if (!Owner || !ComboData || !ComboData->GetMontage())
@@ -172,7 +214,6 @@ void UBZPlayerCombatComponent::StartComboAttack()
 
 	// 공격 상태 확인 플래그 변경.
 	CurrentComboNodeId = StartNode->NodeId;
-	bHasNextInput = false;
 	bIsAttacking = true;
 }
 
@@ -181,7 +222,7 @@ void UBZPlayerCombatComponent::CheckCombo()
 	// 소유자 및 콤보 데이터 유효성 확인.
 	if (!Owner || !ComboData || !ComboData->GetMontage())
 	{
-		bHasNextInput = false;
+		ResetComboInput();
 		return;
 	}
 
@@ -189,40 +230,38 @@ void UBZPlayerCombatComponent::CheckCombo()
 	UAnimInstance* AnimInstance = Owner->GetMesh() ? Owner->GetMesh()->GetAnimInstance() : nullptr;
 	if (!AnimInstance)
 	{
-		bHasNextInput = false;
+		ResetComboInput();
 		return;
 	}
 
-	// 입력 확인.
-	if (!bHasNextInput)
+	EBZAttackInputType InputType;
+	if (!ConsumeComboInput(InputType))
 	{
+		ResetComboInput();
 		return;
 	}
-
+	
 	// 현재 콤보 노드 가져오기.
 	const FBZComboNode* CurrentNode = ComboData->FindNode(CurrentComboNodeId);
 	if (!CurrentNode)
 	{
-		bHasNextInput = false;
 		return;
 	}
 
 	// 다음 콤보 노드 가져오기.
-	const FBZComboNode* NextNode = ComboData->FindNextNode(*CurrentNode, NextInputType);
+	const FBZComboNode* NextNode = ComboData->FindNextNode(*CurrentNode, InputType);
 	if (!NextNode)
 	{
-		bHasNextInput = false;
-		
 		bool bIsLastNode = !CurrentNode->LeftNextNodeId.IsValid() && !CurrentNode->RightNextNodeId.IsValid();
 		bool bIsLeftEndChain = !CurrentNode->LeftNextNodeId.IsValid() && CurrentNode->RightNextNodeId.IsValid();
 
-		bool bCanRestart = NextInputType == EBZAttackInputType::Left && (bIsLastNode || bIsLeftEndChain);
+		bool bCanRestart = InputType == EBZAttackInputType::Left && (bIsLastNode || bIsLeftEndChain);
 
 		if (!bCanRestart)
 		{
 			return;
 		}
-		
+
 		const FBZComboNode* StartNode = ComboData->StartNode();
 		if (!StartNode)
 		{
@@ -243,7 +282,6 @@ void UBZPlayerCombatComponent::CheckCombo()
 	const FName* SectionName = NextNode->SectionName.IsNone() ? nullptr : &NextNode->SectionName;
 	if (!SectionName)
 	{
-		bHasNextInput = false;
 		return;
 	}
 
@@ -251,12 +289,6 @@ void UBZPlayerCombatComponent::CheckCombo()
 	{
 		AnimInstance->Montage_JumpToSection(*SectionName, ComboData->GetMontage());
 		CurrentComboNodeId = NextNode->NodeId;
-		bHasNextInput = false;
-	}
-	else
-	{
-		bHasNextInput = false;
-		return;
 	}
 }
 
@@ -268,9 +300,8 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 	}
 
 	CurrentComboNodeId = FGuid();
-	bHasNextInput = false;
 	bIsAttacking = false;
-	bIsInputEnabled = false;
+	ResetComboInput();
 }
 
 void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVector Point)
