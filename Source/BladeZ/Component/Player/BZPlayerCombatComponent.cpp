@@ -281,21 +281,16 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	}
 
 	const FBZComboNode* CurrentNode = ComboData ? ComboData->FindNode(CurrentComboNodeId) : nullptr;
-	if (!CurrentNode || !CurrentNode->HitEffectPreset)
+	if (!CurrentNode)
 	{
 		return;
 	}
-
-	const FBZHitEffectData& HitEffectData = CurrentNode->HitEffectPreset->GetHitEffectData();
-
-	OnCameraShake.ExecuteIfBound(HitEffectData.Amplitude);
 
 	FBZDamageEvent DamageEvent;
 	DamageEvent.HitInfo = *Enemy;
 	DamageEvent.SetKnockback(CurrentNode->KnockbackPower > 0.0f);
 	DamageEvent.SetKnockbackPower(CurrentNode->KnockbackPower);
-
-
+	
 	if (AActor* HitActor = Enemy->GetActor())
 	{
 		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(Owner);
@@ -313,8 +308,19 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 		);
 	}
 
+	if (!CurrentNode->HitEffectPreset)
+	{
+		return;
+	}
+	
+	const FBZHitEffectData& HitEffectData = CurrentNode->HitEffectPreset->GetHitEffectData();
+
+	OnCameraShake.ExecuteIfBound(HitEffectData.Amplitude);
+	
 	if (UBZSoundManager* SM = UBZSoundManager::Get(this))
+	{
 		SM->PlaySFX(HitEffectData.HitSound, 1.5f, 1.2f, 0.15f);
+	}
 
 	if (HitEffectData.HitStopValue.Num() >= 2
 		&& HitEffectData.HitStopValue[0] >= 0
