@@ -28,9 +28,13 @@ void UBZMinimapWidget::NativeConstruct()
 	ApplyLevelMinimapSettings();
 
 	// Background에 넣어준 Material instance로부터 DynamicMaterial 얻기.
-	if (MinimapBackgroundImage)
+	MinimapMaterialInstance = IsValid(MinimapBackgroundImage)
+		? MinimapBackgroundImage->GetDynamicMaterial()
+		: nullptr;
+	if (!IsValid(MinimapMaterialInstance))
 	{
-		MinimapMaterialInstance = MinimapBackgroundImage->GetDynamicMaterial();
+		UE_LOG(LogTemp, Warning, TEXT("UBZMinimapWidget: No valid background material for level %s; skipping background updates."),
+			*UGameplayStatics::GetCurrentLevelName(this, true));
 	}
 
 	if (UWorld* World = GetWorld())
@@ -125,7 +129,6 @@ void UBZMinimapWidget::ApplyLevelMinimapSettings()
 	if (MinimapBackgroundImage && Settings->MinimapMaterial)
 	{
 		MinimapBackgroundImage->SetBrushFromMaterial(Settings->MinimapMaterial);
-		MinimapMaterialInstance = MinimapBackgroundImage->GetDynamicMaterial();
 	}
 
 	WorldToMinimapScale =
@@ -140,38 +143,34 @@ void UBZMinimapWidget::UpdateMinimap()
 		return;
 	}
 
-	const FName CurrentLevelName(
-		*UGameplayStatics::GetCurrentLevelName(this, true)
-	);
-	
 	const FVector PlayerLocation = PlayerActor->GetActorLocation();
 
-	// UI 아이콘 위치 변환용 스케일.
-	// MaxIconDistance가 미니맵 UI 반경이면,
-	// 월드 반경 1024uu가 UI 반경 MaxIconDistance에 대응됨.
-	constexpr float VisibleWorldDiameter = 2048.0f;
-	const float VisibleRatio =
-		CurrentMinimapSettings.VisibleWorldDiameter /
-		CurrentMinimapSettings.BakedMapWorldWidth;
+	// 미니맵 머티리얼이 없는 테스트 레벨에서도 아이콘 갱신은 계속한다.
+	if (IsValid(MinimapMaterialInstance))
+	{
+		const float VisibleRatio =
+			CurrentMinimapSettings.VisibleWorldDiameter /
+			CurrentMinimapSettings.BakedMapWorldWidth;
 
-	// 플레이어의 월드 위치를 구워진 전체 미니맵 텍스처 UV로 변환.
-	const FVector2D PlayerUV(
-		0.5f + (PlayerLocation.Y - CurrentMinimapSettings.BakedMapCenter.Y)
-		/ CurrentMinimapSettings.BakedMapWorldWidth,
+		// 플레이어의 월드 위치를 구워진 전체 미니맵 텍스처 UV로 변환.
+		const FVector2D PlayerUV(
+			0.5f + (PlayerLocation.Y - CurrentMinimapSettings.BakedMapCenter.Y)
+			/ CurrentMinimapSettings.BakedMapWorldWidth,
 
-		0.5f - (PlayerLocation.X - CurrentMinimapSettings.BakedMapCenter.X)
-		/ CurrentMinimapSettings.BakedMapWorldWidth
-	);
+			0.5f - (PlayerLocation.X - CurrentMinimapSettings.BakedMapCenter.X)
+			/ CurrentMinimapSettings.BakedMapWorldWidth
+		);
 
-	MinimapMaterialInstance->SetVectorParameterValue(
-		TEXT("PlayerUV"),
-		FLinearColor(PlayerUV.X, PlayerUV.Y, 0.0f, 1.0f)
-	);
+		MinimapMaterialInstance->SetVectorParameterValue(
+			TEXT("PlayerUV"),
+			FLinearColor(PlayerUV.X, PlayerUV.Y, 0.0f, 1.0f)
+		);
 
-	MinimapMaterialInstance->SetScalarParameterValue(
-		TEXT("VisibleRatio"),
-		VisibleRatio
-	);
+		MinimapMaterialInstance->SetScalarParameterValue(
+			TEXT("VisibleRatio"),
+			VisibleRatio
+		);
+	}
 
 	for (int32 Index = TrackedActors.Num() - 1; Index >= 0; --Index)
 	{
