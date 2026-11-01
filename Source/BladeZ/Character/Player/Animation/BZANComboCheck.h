@@ -17,5 +17,5 @@ class BLADEZ_API UBZANComboCheck : public UAnimNotify
 public:
 	UBZANComboCheck();
 	
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

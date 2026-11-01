@@ -131,6 +131,7 @@ public:
 	FORCEINLINE void SetNearbyPickup(ABZWeaponPickup* Pickup) { NearbyPickup = Pickup; }
 	
 	FORCEINLINE void SetNearbyItemPickup(ABZItemPickup* Pickup) { NearbyItemPickup = Pickup; }
+
 	// Component private.
 private:
 	// 카메라 세팅.

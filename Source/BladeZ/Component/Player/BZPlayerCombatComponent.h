@@ -20,9 +20,13 @@ public:
 	// Sets default values for this component's properties
 	UBZPlayerCombatComponent();
 	
-	// Getter.
-	FORCEINLINE bool GetIsAttacking() const { return bIsAttacking; }
+	// 공격 입력 허용.
+	FORCEINLINE void SetIsInputEnabled(bool bEnabled) { bIsInputEnabled = bEnabled; }
+	FORCEINLINE bool GetIsInputEnabled() const { return bIsInputEnabled; }
 	
+	// 공격 중 상태 확인.
+	FORCEINLINE bool GetIsAttacking() const { return bIsAttacking; }
+
 	bool GetSuperArmored() const;
 
 protected:
@@ -33,7 +37,7 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
 	// 공격 입력 값 추가용 함수.
-	void SetAttackInput(EBZAttackInputType NewInputType);
+	void SetAttackInput(const EBZAttackInputType NewInputType);
 	
 	// 공격 시작용 함수.
 	void StartComboAttack();
@@ -61,7 +65,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	EBZAttackInputType NextInputType;
 	
-	// 공격 입력 확인용 플래그.
+	// 다음 입력이 있는지 확인용 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	bool bHasNextInput = false;
 	
@@ -73,7 +77,11 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	FGuid CurrentComboNodeId;
 	
-	// 공격 상태 확인 플래그.
+	// 공격 입력 가능 상태 확인용 플래그.
+	UPROPERTY(VisibleAnywhere, Category = Combat)
+	bool bIsInputEnabled = false;
+
+	// 공격 중 상태 확인용 플래그.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
 	bool bIsAttacking = false;
 	

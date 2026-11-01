@@ -128,9 +128,14 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 	}
 }
 
-void UBZPlayerCombatComponent::SetAttackInput(EBZAttackInputType NewInputType)
+void UBZPlayerCombatComponent::SetAttackInput(const EBZAttackInputType NewInputType)
 {
-	if (!bIsAttacking)
+	if (!bIsInputEnabled || !bIsAttacking)
+	{
+		return;
+	}
+
+	if (bHasNextInput && NextInputType == NewInputType)
 	{
 		return;
 	}
@@ -210,7 +215,10 @@ void UBZPlayerCombatComponent::CheckCombo()
 		
 		bool bIsLastNode = !CurrentNode->LeftNextNodeId.IsValid() && !CurrentNode->RightNextNodeId.IsValid();
 		bool bIsLeftEndChain = !CurrentNode->LeftNextNodeId.IsValid() && CurrentNode->RightNextNodeId.IsValid();
-		if (!bIsLastNode && !bIsLeftEndChain)
+
+		bool bCanRestart = NextInputType == EBZAttackInputType::Left && (bIsLastNode || bIsLeftEndChain);
+
+		if (!bCanRestart)
 		{
 			return;
 		}
@@ -228,8 +236,6 @@ void UBZPlayerCombatComponent::CheckCombo()
 
 		AnimInstance->Montage_JumpToSection(StartNode->SectionName, ComboData->GetMontage());
 		CurrentComboNodeId = StartNode->NodeId;
-		return;
-		
 		return;
 	}
 
@@ -264,6 +270,7 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 	CurrentComboNodeId = FGuid();
 	bHasNextInput = false;
 	bIsAttacking = false;
+	bIsInputEnabled = false;
 }
 
 void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVector Point)
