@@ -1,0 +1,8 @@
+Cmd: t.MaxFPS 60
+t.MaxFPS = "60"
+LogTemp: Window BEGIN | Frame=52275
+LogTemp: Window END | Frame=52287
+LogTemp: Window BEGIN | Frame=52433
+LogTemp: Window END | Frame=52445
+LogTemp: Window BEGIN | Frame=52574
+LogTemp: Window END | Frame=52586

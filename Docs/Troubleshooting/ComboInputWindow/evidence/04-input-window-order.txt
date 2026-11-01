@@ -1,0 +1,88 @@
+LogTemp: Left Input | Frame=62472
+LogTemp: Window BEGIN | Frame=62472
+LogTemp: Window END | Frame=62474
+LogTemp: Left Input | Frame=62477
+LogTemp: Left Input | Frame=62509
+LogTemp: Window BEGIN | Frame=62509
+LogTemp: Left Input | Frame=62511
+LogTemp: Window END | Frame=62511
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: Left Input | Frame=62514
+LogTemp: Window BEGIN | Frame=62515
+LogTemp: Window END | Frame=62517
+LogTemp: Left Input | Frame=62528
+LogTemp: Window BEGIN | Frame=62528
+LogTemp: Left Input | Frame=62530
+LogTemp: Window END | Frame=62530
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: Left Input | Frame=62533
+LogTemp: Window BEGIN | Frame=62534
+LogTemp: Left Input | Frame=62536
+LogTemp: Window END | Frame=62536
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: Left Input | Frame=62538
+LogTemp: Left Input | Frame=62541
+LogTemp: Window BEGIN | Frame=62541
+LogTemp: Left Input | Frame=62543
+LogTemp: Window END | Frame=62543
+LogTemp: Jumping to section: LLLL_4, Current Node: LLL_3, Next Input: EBZAttackInputType::Left, Next Node: LLLL_4
+LogTemp: Left Input | Frame=62546
+LogTemp: Left Input | Frame=62548
+LogTemp: Window BEGIN | Frame=62549
+LogTemp: Window END | Frame=62551
+LogTemp: Left Input | Frame=62553
+LogTemp: Left Input | Frame=62555
+LogTemp: Left Input | Frame=62560
+LogTemp: Window BEGIN | Frame=62560
+LogTemp: Left Input | Frame=62562
+LogTemp: Window END | Frame=62562
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: Window BEGIN | Frame=62566
+LogTemp: Left Input | Frame=62567
+LogTemp: Window END | Frame=62568
+LogTemp: Left Input | Frame=62569
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: Window BEGIN | Frame=62573
+LogTemp: Left Input | Frame=62574
+LogTemp: Window END | Frame=62575
+LogTemp: Left Input | Frame=62576
+LogTemp: Jumping to section: LLLL_4, Current Node: LLL_3, Next Input: EBZAttackInputType::Left, Next Node: LLLL_4
+LogTemp: Left Input | Frame=62579
+LogTemp: Left Input | Frame=62581
+LogTemp: Window BEGIN | Frame=62581
+LogTemp: Window END | Frame=62583
+LogTemp: Left Input | Frame=62586
+LogTemp: Left Input | Frame=62588
+LogTemp: Left Input | Frame=62592
+LogTemp: Window BEGIN | Frame=62592
+LogTemp: Left Input | Frame=62594
+LogTemp: Window END | Frame=62594
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: Window BEGIN | Frame=62598
+LogTemp: Left Input | Frame=62599
+LogTemp: Window END | Frame=62600
+LogTemp: Left Input | Frame=62601
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: Left Input | Frame=62603
+LogTemp: Left Input | Frame=62605
+LogTemp: Window BEGIN | Frame=62605
+LogTemp: Window END | Frame=62607
+LogTemp: Left Input | Frame=62608
+LogTemp: Left Input | Frame=62610
+LogTemp: Left Input | Frame=62614
+LogTemp: Window BEGIN | Frame=62614
+LogTemp: Window END | Frame=62616
+LogTemp: Left Input | Frame=62617
+LogTemp: Left Input | Frame=62619
+LogTemp: Window BEGIN | Frame=62623
+LogTemp: Left Input | Frame=62624
+LogTemp: Window END | Frame=62625
+LogTemp: Left Input | Frame=62626
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: Left Input | Frame=62628
+LogTemp: Window BEGIN | Frame=62629
+LogTemp: Left Input | Frame=62630
+LogTemp: Window END | Frame=62631
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: Window BEGIN | Frame=62636
+LogTemp: Window END | Frame=62638

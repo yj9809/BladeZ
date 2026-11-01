@@ -1,0 +1,6 @@
+LogTemp: Window BEGIN | Frame=50663
+LogTemp: Window END | Frame=50665
+LogTemp: Window BEGIN | Frame=50690
+LogTemp: Window END | Frame=50692
+LogTemp: Window BEGIN | Frame=50706
+LogTemp: Window END | Frame=50708

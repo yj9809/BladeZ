@@ -1,0 +1,23 @@
+Cmd: t.MaxFPS 10
+t.MaxFPS = "10"
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LLLL_4, Current Node: LLL_3, Next Input: EBZAttackInputType::Left, Next Node: LLLL_4
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LLLL_4, Current Node: LLL_3, Next Input: EBZAttackInputType::Left, Next Node: LLLL_4
+LogTemp: NextInputType set to: 0
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LL_2, Current Node: L_1, Next Input: EBZAttackInputType::Left, Next Node: LL_2
+LogTemp: NextInputType set to: 0
+LogTemp: Jumping to section: LLL_3, Current Node: LL_2, Next Input: EBZAttackInputType::Left, Next Node: LLL_3
