@@ -1,8 +1,9 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EBZAttackInput.h"
 #include "GameFramework/Character.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
@@ -35,6 +36,7 @@ class BLADEZ_API ABZPlayerCharacter
 {
 	GENERATED_BODY()
 
+
 public:
 	// Sets default values for this character's properties
 	ABZPlayerCharacter();
@@ -54,6 +56,7 @@ public:
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void TeleportSucceeded(bool bIsATest) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -64,23 +67,8 @@ public:
     	
     virtual void Landed(const FHitResult& Hit) override;
 	
-public:
-	/*
-	* 작성자: 강수연
-	* 작성일: 26.05.11
-	* 작성 사유: Stat Component Event Binding 처리를 위해 추가.
-	* 모든 컴포넌트의 초기화가 끝나면 실행.
-	*/
-	virtual void PostInitializeComponents() override;
-
-	/*
-	* 작성자: 강수연
-	* 작성일: 26.05.20
-	* 작성 사유: PlayerDead Event Binding 처리를 위해 추가.
-	*/
-	FOnPlayerDead OnPlayerDead;
-	
 private:
+#pragma region Input Functions
 	void PlayerMove(const FInputActionValue& Value);
 	
 	void PlayerLook(const FInputActionValue& Value);
@@ -100,6 +88,7 @@ private:
 	void PlayerInteract(const FInputActionValue& Value);
 	
 	void PlayerLight(const FInputActionValue& Value);
+#pragma endregion
 	
 	// 착지 처리를 마무리 하기 위한 함수.
 	UFUNCTION()
@@ -134,6 +123,7 @@ public:
 
 	// Component private.
 private:
+	//region Components
 	// 카메라 세팅.
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	TObjectPtr<class USpringArmComponent> SpringArm;
@@ -152,9 +142,9 @@ private:
 	// 전등 효과를 위한 컴포넌트 세팅.
 	UPROPERTY(VisibleAnywhere, Category = Light)
 	TObjectPtr<class USpotLightComponent> LightComponent;
+	//endregion
 	
-	// Input private.
-private:
+	// region Input Action
 	// 플레이어 입력 매핑.
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputMappingContext> InputMappingContext;
@@ -190,8 +180,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Input)
 	TObjectPtr<UInputAction> LightAction;
 	
-	// Weapon private.
-private:
+	// endregion
+
+	// region Weapon Parameters
 	// 웨폰 세팅.
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 	TObjectPtr<ABZWeaponActor> Weapon;
@@ -202,9 +193,9 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<ABZItemPickup> NearbyItemPickup;
+	//endregion
 	
-	// Montage private.
-private:
+	// region Montage
 	// 착지를 위한 몽타주.
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> LandMontage;
@@ -220,9 +211,9 @@ private:
 	// Dead 몽타주.
 	UPROPERTY(VisibleAnywhere, Category = Animation)
 	TObjectPtr<UAnimMontage> DeadMontage;
+	//endregion
 	
-	// Dash value private.
-private:
+	// region Dash Parameters
 	// 대시 쿨다운 타이머 핸들.
 	FTimerHandle DashCoolDownTimerHandle;
 	
@@ -241,6 +232,11 @@ private:
 	// 대시 시 밀어낼 액터 배열.
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> DashHitActors;
+	//endregion
+
+	// region Dead Parameters
+	EPlayerStatus PlayerStatus = EPlayerStatus::Alive;
+	// endregion
 	
 	// Land value private.
 private:
@@ -254,6 +250,22 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Light)
 	bool bIsLighting = false;
 	
+public:
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.11
+	* 작성 사유: Stat Component Event Binding 처리를 위해 추가.
+	* 모든 컴포넌트의 초기화가 끝나면 실행.
+	*/
+	virtual void PostInitializeComponents() override;
+
+	/*
+	* 작성자: 강수연
+	* 작성일: 26.05.20
+	* 작성 사유: PlayerDead Event Binding 처리를 위해 추가.
+	*/
+	FOnPlayerDead OnPlayerDead;
+
 private:
 	/*
 	* 작성자: 강수연

@@ -1,10 +1,11 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZPlayerCombatComponent.h"
 
 #include "NiagaraFunctionLibrary.h"
 #include "Character/Player/BZPlayerCharacter.h"
+#include "Character/Player/Weapon/BZWeaponActor.h"
 #include "Character/Player/Data/BZComboData.h"
 #include "Common/FBZDamageEvent.h"
 #include "GameFramework/Character.h"
@@ -30,6 +31,13 @@ UBZPlayerCombatComponent::UBZPlayerCombatComponent()
 	}
 }
 
+void UBZPlayerCombatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	EndHitStop();
+}
+
 void UBZPlayerCombatComponent::OpenComboInputWindow()
 {
 	if (ComboInputState == EComboInputState::Closed)
@@ -52,7 +60,8 @@ void UBZPlayerCombatComponent::ClosedComboInputWindow()
 
 void UBZPlayerCombatComponent::SetAttackInput(const EBZAttackInputType NewInputType)
 {
-	if (!bIsAttacking ||
+	// None is a sentinel, not an attack command. Preserve any valid buffered input.
+	if (NewInputType == EBZAttackInputType::None || !bIsAttacking ||
 		(ComboInputState != EComboInputState::Open &&
 			ComboInputState != EComboInputState::OpenBuffered))
 	{
@@ -117,15 +126,6 @@ void UBZPlayerCombatComponent::BeginPlay()
 			UE_LOG(LogTemp, Error, TEXT("ComboData is not valid."));
 			return;
 		}
-
-		UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
-		if (AnimInstance && ComboData->GetMontage())
-		{
-			AnimInstance->OnMontageEnded.AddDynamic(
-				this,
-				&UBZPlayerCombatComponent::OnAttackEnded
-			);
-		}
 	}
 }
 
@@ -179,42 +179,69 @@ void UBZPlayerCombatComponent::TickComponent(float DeltaTime, enum ELevelTick Ti
 		const float ElapsedTime = World->GetRealTimeSeconds() - HitStopStartRealTime;
 		if (ElapsedTime >= HitStopEndTime)
 		{
-			UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
-			bIsHitStop = false;
-			HitStopEndTime = 0.0f;
+			EndHitStop();
 		}
 	}
 }
 
+void UBZPlayerCombatComponent::SetComponentTickEnabled(bool bEnabled)
+{
+	if (!bEnabled)
+	{
+		EndHitStop();
+	}
+
+	Super::SetComponentTickEnabled(bEnabled);
+}
+
 void UBZPlayerCombatComponent::StartComboAttack()
 {
-	if (!Owner || !ComboData || !ComboData->GetMontage())
+	ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(GetOwner());
+	if (!IsValid(Player) || !ComboData || !Player->GetMesh())
 	{
 		return;
 	}
 
-	// 콤보 시작 노드 가져오기
+	UAnimInstance* AnimInstance = Player->GetMesh()->GetAnimInstance();
+	UAnimMontage* Montage = ComboData->GetMontage();
 	const FBZComboNode* StartNode = ComboData->StartNode();
-	if (!StartNode)
+	if (!AnimInstance || !Montage || !StartNode || !Montage->IsValidSectionName(StartNode->SectionName))
 	{
 		return;
 	}
 
-	if (!ComboData->GetMontage()->IsValidSectionName(StartNode->SectionName))
-	{
-		return;
-	}
+	// 검증을 통과한 실제 시작/재시작에서만 기존 공격을 정리.
+	InvalidateAttack();
+	const uint64 ThisExecutionId = AttackExecutionId;
 
-	// 시작 노드의 섹션 이름으로 공격 몽타주 재생.
-	const float PlayState = Owner->PlayAnimMontage(ComboData->GetMontage(), BasePlayRate, StartNode->SectionName);
-	if (PlayState <= 0.0f)
-	{
-		return;
-	}
-
-	// 공격 상태 확인 플래그 변경.
 	CurrentComboNodeId = StartNode->NodeId;
 	bIsAttacking = true;
+
+	const float Duration = Player->PlayAnimMontage(Montage, BasePlayRate, StartNode->SectionName);
+	if (Duration <= 0.0f)
+	{
+		InvalidateAttack();
+		return;
+	}
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindWeakLambda(
+		this,
+		[this, ThisExecutionId](UAnimMontage*, bool)
+		{
+			// 이전 재생에서 늦게 도착한 종료라면 무시.
+			if (ThisExecutionId != AttackExecutionId)
+			{
+				return;
+			}
+
+			InvalidateAttack();
+		}
+	);
+
+	// 방금 시작한 활성 몽타주 인스턴스에 연결.
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, Montage);
+
 }
 
 void UBZPlayerCombatComponent::CheckCombo()
@@ -234,13 +261,22 @@ void UBZPlayerCombatComponent::CheckCombo()
 		return;
 	}
 
+	// A stopped/blending-out montage cannot accept a section jump. Its end delegate
+	// may still be queued, so discard the buffered input and invalidate now.
+	if (!bIsAttacking || !AnimInstance->Montage_IsActive(ComboData->GetMontage())
+		|| !AnimInstance->Montage_IsPlaying(ComboData->GetMontage()))
+	{
+		InvalidateAttack();
+		return;
+	}
+
 	EBZAttackInputType InputType;
 	if (!ConsumeComboInput(InputType))
 	{
 		ResetComboInput();
 		return;
 	}
-	
+
 	// 현재 콤보 노드 가져오기.
 	const FBZComboNode* CurrentNode = ComboData->FindNode(CurrentComboNodeId);
 	if (!CurrentNode)
@@ -273,6 +309,8 @@ void UBZPlayerCombatComponent::CheckCombo()
 			return;
 		}
 
+		EndCurrentTrace();
+
 		AnimInstance->Montage_JumpToSection(StartNode->SectionName, ComboData->GetMontage());
 		CurrentComboNodeId = StartNode->NodeId;
 		return;
@@ -287,8 +325,11 @@ void UBZPlayerCombatComponent::CheckCombo()
 
 	if (ComboData->GetMontage()->IsValidSectionName(*SectionName))
 	{
-		AnimInstance->Montage_JumpToSection(*SectionName, ComboData->GetMontage());
+		EndCurrentTrace();
+
 		CurrentComboNodeId = NextNode->NodeId;
+
+		AnimInstance->Montage_JumpToSection(*SectionName, ComboData->GetMontage());
 	}
 }
 
@@ -302,6 +343,33 @@ void UBZPlayerCombatComponent::OnAttackEnded(UAnimMontage* Montage, bool bInterr
 	CurrentComboNodeId = FGuid();
 	bIsAttacking = false;
 	ResetComboInput();
+}
+
+void UBZPlayerCombatComponent::InvalidateAttack()
+{
+	// 이전 몽타주의 종료 콜백부터 무효화한다.
+	++AttackExecutionId;
+
+	EndCurrentTrace();
+
+	CurrentComboNodeId.Invalidate();
+	bIsAttacking = false;
+	ResetComboInput();
+}
+
+void UBZPlayerCombatComponent::CancelAttackForTeleport()
+{
+	if (!bIsAttacking) { return; }
+	UAnimMontage* AttackMontage = ComboData ? ComboData->GetMontage() : nullptr;
+	// Invalidate before stopping: an old NotifyEnd must not flush samples at the new location.
+	InvalidateAttack();
+	if (Owner && Owner->GetMesh() && AttackMontage)
+	{
+		if (UAnimInstance* Anim = Owner->GetMesh()->GetAnimInstance())
+		{
+			Anim->Montage_Stop(0.0f, AttackMontage);
+		}
+	}
 }
 
 void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVector Point)
@@ -321,7 +389,7 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	DamageEvent.HitInfo = *Enemy;
 	DamageEvent.SetKnockback(CurrentNode->KnockbackPower > 0.0f);
 	DamageEvent.SetKnockbackPower(CurrentNode->KnockbackPower);
-	
+
 	if (AActor* HitActor = Enemy->GetActor())
 	{
 		ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(Owner);
@@ -343,27 +411,21 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 	{
 		return;
 	}
-	
+
 	const FBZHitEffectData& HitEffectData = CurrentNode->HitEffectPreset->GetHitEffectData();
 
 	OnCameraShake.ExecuteIfBound(HitEffectData.Amplitude);
-	
+
 	if (UBZSoundManager* SM = UBZSoundManager::Get(this))
 	{
 		SM->PlaySFX(HitEffectData.HitSound, 1.5f, 1.2f, 0.15f);
 	}
 
-	if (HitEffectData.HitStopValue.Num() >= 2
-		&& HitEffectData.HitStopValue[0] >= 0
-		&& HitEffectData.HitStopValue[1] >= 0
-		&& !bIsHitStop)
+	if (HitEffectData.HitStopValue.Num() >= 2 && !bIsHitStop)
 	{
 		if (UWorld* World = GetWorld())
 		{
-			UGameplayStatics::SetGlobalTimeDilation(World, HitEffectData.HitStopValue[1]);
-			HitStopEndTime = HitEffectData.HitStopValue[0];
-			HitStopStartRealTime = World->GetRealTimeSeconds();
-			bIsHitStop = true;
+			StartHitStop(World, HitEffectData.HitStopValue);
 		}
 	}
 
@@ -382,5 +444,56 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 				);
 			}
 		}
+	}
+}
+
+void UBZPlayerCombatComponent::EndCurrentTrace()
+{
+	ABZPlayerCharacter* Player = Cast<ABZPlayerCharacter>(GetOwner());
+
+	if (IsValid(Player) && IsValid(Player->GetWeapon()))
+	{
+		// Active=false + TraceGeneration 증가.
+		// 명중 콜백에서 돌아오면 기존 배치 순회가 중단된다.
+		Player->GetWeapon()->EndTrace();
+	}
+}
+
+void UBZPlayerCombatComponent::StartHitStop(const UWorld* World, const TArray<float>& Duration)
+{
+	if (bIsHitStop)
+	{
+		return;
+	}
+
+	for (const auto& Value : Duration)
+	{
+		if (!FMath::IsFinite(Value) || Value < 0.0f)
+		{
+			return;
+		}
+	}
+
+	bIsHitStop = true;
+
+	UGameplayStatics::SetGlobalTimeDilation(World, Duration[1]);
+	HitStopStartRealTime = World->GetRealTimeSeconds();
+	HitStopEndTime = Duration[0];
+}
+
+void UBZPlayerCombatComponent::EndHitStop()
+{
+	if (!bIsHitStop)
+	{
+		return;
+	}
+
+	bIsHitStop = false;
+	HitStopStartRealTime = 0.0f;
+	HitStopEndTime = 0.0f;
+
+	if (UWorld* World = GetWorld())
+	{
+		UGameplayStatics::SetGlobalTimeDilation(World, 1.0f);
 	}
 }

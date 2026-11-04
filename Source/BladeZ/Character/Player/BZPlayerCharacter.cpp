@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BZPlayerCharacter.h"
@@ -8,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Character/Enemy/Zombie/BZZombie.h"
+#include "Character/Enemy/Zombie/State/DeadState.h"
 #include "Common/FBZDamageEvent.h"
 #include "Component/Player/BZCameraShakeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -246,6 +247,15 @@ void ABZPlayerCharacter::StartComboCheck() const
 void ABZPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	// SetActorLocation/MoveComponent with an explicit teleport flag is also a discontinuity.
+	GetRootComponent()->TransformUpdated.AddWeakLambda(this,
+		[this](USceneComponent*, EUpdateTransformFlags, ETeleportType Teleport)
+		{
+			if (Teleport != ETeleportType::None && CombatComponent)
+			{
+				CombatComponent->CancelAttackForTeleport();
+			}
+		});
 	
 	
 	if (UBZGameInstance* GI = Cast<UBZGameInstance>(GetGameInstance()))
@@ -293,6 +303,13 @@ void ABZPlayerCharacter::BeginPlay()
 void ABZPlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ABZPlayerCharacter::TeleportSucceeded(bool bIsATest)
+{
+	Super::TeleportSucceeded(bIsATest);
+	// TeleportTo(..., bNoCheck=true) may update the root without a teleport flag.
+	if (!bIsATest && CombatComponent) { CombatComponent->CancelAttackForTeleport(); }
 }
 
 // Called to bind functionality to input
@@ -624,7 +641,6 @@ void ABZPlayerCharacter::OnDashMontageEnded(UAnimMontage* Montage, bool bInterru
     bIsDashing = false;
     DashHitActors.Empty();
 
-    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
     GetCapsuleComponent()->OnComponentBeginOverlap.RemoveDynamic(this, &ABZPlayerCharacter::OnCapsuleOverlap);
 
     // 아직 공중이면 착지할 때까지 마찰값 유지.
@@ -632,6 +648,11 @@ void ABZPlayerCharacter::OnDashMontageEnded(UAnimMontage* Montage, bool bInterru
     {
         GetCharacterMovement()->FallingLateralFriction = 0.0f;
     }
+
+	if (PlayerStatus == EPlayerStatus::Alive)
+	{
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	}
 }
 
 void ABZPlayerCharacter::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -654,10 +675,20 @@ void ABZPlayerCharacter::OnCapsuleOverlap(UPrimitiveComponent* OverlappedComp, A
 
 void ABZPlayerCharacter::SetDead()
 {
+	if (PlayerStatus == EPlayerStatus::Dead)
+	{
+		return;
+	}
+
+	PlayerStatus = EPlayerStatus::Dead;
+
+	if (CombatComponent)
+	{
+		CombatComponent->InvalidateAttack();
+	}
+
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	PlayAnimMontage(DeadMontage);
-	
-	PLAYER_LOG(Log, "Set Dead");
 	
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());                                                                                                     
 	if (PlayerController)                                                                                                                                                               

@@ -16,3 +16,10 @@ enum class EComboInputState : uint8
 	OpenBuffered UMETA(DisplayName = "입력 저장 중"),
 	ClosedBuffered UMETA(DisplayName = "입력 저장 완료"),
 };
+
+UENUM(BlueprintType)
+enum class EPlayerStatus : uint8
+{
+	Alive UMETA(DisplayName = "정상"),
+	Dead UMETA(DisplayName = "사망"),
+};

@@ -7,9 +7,6 @@
 #include "Components/SceneComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Animation/AnimMontage.h"
-// [2026-10-28] 기존/베이크 Trace의 CPU 비용을 Unreal Insights에서 재측정하기 위한 마커를 유지한다.
-// CPU Trace 채널 활성화 시 기록하며, 비교 측정 시 Draw Debug는 None으로 유지한다.
-#include "ProfilingDebugging/CpuProfilerTrace.h"
 
 // Sets default values
 ABZWeaponActor::ABZWeaponActor()
@@ -22,11 +19,12 @@ ABZWeaponActor::ABZWeaponActor()
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
-void ABZWeaponActor::StartTrace(USkeletalMeshComponent* CharacterMesh, UAnimMontage* Montage, FName SectionName, FName WindowName)
+void ABZWeaponActor::StartTrace(USkeletalMeshComponent* CharacterMesh, UAnimMontage* Montage, FName SectionName, FName WindowName, int32 SourceMontageInstanceId)
 {
 	++TraceGeneration;
 
 	ActiveTraceMontage = Montage;
+	ActiveTraceMontageInstanceId = SourceMontageInstanceId;
 	ActiveTraceSectionName = SectionName;
 	ActiveTraceWindowName = WindowName;
 	
@@ -36,6 +34,7 @@ void ABZWeaponActor::StartTrace(USkeletalMeshComponent* CharacterMesh, UAnimMont
 	
 	ActiveTraceWindowIndex = INDEX_NONE;
 	TraceCharacterMesh.Reset();
+	TraceTransformHistory.Reset();
 	
 	NextTraceSampleIndex = 0;
 	
@@ -61,9 +60,12 @@ void ABZWeaponActor::EndTrace()
 
 	ActiveTraceWindowIndex = INDEX_NONE;
 	TraceCharacterMesh.Reset();
+	TraceTransformHistory.Reset();
+
 	NextTraceSampleIndex = 0;
 
 	ActiveTraceMontage.Reset();
+	ActiveTraceMontageInstanceId = INDEX_NONE;
 	ActiveTraceSectionName = NAME_None;
 	ActiveTraceWindowName = NAME_None;
 }
@@ -120,20 +122,18 @@ void ABZWeaponActor::TraceBetweenPositions(
 	const FVector& StartLocation, 
 	const FVector& EndLocation)
 {
-	// [2026-10-28] 무기 구간 1회 + 이동 경로 5회의 충돌 질의 및 명중 처리 비용을 측정한다.
-	// 상위 Legacy/Baked 측정 시간에 포함되므로 전체 비용 계산 시 중복 합산하지 않는다.
-	TRACE_CPUPROFILER_EVENT_SCOPE(BZTrace_SweepBatch);
-
 	TArray<FHitResult> HitResults;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(GetOwner());
 
+	// 무기 길이는 사거리만 바꾼다. 주 검사와 이동 경로의 판정 반경은 고정한다.
+	constexpr float TraceRadius = 20.0f;
 	// 무기 Trace 처리.
 	UKismetSystemLibrary::SphereTraceMulti(
 		this,
 		StartLocation,
 		EndLocation,
-		20.0f,
+		TraceRadius,
 		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2),
 		false,
 		ActorsToIgnore,
@@ -145,18 +145,18 @@ void ABZWeaponActor::TraceBetweenPositions(
 		1.0f
 	);
 
-	// 포인트 Trace 처리.
-	constexpr int32 NumCount = 5;
-
-	const float WeaponLength = FVector::Dist(StartLocation, EndLocation);
-	const float Radius = (WeaponLength / (NumCount - 1)) * 0.5f;
+	// 두 자세 모두에서 인접 지점 간격을 반경 이하로 유지한다.
+	// 길이 0도 양 끝점 검사로 처리해 0으로 나누지 않는다.
+	const float MaxWeaponLength = FMath::Max(
+		FVector::Dist(FromStart, FromEnd), FVector::Dist(StartLocation, EndLocation));
+	const int32 NumIntervals = FMath::Max(1, FMath::CeilToInt(MaxWeaponLength / TraceRadius));
 
 	const uint64 GenerationAtEntry = TraceGeneration;
 	
-	// Trace 프레임 사이 보간을 위해 각 포인트 별 Shpere Trace를 추가.
-	for (int32 Index = 0; Index < NumCount; ++Index)
+	// 같은 정규화 지점의 이전/현재 위치를 연결한다. 양 끝점 포함.
+	for (int32 Index = 0; Index <= NumIntervals; ++Index)
 	{
-		const float Alpha = static_cast<float>(Index) / (NumCount - 1);
+		const double Alpha = static_cast<double>(Index) / NumIntervals;
 		const FVector PrevPoint = FMath::Lerp(FromStart, FromEnd, Alpha);
 		const FVector CurrPoint = FMath::Lerp(StartLocation, EndLocation, Alpha);
 		
@@ -167,7 +167,7 @@ void ABZWeaponActor::TraceBetweenPositions(
 			this,
 			PrevPoint,
 			CurrPoint,
-			Radius,
+			TraceRadius,
 			UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel2),
 			false,
 			ActorsToIgnore,
@@ -184,11 +184,12 @@ void ABZWeaponActor::TraceBetweenPositions(
 	for (const FHitResult& Hit : HitResults)
 	{
 		AActor* HitActor = Hit.GetActor();
-		if (HitActor && !HitActors.Contains(HitActor))
+		const bool bAlreadyHit = HitActor && HitActors.Contains(HitActor);
+		if (HitActor && !bAlreadyHit)
 		{
 			HitActors.Add(HitActor);
 			OnAttackHit.ExecuteIfBound(&Hit, Hit.ImpactPoint);
-			
+
 			if (!bIsTracing || TraceGeneration != GenerationAtEntry)
 			{
 				return;
@@ -199,10 +200,6 @@ void ABZWeaponActor::TraceBetweenPositions(
 
 void ABZWeaponActor::ProcessBakedSamplesUntil(float MontageTime)
 {
-	// [2026-10-28] 베이크 샘플 순회와 충돌 검사를 포함한 처리 비용을 기존 방식과 비교한다.
-	// 새 샘플에 도달하지 않아 충돌 검사를 생략하는 호출도 측정 범위에 포함한다.
-	TRACE_CPUPROFILER_EVENT_SCOPE(BZTrace_Baked);
-
 	USkeletalMeshComponent* CharacterMesh = TraceCharacterMesh.Get();
 	
 	if (!bIsTracing || !IsValid(CharacterMesh) || !IsValid(TraceData.Get()) || !FMath::IsFinite(MontageTime) || !TraceData->TraceWindows.IsValidIndex(ActiveTraceWindowIndex))
@@ -218,7 +215,6 @@ void ABZWeaponActor::ProcessBakedSamplesUntil(float MontageTime)
 	}
 
 	const float TargetTime = FMath::Min(MontageTime, Window.EndTime);
-	const FTransform MeshTransform = CharacterMesh->GetComponentTransform();
 	
 	const uint64 GenerationAtEntry = TraceGeneration;
 
@@ -232,18 +228,58 @@ void ABZWeaponActor::ProcessBakedSamplesUntil(float MontageTime)
 			break;
 		}
 		
-		const FVector CurrentStart = MeshTransform.TransformPosition(Sample.Start);
-		const FVector CurrentEnd = MeshTransform.TransformPosition(Sample.End);
+		FTransform SampleTransform;
+
+		if (!EvaluateTransformAt(Sample.Time, SampleTransform))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[WeaponTrace] 샘플 처리 실패: Time=%.6f"), Sample.Time);
+			break;
+		}
+
+		const FVector CurrentStart = SampleTransform.TransformPosition(Sample.Start);
+		const FVector CurrentEnd = SampleTransform.TransformPosition(Sample.End);
 		
 		// 첫 샘플은 해당 위치 자체를 검사한다.
 		const FVector FromStart = NextTraceSampleIndex == 0 ? CurrentStart : PrevBakedStart;
 		const FVector FromEnd = NextTraceSampleIndex == 0 ? CurrentEnd : PrevBakedEnd;
+		const int32 SampleIndexAtEntry = NextTraceSampleIndex;
 		
 		PrevBakedStart = CurrentStart;
 		PrevBakedEnd = CurrentEnd;
 		++NextTraceSampleIndex;
+		FVector SweepStart = FromStart;
+		FVector SweepEnd = FromEnd;
 		
-		TraceBetweenPositions(FromStart, FromEnd, CurrentStart, CurrentEnd);
+		// 이 지점에서는 NextTraceSampleIndex가 이미 증가했으므로
+		// 현재 샘플 번호는 위에서 보관한 SampleIndexAtEntry를 사용한다.
+		if (SampleIndexAtEntry > 0)
+		{
+			const auto& PrevSample = Window.Samples[SampleIndexAtEntry - 1];
+
+			float SplitTime;
+			FTransform MidMesh;
+			if (FindRotationSplitTime(PrevSample.Time, Sample.Time, SplitTime) &&
+				EvaluateTransformAt(SplitTime, MidMesh))
+			{
+				const float Alpha = (SplitTime - PrevSample.Time) / (Sample.Time - PrevSample.Time);
+
+				const FVector MidStart = MidMesh.TransformPosition(FMath::Lerp(PrevSample.Start, Sample.Start, Alpha));
+				const FVector MidEnd = MidMesh.TransformPosition(FMath::Lerp(PrevSample.End, Sample.End, Alpha));
+
+				TraceBetweenPositions(SweepStart, SweepEnd, MidStart, MidEnd);
+
+				// 첫 Sweep의 타격 콜백에서 공격이 끝나거나 교체될 수 있다.
+				if (!bIsTracing || TraceGeneration != GenerationAtEntry)
+				{
+					break;
+				}
+
+				SweepStart = MidStart;
+				SweepEnd = MidEnd;
+			}
+		}
+
+		TraceBetweenPositions(SweepStart, SweepEnd, CurrentStart, CurrentEnd);
 		
 		// 타격 처리 중 공격이 종료됐다면 더 검사하지 않는다.
 		if (!bIsTracing || TraceGeneration != GenerationAtEntry)
@@ -251,6 +287,150 @@ void ABZWeaponActor::ProcessBakedSamplesUntil(float MontageTime)
 			break;
 		}
 	}
+}
+
+bool ABZWeaponActor::RecordTraceSnapshot(const FTraceTransformSnapshot& Snapshot)
+{
+	if (!bIsTracing || !IsValid(TraceCharacterMesh.Get()) || !FMath::IsFinite(Snapshot.MontageTime))
+	{
+		return false;
+	}
+
+	if (TraceTransformHistory.IsEmpty())
+	{
+		TraceTransformHistory.Add(Snapshot);
+		return true;
+	}
+
+	auto& LastSnapshot = TraceTransformHistory.Last();
+
+	// 시간이 뒤로 이동했다면 이전 궤적과 연결하지 않는다.
+	if (Snapshot.MontageTime < LastSnapshot.MontageTime)
+	{
+		EndTrace();
+		return false;
+	}
+
+	// 같은 시점이 다시 전달되면 최신 관측으로 갱신한다.
+	if (Snapshot.MontageTime == LastSnapshot.MontageTime)
+	{
+		LastSnapshot = Snapshot;
+		return true;
+	}
+
+	TraceTransformHistory.Add(Snapshot);
+	return true;
+}
+
+bool ABZWeaponActor::EvaluateTransformAt(float SampleTime, FTransform& OutTransform) const
+{
+	if (!bIsTracing || !FMath::IsFinite(SampleTime) || TraceTransformHistory.IsEmpty())
+	{
+		return false;
+	}
+
+	auto* FirstSnapshot = &TraceTransformHistory[0];
+	auto* LastSnapshot = &TraceTransformHistory.Last();
+
+	if (SampleTime <= FirstSnapshot->MontageTime)
+	{
+		OutTransform = FirstSnapshot->MeshTransform;
+		return true;
+	}
+
+	if (SampleTime >= LastSnapshot->MontageTime)
+	{
+		OutTransform = LastSnapshot->MeshTransform;
+		return true;
+	}
+
+	for (int32 Index = 1; Index < TraceTransformHistory.Num(); ++Index)
+	{
+		const auto& PrevSnapshot = TraceTransformHistory[Index - 1];
+		const auto& CurrSnapshot = TraceTransformHistory[Index];
+
+		if (SampleTime > CurrSnapshot.MontageTime)
+		{
+			continue;
+		}
+
+		const float Duration = CurrSnapshot.MontageTime - PrevSnapshot.MontageTime;
+
+		if (Duration <= 0.0f)
+		{
+			return false;
+		}
+
+		const float Alpha = FMath::Clamp(
+			(SampleTime - PrevSnapshot.MontageTime) / Duration, 0.0f, 1.0f
+		);
+
+		const FVector Location = FMath::Lerp(
+			PrevSnapshot.MeshTransform.GetLocation(),
+			CurrSnapshot.MeshTransform.GetLocation(),
+			Alpha
+		);
+
+		const FQuat Rotation = FQuat::Slerp(
+			PrevSnapshot.MeshTransform.GetRotation(),
+			CurrSnapshot.MeshTransform.GetRotation(),
+			Alpha
+		);
+
+		const FVector Scale = FMath::Lerp(
+			PrevSnapshot.MeshTransform.GetScale3D(),
+			CurrSnapshot.MeshTransform.GetScale3D(),
+			Alpha
+		);
+
+		OutTransform = FTransform(Rotation, Location, Scale);
+		return true;
+	}
+
+	return false;
+}
+
+bool ABZWeaponActor::FindRotationSplitTime(float FromSampleTime, float ToSampleTime, float& OutSplitTime) const
+{
+	constexpr double SplitThresholdDegrees = 90.0;
+	double LargestAngle = 0.0;
+	bool bFound = false;
+
+	for (int32 Index = 1; Index < TraceTransformHistory.Num(); ++Index)
+	{
+		const auto& Prev = TraceTransformHistory[Index - 1];
+		const auto& Curr = TraceTransformHistory[Index];
+
+		if (Prev.MontageTime >= ToSampleTime)
+		{
+			break;
+		}
+
+		const float Begin = FMath::Max(FromSampleTime, Prev.MontageTime);
+		const float End = FMath::Min(ToSampleTime, Curr.MontageTime);
+		if (End <= Begin)
+		{
+			continue;
+		}
+
+		const double FullAngle = FMath::RadiansToDegrees(
+			Prev.MeshTransform.GetRotation().AngularDistance(Curr.MeshTransform.GetRotation())
+		);
+
+		// 스냅샷 구간 중 이번 베이크 샘플 구간에 포함된 회전량.
+		// 현재 EvaluateTransformAt()의 Slerp 보간을 기준으로 한다.
+		const double Fraction = (End - Begin) / (Curr.MontageTime - Prev.MontageTime);
+		const double Angle = FullAngle * Fraction;
+
+		if (Angle >= SplitThresholdDegrees && Angle > LargestAngle)
+		{
+			LargestAngle = Angle;
+			OutSplitTime = Begin + (End - Begin) * 0.5;
+			bFound = true;
+		}
+	}
+
+	return bFound;
 }
 
 // Called every frame
@@ -308,8 +488,12 @@ bool ABZWeaponActor::InitializeTraceComponents()
 }
 
 void ABZWeaponActor::UpdateTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName,
-	float MontageTime, bool bReachedEnd)
+	float MontageTime, bool bReachedEnd, int32 SourceMontageInstanceId)
 {
+	if (ActiveTraceMontageInstanceId != SourceMontageInstanceId)
+	{
+		return;
+	}
 	if (!bIsTracing || !IsValid(TraceData.Get()) || TraceData->Montage.Get() != Montage || !TraceData->TraceWindows.IsValidIndex(ActiveTraceWindowIndex))
 	{
 		return;
@@ -323,15 +507,33 @@ void ABZWeaponActor::UpdateTraceFromNotify(UAnimMontage* Montage, FName SectionN
 		return;
 	}
 	
+	auto* CharacterMesh = TraceCharacterMesh.Get();
+	if (!IsValid(CharacterMesh) || !FMath::IsFinite(MontageTime))
+	{
+		return;
+	}
+
+	const FTraceTransformSnapshot Snapshot
+	{
+		MontageTime,
+		CharacterMesh->GetComponentTransform()
+	};
+
+	if (!RecordTraceSnapshot(Snapshot))
+	{
+		return;
+	}
+
 	// 엔진이 노티파이 끝을 통과했다고 알려주면 저장된 마지막 샘플까지 처리한다.
 	const float TargetTime = bReachedEnd ? Window.EndTime : MontageTime;
 	
 	ProcessBakedSamplesUntil(TargetTime);
 }
 
-void ABZWeaponActor::EndTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName, bool bReachedEnd)
+void ABZWeaponActor::EndTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName, float MontageTime, bool bReachedEnd, int32 SourceMontageInstanceId)
 {
 	if (!bIsTracing
+		|| ActiveTraceMontageInstanceId != SourceMontageInstanceId
 		|| ActiveTraceMontage.Get() != Montage
 		|| ActiveTraceSectionName != SectionName
 		|| ActiveTraceWindowName != WindowName)
@@ -346,7 +548,7 @@ void ABZWeaponActor::EndTraceFromNotify(UAnimMontage* Montage, FName SectionName
 		// 정상 종료: 아직 처리하지 않은 마지막 샘플까지 검사한다.
 		// bReachedEnd가 true이므로 전달 시간 대신 Window.EndTime을 쓴다.
 		UpdateTraceFromNotify(
-			Montage, SectionName, WindowName, 0.0f, true);
+			Montage, SectionName, WindowName, MontageTime, true, SourceMontageInstanceId);
 	}
 
 	// 타격 콜백 중 다른 공격이 시작됐다면 그 공격을 종료하지 않는다.
@@ -358,9 +560,6 @@ void ABZWeaponActor::EndTraceFromNotify(UAnimMontage* Montage, FName SectionName
 
 void ABZWeaponActor::PerformTrace()
 {
-	// [2026-10-28] 프레임별 무기 위치 조회와 충돌 검사를 포함한 기존 방식의 CPU 비용을 측정한다.
-	TRACE_CPUPROFILER_EVENT_SCOPE(BZTrace_Legacy);
-
 	if (!TraceStart || !TraceEnd)
 	{
 		return;

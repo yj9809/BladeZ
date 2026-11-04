@@ -17,16 +17,23 @@ UCLASS()
 class BLADEZ_API ABZWeaponActor : public AActor
 {
 	GENERATED_BODY()
+
+	struct FTraceTransformSnapshot
+	{
+		float MontageTime = 0.0f;
+		FTransform MeshTransform = FTransform::Identity;
+	};
 	
 public:	
 	// Sets default values for this actor's properties
 	ABZWeaponActor();
 	
 	// 적 감지 시작 코드.
-	void StartTrace(USkeletalMeshComponent* CharacterMesh, UAnimMontage* Montage, FName SectionName, FName WindowName);
+	void StartTrace(USkeletalMeshComponent* CharacterMesh, UAnimMontage* Montage, FName SectionName, FName WindowName, int32 SourceMontageInstanceId = INDEX_NONE);
 
 	// 적 감지 종료 코드.
 	void EndTrace();
+
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -37,9 +44,9 @@ public:
 	// 무기 BP의 Start, End 컴포넌트를 찾아 연결한다.
 	bool InitializeTraceComponents();
 	
-	void UpdateTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName, float MontageTime, bool bReachedEnd);
+	void UpdateTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName, float MontageTime, bool bReachedEnd, int32 SourceMontageInstanceId = INDEX_NONE);
 	
-	void EndTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName, bool bReachedEnd);
+	void EndTraceFromNotify(UAnimMontage* Montage, FName SectionName, FName WindowName, float MontageTime, bool bReachedEnd, int32 SourceMontageInstanceId = INDEX_NONE);
 
 protected:
 	// Called when the game starts or when spawned
@@ -57,6 +64,14 @@ private:
 	void TraceBetweenPositions(const FVector& FromStart, const FVector& FromEnd, const FVector& StartLocation, const FVector& EndLocation);
 	
 	void ProcessBakedSamplesUntil(float MontageTime);
+
+	bool RecordTraceSnapshot(const FTraceTransformSnapshot& Snapshot);
+
+	bool EvaluateTransformAt(float SampleTime, FTransform& OutTransform) const;
+
+	bool FindRotationSplitTime(float FromSampleTime, float ToSampleTime, float& OutSplitTime) const;
+
+
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category=Weapon)
@@ -107,4 +122,8 @@ private:
 	
 	// 타격 콜백 도중 공격이 종료되거나 새로 시작됐는지 구분한다.
 	uint64 TraceGeneration = 0;
+	// Origin of the engine notify, distinct from the local callback generation.
+	int32 ActiveTraceMontageInstanceId = INDEX_NONE;
+
+	TArray<FTraceTransformSnapshot> TraceTransformHistory;
 };

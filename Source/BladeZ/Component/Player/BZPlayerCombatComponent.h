@@ -15,11 +15,14 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLADEZ_API UBZPlayerCombatComponent : public UActorComponent
 {
 	GENERATED_BODY()
+
 	
 public:	
 	// Sets default values for this component's properties
 	UBZPlayerCombatComponent();
 	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	// 공격 입력 함수들.
 	void OpenComboInputWindow();
 	void ClosedComboInputWindow();
@@ -32,13 +35,13 @@ public:
 
 	bool GetSuperArmored() const;
 
-protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	
-public:	
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	
+	virtual void SetComponentTickEnabled(bool bEnabled) override;
+
 	// 공격 시작용 함수.
 	void StartComboAttack();
 	
@@ -51,11 +54,24 @@ public:
 	// 몽타주 재생 종료 시 초기화 함수.
 	UFUNCTION()
 	void OnAttackEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	// 공격 상태와 현재 타격 창을 무효화한다.
+	// 몽타주 정지/교체는 호출하는 경로에서 수행한다.
+	void InvalidateAttack();
+	// Discontinuous relocation cannot connect the previous weapon position to the destination.
+	void CancelAttackForTeleport();
 	
 public:
 	// 카메라 셰이크 알림을 위한 델리게이트.
 	FOnCameraShake OnCameraShake;
 	
+private:
+	void EndCurrentTrace();
+
+	void StartHitStop(const UWorld* World, const TArray<float>& Duration);
+
+	void EndHitStop();
+
 private:
 	// 컴포넌트를 소유한 캐릭터.
 	UPROPERTY(VisibleAnywhere, Category = Combat)
@@ -95,5 +111,7 @@ private:
 	
 	// HitStop 지속 시간.
 	UPROPERTY(VisibleAnywhere, Category = HitStop)
-	float HitStopEndTime = 0.0f;	
+	float HitStopEndTime = 0.0f;
+
+	uint64 AttackExecutionId = 0;
 };

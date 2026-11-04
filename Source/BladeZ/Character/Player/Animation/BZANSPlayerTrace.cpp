@@ -6,8 +6,19 @@
 #include "Character/Player/BZPlayerCharacter.h"
 #include "Character/Player/Weapon/BZWeaponActor.h"
 #include "Animation/AnimMontage.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/ActiveMontageInstanceScope.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimNotifyLibrary.h"
+
+namespace
+{
+	int32 NotifyInstanceId(const FAnimNotifyEventReference& Reference)
+	{
+		const auto* Context=Reference.GetContextData<UE::Anim::FAnimNotifyMontageInstanceContext>();
+		return Context ? Context->MontageInstanceID : INDEX_NONE;
+	}
+}
 
 void UBZANSPlayerTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration,
                                     const FAnimNotifyEventReference& EventReference)
@@ -35,14 +46,24 @@ void UBZANSPlayerTrace::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 	
 	const FName SectionName = GetCurrentSectionName(Animation, EventReference);
 
-	Weapon->StartTrace(MeshComp, Cast<UAnimMontage>(Animation), SectionName, WindowName);
+	// A delayed Begin from an old instance must not replace the new window either.
+	const int32 SourceId = NotifyInstanceId(EventReference);
+	if (UAnimInstance* Anim = MeshComp->GetAnimInstance())
+	{
+		if (FAnimMontageInstance* Active = Anim->GetActiveInstanceForMontage(Cast<UAnimMontage>(Animation)))
+		{
+			if (SourceId != INDEX_NONE && Active->GetInstanceID() != SourceId) { return; }
+		}
+	}
+	Weapon->StartTrace(MeshComp, Cast<UAnimMontage>(Animation), SectionName, WindowName, SourceId);
 
 	Weapon->UpdateTraceFromNotify(
 		Cast<UAnimMontage>(Animation),
 		SectionName,
 		WindowName,
 		UAnimNotifyLibrary::GetCurrentAnimationTime(EventReference),
-		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference)
+		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference),
+		NotifyInstanceId(EventReference)
 	);
 }
 
@@ -77,7 +98,10 @@ void UBZANSPlayerTrace::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenc
 		Cast<UAnimMontage>(Animation),
 		SectionName,
 		WindowName,
-		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference));
+		UAnimNotifyLibrary::GetCurrentAnimationTime(EventReference),
+		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference),
+		NotifyInstanceId(EventReference)
+	);
 }
 
 void UBZANSPlayerTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float FrameDeltaTime,
@@ -111,7 +135,8 @@ void UBZANSPlayerTrace::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequen
 		SectionName,
 		WindowName,
 		UAnimNotifyLibrary::GetCurrentAnimationTime(EventReference),
-		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference)
+		UAnimNotifyLibrary::NotifyStateReachedEnd(EventReference),
+		NotifyInstanceId(EventReference)
 	);
 }
 
