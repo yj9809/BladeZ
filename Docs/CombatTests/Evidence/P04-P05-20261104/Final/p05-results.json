@@ -1,0 +1,142 @@
+{
+  "fixed-accuracy": {
+    "run": "P05-NoDraw-fixed-accuracy-60FDE7444E35A10220C2AABDE1DF1871",
+    "cycles": 500,
+    "actors": [
+      34
+    ],
+    "components": [
+      71
+    ],
+    "memoryMiB": [
+      1780.97,
+      1783.45,
+      1775.75,
+      1777.79,
+      1780.28,
+      1786.29,
+      1796.18,
+      1806.53,
+      1816.73,
+      1827.02,
+      1837.36
+    ],
+    "cpuMsPerCycle": [
+      15.3125,
+      16.25
+    ],
+    "cpuMsPerCompletedAttack": 5.1667,
+    "elapsedMsPerCycle": 16.1176,
+    "hpLoss": [
+      30000,
+      20000,
+      500
+    ],
+    "warmup": 20
+  },
+  "fixed-cost": {
+    "run": "P05-NoDraw-fixed-cost-B9FD93E941F0C284956AD08E0AB11F3B",
+    "cycles": 500,
+    "actors": [
+      34
+    ],
+    "components": [
+      71
+    ],
+    "memoryMiB": [
+      1776.3,
+      1777.18,
+      1777.64,
+      1778.23,
+      1768.75,
+      1769.15,
+      1769.8,
+      1770.27,
+      1770.93,
+      1771.84,
+      1773.11
+    ],
+    "cpuMsPerCycle": [
+      12.8125,
+      14.2188
+    ],
+    "cpuMsPerCompletedAttack": 4.5,
+    "elapsedMsPerCycle": 13.6464,
+    "hpLoss": [
+      30000,
+      20000,
+      500
+    ],
+    "warmup": 20
+  },
+  "seeded-accuracy": {
+    "run": "P05-NoDraw-seeded-accuracy-C0D2CBEA453193892201AC8E702C6E21",
+    "cycles": 500,
+    "actors": [
+      34
+    ],
+    "components": [
+      71
+    ],
+    "memoryMiB": [
+      1775.95,
+      1778.16,
+      1780.21,
+      1771.52,
+      1773.66,
+      1776.2,
+      1784.65,
+      1794.86,
+      1804.66,
+      1814.7,
+      1824.81
+    ],
+    "cpuMsPerCycle": [
+      15.3125,
+      16.4062
+    ],
+    "cpuMsPerCompletedAttack": 5.2396,
+    "elapsedMsPerCycle": 16.0447,
+    "hpLoss": [
+      30000,
+      20000,
+      500
+    ],
+    "warmup": 20
+  },
+  "seeded-cost": {
+    "run": "P05-NoDraw-seeded-cost-556AD9D04BB67878719B43B61FDFC548",
+    "cycles": 500,
+    "actors": [
+      34
+    ],
+    "components": [
+      71
+    ],
+    "memoryMiB": [
+      1770.82,
+      1771.51,
+      1771.98,
+      1772.48,
+      1762.52,
+      1763.07,
+      1763.54,
+      1764.14,
+      1764.77,
+      1765.62,
+      1766.54
+    ],
+    "cpuMsPerCycle": [
+      11.4062,
+      13.5938
+    ],
+    "cpuMsPerCompletedAttack": 4.1354,
+    "elapsedMsPerCycle": 13.4657,
+    "hpLoss": [
+      30000,
+      20000,
+      500
+    ],
+    "warmup": 20
+  }
+}
