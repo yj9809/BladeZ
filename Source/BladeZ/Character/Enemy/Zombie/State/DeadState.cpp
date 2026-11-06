@@ -13,8 +13,9 @@ void DeadState::OnEnter()
 	// 죽음 스테이트 시작할 때 아래 코드를 실행시키면 반복 실행되는 문제가 있음.
 
 	//Owner->SetActorEnableCollision(false);
+	// 26.11.06 윤제영: 무기 트레이스는 채널 2번으로 설정되어 있어 2번도 무시하도록 설정 추가.
 	//트레이스 웨폰 채널 이그노어 변경하기 
-	Owner->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1,/*WeaponTrace*/ECR_Ignore);
+	Owner->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel2,/*WeaponTrace*/ECR_Ignore);
 	
 	UAnimInstance* AnimInstance = Owner->GetMesh()->GetAnimInstance();
 	if (!AnimInstance || !Owner->ZombieDeathAnim)

@@ -183,7 +183,8 @@ void UBZZombieObjectPool::ActiveZombies(ABZZombie* InZombie)
 {
 	if (InZombie)
 	{
-		InZombie->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1,/*WeaponTrace*/ECR_Overlap);
+		// 26.11.06 윤제영: 무기 트레이스는 채널 2번으로 설정되어 있어 2번도 Overlap하도록 설정 추가.
+		InZombie->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel2,/*WeaponTrace*/ECR_Overlap);
 		InZombie->SetActorHiddenInGame(false);
 		InZombie->SetActorEnableCollision(true);
 		InZombie->SetActorTickEnabled(true);
