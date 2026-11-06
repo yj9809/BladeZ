@@ -15,10 +15,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Combo)
 	float Amplitude = 0.0f;
 	
-	// 히트 스톱 값(초 단위).
-	// index0: 지속 시간, index1: 강도.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = HitStop)
-	TArray<float> HitStopValue;
+	// 히트 스톱 지속 시간.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = HitStop, meta = (ClampMin = "0.0"))
+	float HitStopDuration = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = HitStop,
+		meta = (EditCondition = "HitStopDuration > 0.0", ClampMin = "0.01", ClampMax = "1.0", EditConditionHides = true))
+	float HitStopTimeDilation = 0.01f;
 	
 	// 이펙트.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Effect)

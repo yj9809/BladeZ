@@ -241,7 +241,6 @@ void UBZPlayerCombatComponent::StartComboAttack()
 
 	// 방금 시작한 활성 몽타주 인스턴스에 연결.
 	AnimInstance->Montage_SetEndDelegate(EndDelegate, Montage);
-
 }
 
 void UBZPlayerCombatComponent::CheckCombo()
@@ -421,14 +420,6 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 		SM->PlaySFX(HitEffectData.HitSound, 1.5f, 1.2f, 0.15f);
 	}
 
-	if (HitEffectData.HitStopValue.Num() >= 2 && !bIsHitStop)
-	{
-		if (UWorld* World = GetWorld())
-		{
-			StartHitStop(World, HitEffectData.HitStopValue);
-		}
-	}
-
 	if (HitEffectData.HitEffect.Num() > 0)
 	{
 		UWorld* World = GetWorld();
@@ -445,6 +436,19 @@ void UBZPlayerCombatComponent::OnAttackHit(const FHitResult* Enemy, const FVecto
 			}
 		}
 	}
+
+	if (HitEffectData.HitStopDuration <= 0.0f)
+	{
+		return;
+	}
+
+	if (!bIsHitStop)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			StartHitStop(World, HitEffectData.HitStopDuration, HitEffectData.HitStopTimeDilation);
+		}
+	}
 }
 
 void UBZPlayerCombatComponent::EndCurrentTrace()
@@ -459,26 +463,24 @@ void UBZPlayerCombatComponent::EndCurrentTrace()
 	}
 }
 
-void UBZPlayerCombatComponent::StartHitStop(const UWorld* World, const TArray<float>& Duration)
+void UBZPlayerCombatComponent::StartHitStop(const UWorld* World, const float& Duration, const float& TimeDilation)
 {
 	if (bIsHitStop)
 	{
 		return;
 	}
 
-	for (const auto& Value : Duration)
+	if (!FMath::IsFinite(Duration) || !FMath::IsFinite(TimeDilation) || Duration <= 0.0f || TimeDilation <= 0.0f ||
+		TimeDilation > 1.0f)
 	{
-		if (!FMath::IsFinite(Value) || Value < 0.0f)
-		{
-			return;
-		}
+		return;
 	}
 
 	bIsHitStop = true;
 
-	UGameplayStatics::SetGlobalTimeDilation(World, Duration[1]);
+	UGameplayStatics::SetGlobalTimeDilation(World, TimeDilation);
 	HitStopStartRealTime = World->GetRealTimeSeconds();
-	HitStopEndTime = Duration[0];
+	HitStopEndTime = Duration;
 }
 
 void UBZPlayerCombatComponent::EndHitStop()

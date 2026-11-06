@@ -68,7 +68,7 @@ public:
 private:
 	void EndCurrentTrace();
 
-	void StartHitStop(const UWorld* World, const TArray<float>& Duration);
+	void StartHitStop(const UWorld* World, const float& Duration, const float& TimeDilation);
 
 	void EndHitStop();
 
